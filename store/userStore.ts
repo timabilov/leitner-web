@@ -4,7 +4,7 @@ import { zustandStorage } from './storage'; // Adjust the import path as needed
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import i18n from '@/i18n';
 import { ISO_TO_LANGUAGE } from '@/assets/languages';
-import * as Sentry from '@sentry/react-native';
+// import * as Sentry from '@sentry/react-native';
 
 interface UserStore {
   userId: string;
@@ -137,14 +137,14 @@ export const useUserStore = create<UserStore>()(
         if ( state.countryCode && typeof state.countryCode  === 'string' && ISO_TO_LANGUAGE && state.countryCode in ISO_TO_LANGUAGE)
           storeLanguage =  ISO_TO_LANGUAGE[state.countryCode].lng_code;
         if (!i18n.isInitialized) {
-           Sentry.captureException({
-            error: 'i18n is not initialized yet' }, {
-            extra: {
-              message: 'Error on onRehydrateStorage',
-              userId: state.userId,
-              language: storeLanguage
-            },
-          });
+          //  Sentry.captureException({
+          //   error: 'i18n is not initialized yet' }, {
+          //   extra: {
+          //     message: 'Error on onRehydrateStorage',
+          //     userId: state.userId,
+          //     language: storeLanguage
+          //   },
+          // });
           console.warn('i18n not initialized yet, deferring language change');
         return;
       }else {
@@ -154,14 +154,14 @@ export const useUserStore = create<UserStore>()(
         }
         }catch(error) {
           console.log('error while changeLanguage on rehydration storage', error)
-          Sentry.captureException({
-            error: 'error while changeLanguage on rehydration storage' }, {
-            extra: {
-              message: 'Error on onRehydrateStorage',
-              userId: state.userId,
-              language:  storeLanguage
-            },
-          });
+          // Sentry.captureException({
+          //   error: 'error while changeLanguage on rehydration storage' }, {
+          //   extra: {
+          //     message: 'Error on onRehydrateStorage',
+          //     userId: state.userId,
+          //     language:  storeLanguage
+          //   },
+          // });
         }
       }   
       }
