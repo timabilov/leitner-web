@@ -1,0 +1,161 @@
+{
+  "TikTok": "تيك توك",
+  "Instagram": "انستقرام",
+  "App Store": "متجر التطبيقات",
+  "Friend or Family": "صديق أو عائلة",
+  "Google": "جوجل",
+  "Other": "أخرى",
+  "Almost Done!": "تقريباً انتهينا!",
+  "Where did you hear about us?": "من أين سمعت عنا؟",
+  "Start Learning 🚀": "ابدأ التعلم 🚀",
+  "Record, edit and learn smart": "سجل، حرر وتعلم بذكاء",
+  "Create quizzes from your notes": "أنشئ اختبارات من ملاحظاتك",
+  "Flashcards for better memory": "بطاقات تذكير لذاكرة أفضل",
+  "Network error, please check your connection!": "خطأ في الشبكة، يرجى التحقق من اتصالك!",
+  "Request timed out, please try again later.": "انتهت مهلة الطلب، يرجى المحاولة مرة أخرى لاحقاً.",
+  "An error occurred during sign-in, please try again later or reach to support@skripe.com": "حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مرة أخرى لاحقاً أو التواصل مع support@skripe.com",
+  "Google play services are not available, please verify your device support.": "خدمات جوجل بلاي غير متاحة، يرجى التحقق من دعم جهازك.",
+  "Sign in canceled.": "تم إلغاء تسجيل الدخول.",
+  "Sign-in in progres..": "تسجيل الدخول قيد التقدم...",
+  "Sorry error happened, try reloading the app or try again later.": "عذراً، حدث خطأ. حاول إعادة تحميل التطبيق أو المحاولة مرة أخرى لاحقاً.",
+  "Leitner AI": "لايتنر الذكي",
+  "Sign in with Google": "تسجيل الدخول بجوجل",
+  "Privacy Policy": "سياسة الخصوصية",
+  "Terms of Use": "شروط الاستخدام",
+  "Settings": "الإعدادات",
+  "Quiz": "اختبار",
+  "Flashcards": "بطاقات التذكير",
+  "Home": "الرئيسية",
+  "Note": "ملاحظة",
+  "Create Note": "إنشاء ملاحظة",
+  "Processing Note": "معالجة الملاحظة",
+  "Import Image": "استيراد صورة",
+  "Error": "خطأ",
+  "Shorts aren't supported": "الفيديوهات القصيرة غير مدعومة",
+  "Youtube note": "ملاحظة يوتيوب",
+  "Failed to create note, please try again.": "فشل في إنشاء الملاحظة، يرجى المحاولة مرة أخرى.",
+  "Please add youtube link first.": "يرجى إضافة رابط يوتيوب أولاً.",
+  "Incorrect Youtube URL": "رابط يوتيوب غير صحيح",
+  "Youtube Link": "رابط يوتيوب",
+  "Clear link": "مسح الرابط",
+  "Warning": "تحذير",
+  "Maximum allowed duration is 2 hours": "المدة القصوى المسموحة هي ساعتان",
+  "Create note": "إنشاء ملاحظة",
+  "Failed to search notes": "فشل في البحث عن الملاحظات",
+  "There was an error configuring the purchases. Please try to re-launch the app.": "حدث خطأ في تكوين المشتريات. يرجى إعادة تشغيل التطبيق.",
+  "OK": "موافق",
+  "There was an error fetching the purchase history. Please try to re-launch the app.": "حدث خطأ في جلب سجل المشتريات. يرجى إعادة تشغيل التطبيق.",
+  "You have reached your daily limit of {{limit}} notes. Please try again in {{till_tomorrow_h}} hours.": "لقد وصلت إلى حدك اليومي من {{limit}} ملاحظة. يرجى المحاولة مرة أخرى خلال {{till_tomorrow_h}} ساعة.",
+  "You have reached your daily limit of {{limit}} notes. Please subscribe or try again in {{till_tomorrow_h}} hours.": "لقد وصلت إلى حدك اليومي من {{limit}} ملاحظة. يرجى الاشتراك أو المحاولة مرة أخرى خلال {{till_tomorrow_h}} ساعة.",
+  "Daily Limit Reached": "تم الوصول إلى الحد اليومي",
+  "There was an error getting information about your purchases. Please try again later.": "حدث خطأ في الحصول على معلومات مشترياتك. يرجى المحاولة مرة أخرى لاحقاً.",
+  "You have reached your daily limit of notes of {{limit}}. Please try again in {{till_tomorrow_h}}.": "لقد وصلت إلى حدك اليومي من {{limit}} ملاحظة. يرجى المحاولة مرة أخرى خلال {{till_tomorrow_h}}.",
+  "Audio Limit Reached": "تم الوصول إلى حد الصوت",
+  "You have reached your daily limit of {{audio_hours_limit}} audio hours. Please try again tomorrow.": "لقد وصلت إلى حدك اليومي من {{audio_hours_limit}} ساعة صوتية. يرجى المحاولة مرة أخرى غداً.",
+  "Draft {{id}}": "مسودة {{id}}",
+  "Processing": "معالجة",
+  "Youtube": "يوتيوب",
+  "Multi-note": "متعدد الملاحظات",
+  "All notes": "جميع الملاحظات",
+  "Upgrade to PRO": "ترقية إلى برو",
+  "Search transcripts..": "البحث في النصوص...",
+  "No notes available": "لا توجد ملاحظات متاحة",
+  "No results found": "لا توجد نتائج",
+  "Create new note": "إنشاء ملاحظة جديدة",
+  "Search languages": "البحث في اللغات",
+  "Save Draft": "حفظ المسودة",
+  "Hold on!": "انتظر!",
+  "Are you sure you want to go back? Your study content may not be saved.": "هل أنت متأكد من أنك تريد العودة؟ قد لا يتم حفظ محتوى دراستك.",
+  "You can only add up to 1.5 hours of audio.": "يمكنك إضافة ما يصل إلى 1.5 ساعة من الصوت فقط.",
+  "Please add text or files to your note.": "يرجى إضافة نص أو ملفات إلى ملاحظتك.",
+  "Photosynthesis: Plants use sunlight, CO2, and water to produce glucose and oxygen. Chlorophyll in chloroplasts captures light energy, driving the process. Key stages: light-dependent and Calvin cycle.": "التمثيل الضوئي: تستخدم النباتات ضوء الشمس وثاني أكسيد الكربون والماء لإنتاج الجلوكوز والأكسجين. يحتجز الكلوروفيل في البلاستيدات الخضراء طاقة الضوء، مما يقود العملية. المراحل الأساسية: المرحلة المعتمدة على الضوء ودورة كالفن.",
+  "Materials": "المواد",
+  "No media added": "لم تتم إضافة وسائط",
+  "Gallery": "المعرض",
+  "Photo": "صورة",
+  "Text will not be included in your note": "لن يتم تضمين النص في ملاحظتك",
+  "Text": "نص",
+  "PDF": "بي دي إف",
+  "Audio": "صوت",
+  "Process Note": "معالجة الملاحظة",
+  "No study materials": "لا توجد مواد دراسية",
+  "Trim to 1.5 hour": "قص إلى 1.5 ساعة",
+  "Max text length": "أقصى طول للنص",
+  "Max allowed files: {{files}}": "أقصى عدد من الملفات المسموح: {{files}}",
+  "Unknown Note": "ملاحظة غير معروفة",
+  "Sorry cannot find this note preview, please try to refresh the app": "عذراً، لا يمكن العثور على معاينة هذه الملاحظة، يرجى محاولة تحديث التطبيق.",
+  "Failed to open preview files, please reload the app": "فشل في فتح ملفات المعاينة، يرجى إعادة تحميل التطبيق.",
+  "No transcript available": "لا يوجد نص متاح",
+  "No summary available": "لا يوجد ملخص متاح",
+  "Quiz Alerts": "تنبيهات الاختبار",
+  "AI Quiz": "اختبار ذكي",
+  "Loading images...": "تحميل الصور...",
+  "Token Breakdown": "تفصيل الرموز",
+  "Input Tokens": "رموز الإدخال",
+  "Thoughts Tokens": "رموز الأفكار",
+  "Output Tokens": "رموز الإخراج",
+  "Total Tokens": "إجمالي الرموز",
+  "Overview": "نظرة عامة",
+  "Download Failed": "فشل التحميل",
+  "Failed to retrieve attachments zip URL.": "فشل في استرداد رابط ملف المرفقات المضغوط.",
+  "Download Complete": "اكتمل التحميل",
+  "All attachments have been downloaded successfully.": "تم تحميل جميع المرفقات بنجاح.",
+  "Failed to download attachments.": "فشل في تحميل المرفقات.",
+  "Download All": "تحميل الكل",
+  "No attachments": "لا توجد مرفقات",
+  "Text Content": "محتوى النص",
+  "Challenge AI": "تحدي الذكاء الاصطناعي",
+  "Sorry, couldn't start processing your note. Please try again by creating new one.": "عذراً، لم نتمكن من بدء معالجة ملاحظتك. يرجى المحاولة مرة أخرى بإنشاء ملاحظة جديدة.",
+  "Please wait": "يرجى الانتظار",
+  "Go back to notes": "العودة إلى الملاحظات",
+  "It seems you importing bigger material, it might take couple of minutes.\"": "يبدو أنك تستورد مادة أكبر، فعل الإشعارات لتنبيهك عند اكتمال الاستيراد.",
+  "Failed to fetch flashcards status": "فشل في جلب حالة بطاقات التذكير",
+  "Failed to start flashcard generation": "فشل في بدء إنشاء بطاقات التذكير",
+  "Generating flashcards": "إنشاء بطاقات التذكير",
+  "It might take a minute, please wait": "قد يستغرق دقيقة، يرجى الانتظار.",
+  "Try Again": "حاول مرة أخرى",
+  "No flashcards available": "لا توجد بطاقات تذكير متاحة",
+  "Generate Quizzes & Flashcards": "إنشاء اختبارات وبطاقات تذكير",
+  "Failed to update quiz alerts": "فشل في تحديث تنبيهات الاختبار",
+  "Failed to fetch quiz status": "فشل في جلب حالة الاختبار",
+  "Failed to start quiz generation": "فشل في بدء إنشاء الاختبار",
+  "Unknown note": "ملاحظة غير معروفة",
+  "Not taken": "لم يتم إجراؤه",
+  "Last Taken:": "آخر مرة تم إجراؤه:",
+  "Generating quiz": "إنشاء اختبار",
+  "Loading": "تحميل",
+  "No quizzes available": "لا توجد اختبارات متاحة",
+  "Easy Quiz": "اختبار سهل",
+  "Hard Quiz": "اختبار صعب",
+  "Learning Experience": "تجربة التعلم",
+  "Our app boosts learning with personalized quiz alerts, analyzing performance to send reminders for challenging questions, tailoring your mastery of the material.": "يعزز تطبيقنا التعلم من خلال تنبيهات الاختبار المخصصة، مع تحليل الأداء لإرسال تذكيرات للأسئلة الصعبة، مما يساعد على إتقان المادة.",
+  "Manage": "إدارة",
+  "Enable": "تفعيل",
+  "Failed to update the model. Please try again.": "فشل في تحديث النموذج. يرجى المحاولة مرة أخرى.",
+  "Failed to change theme": "فشل في تغيير المظهر",
+  "Log Out": "تسجيل الخروج",
+  "Are you sure you want to log out?": "هل أنت متأكد من أنك تريد تسجيل الخروج؟",
+  "Cancel": "إلغاء",
+  "Delete Account": "حذف الحساب",
+  "This action cannot be undone. Are you sure you want to delete your account?": "لا يمكن التراجع عن هذا الإجراء. هل أنت متأكد من أنك تريد حذف حسابك؟",
+  "Delete": "حذف",
+  "Subscribed PRO": "مشترك برو",
+  "Manage subscription": "إدارة الاشتراك",
+  "Subscription center": "مركز الاشتراك",
+  "Language": "اللغة",
+  "Model": "النموذج",
+  "Email": "البريد الإلكتروني",
+  "Not available": "غير متاح",
+  "Daily Note Quota": "الحصة اليومية من الملاحظات",
+  "Support": "الدعم",
+  "Terms of Service": "شروط الخدمة",
+  "App Version": "إصدار التطبيق",
+  "User": "المستخدم",
+  "Select Model": "اختر النموذج",
+  "Enable Notifications": "تفعيل الإشعارات",
+  "Enable alerts for this note": "تفعيل التنبيهات",
+  "Get yourself prepared with random \"{{noteName}}\" questions": "استعد بأسئلة عشوائية من \"{{noteName}}\"",
+  "Transcript": "النص المكتوب",
+  "Attachments": "المرفقات"
+  
+}
