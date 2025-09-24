@@ -26,6 +26,27 @@ import SignInPdfAILight from '../assets/svgs/signinpdfailight.svg';
 import SignInPenAIDark from '../assets/svgs/signinpenaidark.svg';
 import SignInPenAILight from '../assets/svgs/signinpenailight.svg';
 import GoogleIconSign from '../assets/svgs/devicon_google.svg';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode'; // <-- IMPORT THE DECODER
+
+
+interface GoogleTokenPayload {
+  iss: string;
+  azp: string;
+  aud: string;
+  sub: string;
+  email: string;
+  email_verified: boolean;
+  nbf: number;
+  name: string;
+  picture: string; // <-- Google calls it 'picture', not 'photoURL'
+  given_name: string;
+  family_name: string;
+  iat: number;
+  exp: number;
+  jti: string;
+}
+
 
 const LoginScreen = () => {
   const { t } = useTranslation();
@@ -120,24 +141,29 @@ const LoginScreen = () => {
 
 
   // --- THIS IS THE REPLACEMENT SIGN-IN LOGIC ---
-  const signIn = async () => {
-    const provider = new GoogleAuthProvider();
+  const signIn = async (credentialResponse) => {
+    // const provider = new GoogleAuthProvider();
+    const idToken = credentialResponse.credential;
+    console.log("Received Google ID Token on web:", idToken, credentialResponse);
+    const decodedToken = jwtDecode<GoogleTokenPayload>(idToken);
+
+    console.log("Decoded Token Payload:", decodedToken);
+    
+    const userInfo = {
+      id: decodedToken.sub, // 'sub' is the unique Google user ID
+      name: decodedToken.name,
+      email: decodedToken.email,
+      photo: decodedToken.picture, // The claim is 'picture'
+    };
+
     try {
       // 1. Trigger the Google sign-in popup window
-      const result = await signInWithPopup(fbAuth, provider);
       
-      const user = result.user;
-      const idToken = await user.getIdToken();
 
       // 2. Prepare data for your backend in the same structure as before
       const backendData = {
         idToken,
-        user: {
-          id: user.uid,
-          name: user.displayName,
-          email: user.email,
-          photo: user.photoURL,
-        },
+        user: userInfo,
         platform: 'web',
       };
       
@@ -225,23 +251,10 @@ const LoginScreen = () => {
           </div>
         </div>
         <div className="button-container">
-          <button
-            className="google-button"
-            style={{ 
-              backgroundColor: googleVerifyMutation.isLoading ? theme.colors.elevation.level5 : theme.colors.primary,
-              color: theme.colors.onPrimary
-            }}
-            onClick={signIn} // The onClick now calls our new Firebase signIn function
-            disabled={googleVerifyMutation.isLoading}
-          >
-            {googleVerifyMutation.isLoading && (
-              <div className="spinner">⏳</div>
-            )}
-            <GoogleIconSign width={20} height={20} className="google-icon" />
-            <span className="google-button-text">
-              {t("Sign in with Google")}
-            </span>
-          </button>
+          <GoogleLogin
+          onSuccess={signIn}
+          onError={signIn}
+        />
         </div>
         <div className="links-container">
           <a
