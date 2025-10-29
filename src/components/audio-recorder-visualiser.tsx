@@ -23,8 +23,8 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   className?: string;
-  timerClassName?: string;
   onRecordingComplete?: (audioBlob: Blob) => void;
+  onStatusChange?: (status: "recording" | "paused" | "inactive") => void;
 };
 
 const mimeType = "audio/webm";
@@ -42,14 +42,14 @@ const padWithLeadingZeros = (num: number, length: number): string => {
 
 // --- Child Components (Wrapped with React.forwardRef) ---
 
-const Timer = React.memo(React.forwardRef<HTMLDivElement, { hours: number; minutes: number; seconds: number; timerClassName?: string; }>(
-  ({ hours, minutes, seconds, timerClassName }, ref) => {
+const Timer = React.memo(React.forwardRef<HTMLDivElement, { hours: number; minutes: number; seconds: number; className?: string; }>(
+  ({ hours, minutes, seconds, className }, ref) => {
     const [h1, h2] = useMemo(() => padWithLeadingZeros(hours, 2).split(""), [hours]);
     const [m1, m2] = useMemo(() => padWithLeadingZeros(minutes, 2).split(""), [minutes]);
     const [s1, s2] = useMemo(() => padWithLeadingZeros(seconds, 2).split(""), [seconds]);
 
     return (
-        <div ref={ref} className={cn("items-center -top-12 left-0 absolute justify-center gap-0.5 border p-1.5 rounded-md font-mono font-medium text-foreground bg-background flex", timerClassName)}>
+        <div ref={ref} className={cn("flex items-center justify-center gap-0.5 rounded-md font-mono font-medium text-foreground bg-background", className)}>
             <span>{h1}</span><span>{h2}</span>:<span>{m1}</span><span>{m2}</span>:<span>{s1}</span><span>{s2}</span>
         </div>
     );
@@ -124,10 +124,9 @@ MicSelect.displayName = "MicSelect";
 
 // --- Main Component ---
 
-export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecordingComplete,   onStatusChange }: Props) => {
+export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, onStatusChange }: Props) => {
   const { theme } = useTheme();
 
-  // (The rest of the component logic is identical and remains here)
   const [recordingStatus, setRecordingStatus] = useState<"recording" | "paused" | "inactive">("inactive");
   const [playbackStatus, setPlaybackStatus] = useState<"playing" | "paused" | "inactive">("inactive");
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -145,13 +144,6 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
   const timerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   
-   useEffect(() => {
-    if (onStatusChange) {
-      onStatusChange(recordingStatus);
-    }
-  }, [recordingStatus, onStatusChange]);
-
-
   const webAudioRefs = useRef<{
     audioContext: AudioContext | null; sourceNode: AudioNode | null;
     gainNode: GainNode | null; analyser: AnalyserNode | null;
@@ -160,6 +152,10 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
     audioContext: null, sourceNode: null, gainNode: null, analyser: null,
     animationFrameId: null, startTime: 0, pausedTime: 0
   });
+
+   useEffect(() => {
+    if (onStatusChange) { onStatusChange(recordingStatus); }
+  }, [recordingStatus, onStatusChange]);
 
   const getAvailableMics = async () => {
     try {
@@ -237,6 +233,7 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
   const stopRecording = () => { if (mediaRecorderRef.current?.state !== "inactive") mediaRecorderRef.current?.stop(); };
   const pauseRecording = () => { if (mediaRecorderRef.current?.state === "recording") { mediaRecorderRef.current.pause(); setRecordingStatus("paused"); } };
   const resumeRecording = () => { if (mediaRecorderRef.current?.state === "paused") { mediaRecorderRef.current.resume(); setRecordingStatus("recording"); } };
+  
   const playAudio = (offset = webAudioRefs.current.pausedTime) => {
     if (!audioBufferRef.current) return;
     cleanupWebAudioNodes(); 
@@ -253,6 +250,7 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
     sourceNode.start(0, offset);
     setPlaybackStatus("playing");
   };
+
   const pauseAudio = (isEnded = false) => {
     const { sourceNode, audioContext, startTime } = webAudioRefs.current;
     if (!sourceNode || !audioContext) return;
@@ -262,6 +260,7 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
     cleanupWebAudioNodes();
     if (isEnded) setCurrentTime(0);
   };
+
   const handlePlaybackToggle = () => { if (playbackStatus === "playing") pauseAudio(); else playAudio(); };
   const handleSeek = (time: number) => {
     if (duration <= 0) return;
@@ -284,12 +283,14 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
     }
   };
   const discardRecording = () => { if (mediaRecorderRef.current?.state !== "inactive") mediaRecorderRef.current?.stop(); cleanupAllResources(); };
+  
   const cleanupWebAudioNodes = () => {
     const { audioContext, animationFrameId } = webAudioRefs.current;
     if (audioContext && audioContext.state !== "closed") audioContext.close();
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
     webAudioRefs.current = { ...webAudioRefs.current, audioContext: null, sourceNode: null, gainNode: null, analyser: null, animationFrameId: null };
   };
+
   const cleanupAllResources = () => {
     if (playbackStatus !== 'inactive') setPlaybackStatus('inactive');
     cleanupWebAudioNodes();
@@ -302,6 +303,7 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
     setDuration(0);
     webAudioRefs.current.pausedTime = 0;
   };
+  
   const handleDownload = () => {
     if (audioUrl) {
       const a = document.createElement("a");
@@ -309,10 +311,12 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
     }
   };
+
   useEffect(() => {
     if (recordingStatus === "recording") timerTimeoutRef.current = setTimeout(() => setTimer((prev) => prev + 1), 1000);
     return () => { if (timerTimeoutRef.current) clearTimeout(timerTimeoutRef.current); };
   }, [recordingStatus, timer]);
+  
   useEffect(() => {
     const drawWaveform = (dataArray: Uint8Array) => {
       const canvas = canvasRef.current;
@@ -350,6 +354,7 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
     if (recordingStatus === 'recording' || playbackStatus === 'playing') visualize();
     return () => { if (webAudioRefs.current.animationFrameId) cancelAnimationFrame(webAudioRefs.current.animationFrameId); };
   }, [recordingStatus, playbackStatus, theme, duration]);
+  
   const { hours, minutes, seconds } = useMemo(() => ({
       hours: Math.floor(timer / 3600),
       minutes: Math.floor((timer % 3600) / 60),
@@ -358,17 +363,30 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
 
   return (
     <div className={cn("flex flex-col items-center justify-center gap-4 w-full", className)}>
-      <div className={cn("flex h-16 rounded-lg relative w-full items-center justify-center gap-2 max-w-5xl", { "border p-1": recordingStatus !== "inactive" || audioUrl })}>
+      <div className={cn("flex h-16 rounded-lg relative w-full items-center justify-center gap-2 max-w-5xl", { "border": recordingStatus !== "inactive" || audioUrl })}>
         {recordingStatus !== "inactive" || (audioUrl && playbackStatus !== 'inactive') ? (
-          <>
-            {recordingStatus !== "inactive" && <Timer {...{ hours, minutes, seconds, timerClassName }}/>}
-            <canvas ref={canvasRef} className="h-full w-full bg-background rounded-lg" />
-          </>
+          <canvas ref={canvasRef} className="h-full w-full bg-background rounded-lg" />
         ) : (
-             <div className="text-muted-foreground">Press mic to start recording</div>
+          <div className="text-muted-foreground">Press mic to start recording</div>
         )}
       </div>
-      
+
+      {/* --- Section for Timer OR Playback Controls --- */}
+      <div className="flex w-full min-h-[40px] max-w-5xl items-center justify-center gap-2">
+        {recordingStatus !== 'inactive' ? (
+          <Timer hours={hours} minutes={minutes} seconds={seconds} />
+        ) : audioUrl ? (
+          <>
+            <Tooltip><TooltipTrigger asChild><Button onClick={handlePlaybackToggle} size="icon">{playbackStatus === 'playing' ? <Pause size={18} /> : <Play size={18} />}</Button></TooltipTrigger><TooltipContent><p>{playbackStatus === 'playing' ? 'Pause' : 'Play'}</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button onClick={startRecording} size="icon"><Mic size={18} /></Button></TooltipTrigger><TooltipContent><p>Record Again</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button onClick={handleDownload} size="icon" variant="outline"><Download size={18} /></Button></TooltipTrigger><TooltipContent><p>Download</p></TooltipContent></Tooltip>
+            <VolumeControl volume={volume} onVolumeChange={handleVolumeChange} />
+            <Tooltip><TooltipTrigger asChild><Button onClick={toggleLooping} size="icon" variant={isLooping ? "secondary" : "ghost"}><Repeat size={16} /></Button></TooltipTrigger><TooltipContent><p>Loop</p></TooltipContent></Tooltip>
+            <Tooltip><TooltipTrigger asChild><Button onClick={discardRecording} size="icon" variant="destructive"><Trash size={18} /></Button></TooltipTrigger><TooltipContent><p>Discard</p></TooltipContent></Tooltip>
+          </>
+        ) : null}
+      </div>
+
       {audioUrl && recordingStatus === 'inactive' && (
         <div className="flex flex-col gap-3 w-full max-w-5xl">
             <Timeline currentTime={currentTime} duration={duration} onSeek={handleSeek} />
@@ -379,33 +397,25 @@ export const AudioRecorderWithVisualizer = ({ className, timerClassName, onRecor
         </div>
       )}
 
+      {/* --- Main Action Buttons (only visible in initial or recording states) --- */}
       <div className="flex items-center gap-2">
-        {audioUrl && recordingStatus === 'inactive' ? (
-          <>
-            <Tooltip><TooltipTrigger asChild><Button onClick={handlePlaybackToggle} size="icon">{playbackStatus === 'playing' ? <Pause size={18} /> : <Play size={18} />}</Button></TooltipTrigger><TooltipContent><p>{playbackStatus === 'playing' ? 'Pause' : 'Play'}</p></TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><Button onClick={startRecording} size="icon"><Mic size={18} /></Button></TooltipTrigger><TooltipContent><p>Record Again</p></TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><Button onClick={handleDownload} size="icon" variant="outline"><Download size={18} /></Button></TooltipTrigger><TooltipContent><p>Download</p></TooltipContent></Tooltip>
-            <VolumeControl volume={volume} onVolumeChange={handleVolumeChange} />
-            <Tooltip><TooltipTrigger asChild><Button onClick={toggleLooping} size="icon" variant={isLooping ? "secondary" : "ghost"}><Repeat size={16} /></Button></TooltipTrigger><TooltipContent><p>Loop</p></TooltipContent></Tooltip>
-            <Tooltip><TooltipTrigger asChild><Button onClick={discardRecording} size="icon" variant="destructive"><Trash size={18} /></Button></TooltipTrigger><TooltipContent><p>Discard</p></TooltipContent></Tooltip>
-          </>
-        ) : recordingStatus === "inactive" ? (
-          <Tooltip><TooltipTrigger asChild><Button onClick={startRecording} size="icon"><Mic size={18} /></Button></TooltipTrigger><TooltipContent><p>Start Recording</p></TooltipContent></Tooltip>
-        ) : (
+        {recordingStatus === "inactive" && !audioUrl ? (
+          <Tooltip><TooltipTrigger asChild><Button onClick={startRecording} size="icon" className="w-12 h-12"><Mic size={24} /></Button></TooltipTrigger><TooltipContent><p>Start Recording</p></TooltipContent></Tooltip>
+        ) : recordingStatus !== "inactive" ? (
           <>
             <Tooltip><TooltipTrigger asChild><Button onClick={discardRecording} size="icon" variant="destructive"><Trash size={18} /></Button></TooltipTrigger><TooltipContent><p>Cancel</p></TooltipContent></Tooltip>
             {recordingStatus === "recording" ? (
-              <Tooltip><TooltipTrigger asChild><Button onClick={pauseRecording} size="icon" variant="outline"><Pause size={18} /></Button></TooltipTrigger><TooltipContent><p>Pause</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><Button onClick={pauseRecording} size="icon" variant="outline" className="w-12 h-12"><Pause size={24} /></Button></TooltipTrigger><TooltipContent><p>Pause</p></TooltipContent></Tooltip>
             ) : (
-              <Tooltip><TooltipTrigger asChild><Button onClick={resumeRecording} size="icon" variant="outline"><Play size={18} /></Button></TooltipTrigger><TooltipContent><p>Resume</p></TooltipContent></Tooltip>
+              <Tooltip><TooltipTrigger asChild><Button onClick={resumeRecording} size="icon" variant="outline" className="w-12 h-12"><Play size={24} /></Button></TooltipTrigger><TooltipContent><p>Resume</p></TooltipContent></Tooltip>
             )}
             <Tooltip><TooltipTrigger asChild><Button onClick={stopRecording} size="icon"><Square size={18} /></Button></TooltipTrigger><TooltipContent><p>Finish</p></TooltipContent></Tooltip>
           </>
-        )}
+        ) : null}
       </div>
 
       {availableMics.length > 0 && recordingStatus === 'inactive' && (
-        <div className="w-full max-w-xs">
+        <div className="w-full max-w-xs mt-2">
           <MicSelect
             mics={availableMics}
             selectedMicId={selectedMicId}
