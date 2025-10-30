@@ -25,6 +25,7 @@ type Props = {
   className?: string;
   onRecordingComplete?: (audioBlob: Blob) => void;
   onStatusChange?: (status: "recording" | "paused" | "inactive") => void;
+  onSilenceChange?: (isSilent: boolean) => void;
 };
 
 const mimeType = "audio/webm";
@@ -40,9 +41,9 @@ const padWithLeadingZeros = (num: number, length: number): string => {
   return String(num).padStart(length, "0");
 };
 
-// --- Child Components (Wrapped with React.forwardRef) ---
+// --- Child Components ---
 
-const Timer = React.memo(React.forwardRef<HTMLDivElement, { hours: number; minutes: number; seconds: number; className?: string; }>(
+const Timer = React.memo(React.forwardRef<HTMLDivElement, { hours: number; minutes: number; seconds: number; className?: string }>(
   ({ hours, minutes, seconds, className }, ref) => {
     const [h1, h2] = useMemo(() => padWithLeadingZeros(hours, 2).split(""), [hours]);
     const [m1, m2] = useMemo(() => padWithLeadingZeros(minutes, 2).split(""), [minutes]);
@@ -102,7 +103,6 @@ const MicSelect = React.memo(React.forwardRef<HTMLDivElement, { mics: MediaDevic
   ({ mics, selectedMicId, onMicChange, disabled }, ref) => {
     return (
       <div ref={ref} className="w-full flex flex-col gap-2">
-        <Label htmlFor="mic-select">Input device</Label>
         <Select onValueChange={onMicChange} value={selectedMicId} disabled={disabled}>
           <SelectTrigger id="mic-select" className="w-full">
             <SelectValue placeholder="Select a microphone" />
@@ -124,7 +124,7 @@ MicSelect.displayName = "MicSelect";
 
 // --- Main Component ---
 
-export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, onStatusChange }: Props) => {
+export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, onStatusChange, onSilenceChange }: Props) => {
   const { theme } = useTheme();
 
   const [recordingStatus, setRecordingStatus] = useState<"recording" | "paused" | "inactive">("inactive");
@@ -137,12 +137,16 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
   const [volume, setVolume] = useState(1);
   const [isLooping, setIsLooping] = useState(false);
   const [timer, setTimer] = useState<number>(0);
+  const [isSilent, setIsSilent] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
   const timerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const prevBarHeightsRef = useRef<number[]>([]);
+  const silenceRef = useRef({ consecutiveFrames: 0 });
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   const webAudioRefs = useRef<{
     audioContext: AudioContext | null; sourceNode: AudioNode | null;
@@ -153,9 +157,14 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
     animationFrameId: null, startTime: 0, pausedTime: 0
   });
 
-   useEffect(() => {
-    if (onStatusChange) { onStatusChange(recordingStatus); }
-  }, [recordingStatus, onStatusChange]);
+  useEffect(() => { if (onStatusChange) { onStatusChange(recordingStatus); } }, [recordingStatus, onStatusChange]);
+  useEffect(() => { if (onSilenceChange) { onSilenceChange(isSilent); } }, [isSilent, onSilenceChange]);
+  
+  const createAnalyser = (context: AudioContext) => {
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 256;
+    return analyser;
+  };
 
   const getAvailableMics = async () => {
     try {
@@ -180,7 +189,6 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
       return stream;
     } catch (err) {
       alert("Microphone access was denied or the selected device is not available.");
-      console.error(err);
       return null;
     }
   };
@@ -189,35 +197,24 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
     cleanupAllResources();
     const stream = await getMicrophoneStream();
     if (!stream) return;
-
     setRecordingStatus("recording");
     audioChunksRef.current = [];
-
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const analyser = audioContext.createAnalyser();
+    const analyser = createAnalyser(audioContext);
     const sourceNode = audioContext.createMediaStreamSource(stream);
-    
     sourceNode.connect(analyser);
     webAudioRefs.current = { ...webAudioRefs.current, audioContext, analyser, sourceNode };
-
     const mediaRecorder = new MediaRecorder(stream, { mimeType });
     mediaRecorderRef.current = mediaRecorder;
-
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) audioChunksRef.current.push(event.data);
-    };
-
+    mediaRecorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunksRef.current.push(event.data); };
     mediaRecorder.onstop = async () => {
       stream.getTracks().forEach(track => track.stop());
-      cleanupWebAudioNodes(); 
-
+      cleanupWebAudioNodes();
       if (audioChunksRef.current.length > 0) {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
-
         if (onRecordingComplete) onRecordingComplete(audioBlob);
-
         const arrayBuffer = await audioBlob.arrayBuffer();
         const decodingContext = new AudioContext();
         const decodedAudio = await decodingContext.decodeAudioData(arrayBuffer);
@@ -236,13 +233,13 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
   
   const playAudio = (offset = webAudioRefs.current.pausedTime) => {
     if (!audioBufferRef.current) return;
-    cleanupWebAudioNodes(); 
+    cleanupWebAudioNodes();
     const audioContext = new AudioContext();
     const sourceNode = audioContext.createBufferSource();
     sourceNode.buffer = audioBufferRef.current;
     const gainNode = audioContext.createGain();
     gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    const analyser = audioContext.createAnalyser();
+    const analyser = createAnalyser(audioContext);
     sourceNode.connect(gainNode).connect(analyser).connect(audioContext.destination);
     sourceNode.loop = isLooping;
     webAudioRefs.current = { ...webAudioRefs.current, audioContext, sourceNode, gainNode, analyser, startTime: audioContext.currentTime - offset };
@@ -262,12 +259,19 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
   };
 
   const handlePlaybackToggle = () => { if (playbackStatus === "playing") pauseAudio(); else playAudio(); };
+  
   const handleSeek = (time: number) => {
     if (duration <= 0) return;
     const clampedTime = Math.max(0, Math.min(time, duration));
-    if (playbackStatus === "playing") { pauseAudio(); playAudio(clampedTime); } 
-    else { webAudioRefs.current.pausedTime = clampedTime; setCurrentTime(clampedTime); }
+    if (playbackStatus === "playing") {
+        pauseAudio();
+        playAudio(clampedTime);
+    } else {
+        webAudioRefs.current.pausedTime = clampedTime;
+        setCurrentTime(clampedTime);
+    }
   };
+  
   const handleVolumeChange = (newVolume: number[]) => {
     const vol = newVolume[0];
     setVolume(vol);
@@ -288,6 +292,7 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
     const { audioContext, animationFrameId } = webAudioRefs.current;
     if (audioContext && audioContext.state !== "closed") audioContext.close();
     if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     webAudioRefs.current = { ...webAudioRefs.current, audioContext: null, sourceNode: null, gainNode: null, analyser: null, animationFrameId: null };
   };
 
@@ -318,31 +323,84 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
   }, [recordingStatus, timer]);
   
   useEffect(() => {
-    const drawWaveform = (dataArray: Uint8Array) => {
+    const drawVisualizer = (dataArray: Uint8Array) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const { width: WIDTH, height: HEIGHT } = canvas;
       const canvasCtx = canvas.getContext("2d");
       if (!canvasCtx) return;
+
       canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-      canvasCtx.fillStyle = theme === "dark" ? "#E5E7EB" : "#374151";
-      const barWidth = 2, spacing = 1, numBars = Math.floor(WIDTH / (barWidth + spacing));
+
+      const bufferLength = dataArray.length;
+      if (prevBarHeightsRef.current.length !== bufferLength) {
+        prevBarHeightsRef.current = new Array(bufferLength).fill(0);
+      }
+      const barWidth = (WIDTH / bufferLength) * 1.25;
       let x = 0;
-      for (let i = 0; i < numBars; i++) {
-        const barHeight = (dataArray[i] / 128.0) * (HEIGHT / 1.5);
-        canvasCtx.fillRect(x, HEIGHT / 2 - barHeight / 2, barWidth, barHeight);
-        x += barWidth + spacing;
+      canvasCtx.fillStyle = 'oklch(86.5% 0.127 207.078)';
+
+      for (let i = 0; i < bufferLength; i++) {
+        const normalizedValue = dataArray[i] / 255;
+        const targetHeight = Math.pow(normalizedValue, 2.5) * HEIGHT;
+        const smoothingFactor = 0.1;
+        const smoothedHeight = prevBarHeightsRef.current[i] + (targetHeight - prevBarHeightsRef.current[i]) * smoothingFactor;
+        
+        canvasCtx.fillRect(x, HEIGHT - smoothedHeight, barWidth, smoothedHeight);
+        prevBarHeightsRef.current[i] = smoothedHeight;
+        x += barWidth + 1;
       }
     };
+    
     const visualize = () => {
       const { analyser } = webAudioRefs.current;
       if (!analyser) return;
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      
+      const frequencyDataArray = new Uint8Array(analyser.frequencyBinCount);
+      const timeDomainDataArray = new Uint8Array(analyser.fftSize);
+
       const draw = () => {
         if (!webAudioRefs.current.analyser) return;
         webAudioRefs.current.animationFrameId = requestAnimationFrame(draw);
-        webAudioRefs.current.analyser.getByteTimeDomainData(dataArray);
-        drawWaveform(dataArray);
+        
+        if (recordingStatus === 'recording') {
+            webAudioRefs.current.analyser.getByteTimeDomainData(timeDomainDataArray);
+            let maxDeviation = 0;
+            for (let i = 0; i < timeDomainDataArray.length; i++) {
+                const deviation = Math.abs(timeDomainDataArray[i] - 128);
+                if (deviation > maxDeviation) maxDeviation = deviation;
+            }
+            
+            const SILENCE_THRESHOLD = 5;
+            const INITIAL_SILENT_FRAMES = 30;
+
+            if (maxDeviation < SILENCE_THRESHOLD) {
+                silenceRef.current.consecutiveFrames++;
+            } else {
+                silenceRef.current.consecutiveFrames = 0;
+                if (silenceTimerRef.current) {
+                    clearTimeout(silenceTimerRef.current);
+                    silenceTimerRef.current = null;
+                }
+                if (isSilent) {
+                    setIsSilent(false);
+                }
+            }
+
+            if (
+                silenceRef.current.consecutiveFrames >= INITIAL_SILENT_FRAMES &&
+                !silenceTimerRef.current &&
+                !isSilent
+            ) {
+                silenceTimerRef.current = setTimeout(() => {
+                    setIsSilent(true);
+                }, 2000);
+            }
+        }
+        
+        webAudioRefs.current.analyser.getByteFrequencyData(frequencyDataArray);
+        drawVisualizer(frequencyDataArray);
+
         if (playbackStatus === 'playing') {
           const { audioContext, startTime } = webAudioRefs.current;
           const newTime = webAudioRefs.current.pausedTime + (audioContext!.currentTime - startTime);
@@ -351,9 +409,29 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
       };
       draw();
     };
-    if (recordingStatus === 'recording' || playbackStatus === 'playing') visualize();
-    return () => { if (webAudioRefs.current.animationFrameId) cancelAnimationFrame(webAudioRefs.current.animationFrameId); };
-  }, [recordingStatus, playbackStatus, theme, duration]);
+
+    if (recordingStatus === 'recording' || playbackStatus === 'playing') {
+      visualize();
+    } else {
+      if (isSilent) setIsSilent(false);
+      silenceRef.current.consecutiveFrames = 0;
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      const canvas = canvasRef.current;
+      if (canvas) {
+          const canvasCtx = canvas.getContext("2d");
+          if(canvasCtx) canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+    
+    return () => {
+      if (webAudioRefs.current.animationFrameId) {
+        cancelAnimationFrame(webAudioRefs.current.animationFrameId);
+      }
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+    };
+  }, [recordingStatus, playbackStatus, theme, duration, currentTime, audioUrl, isSilent]);
   
   const { hours, minutes, seconds } = useMemo(() => ({
       hours: Math.floor(timer / 3600),
@@ -363,15 +441,8 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
 
   return (
     <div className={cn("flex flex-col items-center justify-center gap-4 w-full", className)}>
-      <div className={cn("flex h-16 rounded-lg relative w-full items-center justify-center gap-2 max-w-5xl", { "border": recordingStatus !== "inactive" || audioUrl })}>
-        {recordingStatus !== "inactive" || (audioUrl && playbackStatus !== 'inactive') ? (
-          <canvas ref={canvasRef} className="h-full w-full bg-background rounded-lg" />
-        ) : (
-          <div className="text-muted-foreground">Press mic to start recording</div>
-        )}
-      </div>
+        { recordingStatus === 'recording' &&  <div className="flex h-8 w-full flex-row"><canvas ref={canvasRef} className="h-full w-full bg-background" /></div>  }
 
-      {/* --- Section for Timer OR Playback Controls --- */}
       <div className="flex w-full min-h-[40px] max-w-5xl items-center justify-center gap-2">
         {recordingStatus !== 'inactive' ? (
           <Timer hours={hours} minutes={minutes} seconds={seconds} />
@@ -397,33 +468,40 @@ export const AudioRecorderWithVisualizer = ({ className, onRecordingComplete, on
         </div>
       )}
 
-      {/* --- Main Action Buttons (only visible in initial or recording states) --- */}
-      <div className="flex items-center gap-2">
-        {recordingStatus === "inactive" && !audioUrl ? (
-          <Tooltip><TooltipTrigger asChild><Button onClick={startRecording} size="icon" className="w-12 h-12"><Mic size={24} /></Button></TooltipTrigger><TooltipContent><p>Start Recording</p></TooltipContent></Tooltip>
-        ) : recordingStatus !== "inactive" ? (
-          <>
-            <Tooltip><TooltipTrigger asChild><Button onClick={discardRecording} size="icon" variant="destructive"><Trash size={18} /></Button></TooltipTrigger><TooltipContent><p>Cancel</p></TooltipContent></Tooltip>
-            {recordingStatus === "recording" ? (
-              <Tooltip><TooltipTrigger asChild><Button onClick={pauseRecording} size="icon" variant="outline" className="w-12 h-12"><Pause size={24} /></Button></TooltipTrigger><TooltipContent><p>Pause</p></TooltipContent></Tooltip>
-            ) : (
-              <Tooltip><TooltipTrigger asChild><Button onClick={resumeRecording} size="icon" variant="outline" className="w-12 h-12"><Play size={24} /></Button></TooltipTrigger><TooltipContent><p>Resume</p></TooltipContent></Tooltip>
-            )}
-            <Tooltip><TooltipTrigger asChild><Button onClick={stopRecording} size="icon"><Square size={18} /></Button></TooltipTrigger><TooltipContent><p>Finish</p></TooltipContent></Tooltip>
-          </>
-        ) : null}
-      </div>
+      {recordingStatus === "inactive" && !audioUrl ? (
+        <div className="flex items-end gap-4 w-full max-w-5xl justify-center">
+          {availableMics.length > 0 && (
+            <div className="w-full max-w-xs">
+              <MicSelect
+                mics={availableMics}
+                selectedMicId={selectedMicId}
+                onMicChange={setSelectedMicId}
+                disabled={false}
+              />
+            </div>
+          )}
 
-      {availableMics.length > 0 && recordingStatus === 'inactive' && (
-        <div className="w-full max-w-xs mt-2">
-          <MicSelect
-            mics={availableMics}
-            selectedMicId={selectedMicId}
-            onMicChange={setSelectedMicId}
-            disabled={recordingStatus !== 'inactive' || playbackStatus !== 'inactive'}
-          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={startRecording} size="icon" className="w-9 h-9">
+                <Mic size={24} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>Start Recording</p></TooltipContent>
+          </Tooltip>
+          
         </div>
-      )}
+      ) : recordingStatus !== "inactive" ? (
+        <div className="flex items-center gap-2">
+          <Tooltip><TooltipTrigger asChild><Button onClick={discardRecording} size="icon" variant="destructive"><Trash size={18} /></Button></TooltipTrigger><TooltipContent><p>Cancel</p></TooltipContent></Tooltip>
+          {recordingStatus === "recording" ? (
+            <Tooltip><TooltipTrigger asChild><Button onClick={pauseRecording} size="icon" variant="outline" className="w-12 h-12"><Pause size={24} /></Button></TooltipTrigger><TooltipContent><p>Pause</p></TooltipContent></Tooltip>
+          ) : (
+            <Tooltip><TooltipTrigger asChild><Button onClick={resumeRecording} size="icon" variant="outline" className="w-12 h-12"><Play size={24} /></Button></TooltipTrigger><TooltipContent><p>Resume</p></TooltipContent></Tooltip>
+          )}
+          <Tooltip><TooltipTrigger asChild><Button onClick={stopRecording} size="icon"><Square size={18} /></Button></TooltipTrigger><TooltipContent><p>Finish</p></TooltipContent></Tooltip>
+        </div>
+      ) : null}
     </div>
   );
 };

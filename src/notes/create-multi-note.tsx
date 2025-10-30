@@ -11,7 +11,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash, UploadCloud, X, FileText, File, CircleAlert, Volume2 } from "lucide-react";
+import { Plus, Trash, UploadCloud, X, FileText, File, CircleAlert, Volume2, VolumeOff } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -24,7 +24,7 @@ import 'react-medium-image-zoom/dist/styles.css'
 
 
 // --- Type Definitions ---
-type RecordingStatus = "recording" | "paused" | "inactive";
+type RecordingStatus = "recording" | "paused" | "inactive" | 'isSilent';
 type Recording = {
   id: number;
   audioBlob: Blob | null;
@@ -39,7 +39,7 @@ const CreateMultiNote = () => {
   const [noteText, setNoteText] = useState<string>("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [recordings, setRecordings] = useState<Recording[]>([
-    { id: Date.now(), audioBlob: null, status: "inactive" },
+    { id: Date.now(), audioBlob: null, status: "inactive", isSilent: false },
   ]);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [previewFile, setPreviewFile] = useState<File | null>(null); // For PDF preview dialog
@@ -84,6 +84,15 @@ const CreateMultiNote = () => {
 
   const isAnyRecordingActive = recordings.some(rec => rec.status !== 'inactive');
   const canSave = !isAnyRecordingActive && (noteText.trim() !== '' || attachedFiles.length > 0 || recordings.some(r => r.audioBlob));
+ const isAnyRecorderSilent = recordings.some(rec => rec.status === 'recording' && rec.isSilent);
+
+  // New handler for silence updates
+  const handleSilenceUpdate = (id: number, isSilent: boolean) => {
+    setRecordings(prev =>
+      prev.map(rec => (rec.id === id ? { ...rec, isSilent } : rec))
+    );
+  };
+
 
   return (
     <>
@@ -137,16 +146,27 @@ const CreateMultiNote = () => {
               {
                 recordings.find(recording => recording.status === 'recording') && (
                     <Alert className='border-sky-700/10 bg-sky-600/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400'>
-                        <Volume2 />
-                        <AlertTitle>Hey, can you speak up a bit?  We’ll ping you if we miss anything!</AlertTitle>
-                        </Alert>
+                    <Volume2 />
+                    <AlertTitle>Hey, can you speak up a bit?  We’ll ping you if we miss anything!</AlertTitle>
+                    </Alert>
                 )
               }
+                {/* --- NEW SILENCE ALERT --- */}
+              {isAnyRecorderSilent && (
+                <Alert className='border-red-700/10 bg-red-600/10 text-red-600 dark:bg-red-400/10 dark:text-red-400'>
+                <VolumeOff />
+                  <AlertTitle>No Audio Detected.  Your microphone may not be picking up any sound. Please check your audio input.</AlertTitle>
+                </Alert>
+              )}
 
               {recordings.map((rec, index) => (
                 <div key={rec.id} className="flex items-center gap-4 p-4 border rounded-lg">
                   <div className="flex-grow">
-                    <AudioRecorderWithVisualizer onRecordingComplete={(blob) => handleUpdateRecording(rec.id, blob)} onStatusChange={(status) => handleStatusUpdate(rec.id, status)} />
+                    <AudioRecorderWithVisualizer
+                        onRecordingComplete={(blob) => handleUpdateRecording(rec.id, blob)}
+                        onStatusChange={(status) => handleStatusUpdate(rec.id, status)}
+                        onSilenceChange={(isSilent) => handleSilenceUpdate(rec.id, isSilent)}
+                    />
                   </div>
                   {recordings.length > 1 && (
                     <Tooltip>
