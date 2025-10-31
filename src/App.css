@@ -5,6 +5,22 @@
   /* text-align: center; */
 }
 
+/* Fix Radix Tooltip portal clipping */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+  pointer-events: none;
+}
+
+/* Optional: better visuals */
+[data-radix-tooltip-content] {
+  background: oklch(20% 0.01 240);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
@@ -40,3 +56,5 @@
 .read-the-docs {
   color: #888;
 }
+
+.contents { display: contents; }

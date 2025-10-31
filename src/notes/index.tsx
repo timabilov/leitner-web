@@ -22,6 +22,7 @@ import SortableGrid from "./sortable-example";
 import {
   FolderArchive,
   FoldHorizontal,
+  Paperclip,
   Plus,
   Search,
   Youtube,
@@ -60,6 +61,8 @@ import {
 import CreateYoutubeNote from "./create-youtube-note";
 import { toast } from "sonner";
 import CreateMultiNote from "./create-multi-note";
+import { AIPromptInput } from "./ai-prompt-textarea";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipPortal, TooltipProvider } from "@/components/ui/tooltip";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -190,123 +193,125 @@ const Notes = ({ children }: any) => {
   };
 
   return (
-    <SidebarProvider
-      className=" h-full min-h-auto"
-      style={
-        {
-          "--sidebar-width": "calc(var(--spacing) * 64)",
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar variant="sidebar" />
-      <SidebarInset>
-        <Header
-          photo={photo}
-          shortName={shortName}
-          selectedFolder={selectedFolder}
-          setSelectedFolder={setSelectedFolder}
-          foldersList={foldersQuery?.data?.folders}
-        />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2">
-            <div className="hidden sm:flex p-4 mt-4 flex-row justify-center ">
-                <p className="text-muted-foreground text-2xl tracking-tight">
-                   {`Hey ${fullName}, do you want to create new note?`}
-                </p>
+    <>
+        <SidebarProvider
+        className=" h-full min-h-auto"
+        style={
+            {
+            "--sidebar-width": "calc(var(--spacing) * 64)",
+            } as React.CSSProperties
+        }
+        >
+          <AppSidebar variant="sidebar" /> 
+        <SidebarInset className="relative overflow-visible"> 
+            <Header
+            photo={photo}
+            shortName={shortName}
+            selectedFolder={selectedFolder}
+            setSelectedFolder={setSelectedFolder}
+            foldersList={foldersQuery?.data?.folders}
+            />
+            <div className="flex flex-1 flex-col">
+            <div className="@container/main flex flex-1 flex-col gap-2">
+                <div className=" sm:flex p-4 mt-4 flex-row justify-center ">
+                    <p className="text-muted-foreground text-2xl tracking-tight">
+                    {`Hey ${fullName}, do you want to create new note?`}
+                    </p>
+                {/* <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+                Create new
+                </h3> */}
+                </div>
+                <div className="px-4 grid w-full gap-x-6 md:grid-cols-2">
+                <Card className=" hover:shadow-lg transition-shadow duration-200 bg-card border-border pb-0 w-xs justify-self-end">
+                    <CardHeader>
+                    <CardTitle>
+                        <Youtube fill="oklch(63.7% 0.237 25.331)" />
+                    </CardTitle>
+                    <CardDescription>
+                        For youtube videos (max 2 hours)
+                    </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col h-full border-t py-3 cursor-pointer">
+                    <p className="flex justify-between items-center text-link hover:underline font-medium group transition-colors duration-200">
+                        Youtube
+                        <CreateYoutubeNote />
+                    </p>
+                    </CardContent>
+                </Card>
+                <Card className="hover:shadow-lg transition-shadow duration-200 bg-card border-border pb-0 w-xs justify-self-start">
+                    <CardHeader>
+                    <CardTitle>
+                        <FolderArchive fill="oklch(94.5% 0.129 101.54)"/>
+                    </CardTitle>
+                    <CardDescription>
+                        For audio, text, recording, images
+                    </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex flex-col h-full border-t py-3 cursor-pointer">
+                    <p className="flex justify-between items-center text-link hover:underline font-medium group transition-colors duration-200">
+                        Multi note
+                        <CreateMultiNote />
+                    </p>
+                    </CardContent>
+                </Card>
+                </div>
+                <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
+                        {/* <Search className="text-muted-foreground absolute top-1/2 h-4 w-4 -translate-y-1/2 transform" /> */}
+                        {/* <Input
+                            placeholder="Search notes..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10 max-w-2xl"
+                        /> */}
+                            <AIPromptInput />
 
-              {/* <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-               Create new
-              </h3> */}
-            </div>
-            <div className="px-4 grid w-full gap-x-6 md:grid-cols-2">
-              <Card className=" hover:shadow-lg transition-shadow duration-200 bg-card border-border pb-0 w-xs justify-self-end">
-                <CardHeader>
-                  <CardTitle>
-                    <Youtube fill="oklch(63.7% 0.237 25.331)" />
-                  </CardTitle>
-                  <CardDescription>
-                    For youtube videos (max 2 hours)
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col h-full border-t py-3 cursor-pointer">
-                  <p className="flex justify-between items-center text-link hover:underline font-medium group transition-colors duration-200">
-                    Youtube
-                    <CreateYoutubeNote />
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="hover:shadow-lg transition-shadow duration-200 bg-card border-border pb-0 w-xs justify-self-start">
-                <CardHeader>
-                  <CardTitle>
-                    <FolderArchive fill="oklch(94.5% 0.129 101.54)"/>
-                  </CardTitle>
-                  <CardDescription>
-                    For audio, text, recording, images
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col h-full border-t py-3 cursor-pointer">
-                  <p className="flex justify-between items-center text-link hover:underline font-medium group transition-colors duration-200">
-                    Multi note
-                    <CreateMultiNote />
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
-                    {/* <Search className="text-muted-foreground absolute top-1/2 h-4 w-4 -translate-y-1/2 transform" /> */}
-                    <Input
-                        placeholder="Search notes..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 max-w-2xl"
-                    />
-
-            </div>
-             {/* <img src="./adaptive-icon.png" />  */}
-            <div className="hidden sm:flex justify-between p-4 mt-4">
-              <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-                All notes
-              </h3>
-              <ButtonGroup
-                orientation="horizontal"
-                aria-label="Media controls"
-                className="h-fit"
-              >
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setViewMode("grid")}
+                </div>
+                {/* <img src="./adaptive-icon.png" />  */}
+                <div className="hidden sm:flex justify-between p-4 mt-4">
+                <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+                    All notes
+                </h3>
+                <ButtonGroup
+                    orientation="horizontal"
+                    aria-label="Media controls"
+                    className="h-fit"
                 >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setViewMode("list")}
+                    <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setViewMode("grid")}
+                    >
+                    <Grid3X3 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setViewMode("list")}
+                    >
+                    <List className="h-4 w-4" />
+                    </Button>
+                </ButtonGroup>
+
+                </div>
+
+                <div
+                className={
+                    viewMode === "grid"
+                    ? "xs:grid-cols-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4"
+                    : "grid-cols-1"
+                    }
                 >
-                  <List className="h-4 w-4" />
-                </Button>
-              </ButtonGroup>
-
+                <SortableGrid
+                    data={notesQuery?.data?.data?.notes}
+                    view={viewMode}
+                    setView={setViewMode}
+                />
+                </div>
             </div>
-
-            <div
-              className={
-                viewMode === "grid"
-                  ? "xs:grid-cols-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4"
-                  : "grid-cols-1"
-              }
-            >
-              <SortableGrid
-                data={notesQuery?.data?.data?.notes}
-                view={viewMode}
-                setView={setViewMode}
-              />
             </div>
-          </div>
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+        </SidebarInset>
+        </SidebarProvider>
+        </>
   );
 };
 

@@ -3,6 +3,9 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 
 import { cn } from "@/lib/utils"
 
+// Add the export for the Portal component (optional: add it to your existing exports)
+const TooltipPortal = TooltipPrimitive.Portal
+
 function TooltipProvider({
   delayDuration = 0,
   ...props
@@ -56,4 +59,4 @@ function TooltipContent({
   )
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, TooltipPortal }
