@@ -20,7 +20,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 // --- Lucide Icon Imports ---
 import { 
   File, Image, X, Paperclip, CornerDownLeft, Mic, 
-  StopCircle, UploadCloud, Download, ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2
+  StopCircle, UploadCloud, Download, ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2,
+  ChevronUp,
+  ArrowUp
 } from 'lucide-react';
 
 // --- AudioPreview Sub-Component (for completed recordings) ---
@@ -85,12 +87,19 @@ export function AIPromptInput({ portalContainer }) {
   const [audioDevices, setAudioDevices] = useState([]);
   const [selectedMicId, setSelectedMicId] = useState('default');
   const [isFetchingMics, setIsFetchingMics] = useState(false);
+ const [elapsedTime, setElapsedTime] = useState(0);
+
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const mediaStreamRef = useRef(null);
   const hasFetchedMics = useRef(false);
   const isDeletingRef = useRef(false); // NEW: The flag to signal deletion intent
+ const timerIntervalRef = useRef(null);
+  const startTimeRef = useRef(0);
+ // --- NEW: Robust Timer Refs (Accumulator Pattern) ---
+  const lastStartTimeRef = useRef(0);
+  const previouslyElapsedTimeRef = useRef(0);
 
   const getAudioDevices = useCallback(async (requestPermission = false) => {
     setIsFetchingMics(true);
@@ -111,6 +120,16 @@ export function AIPromptInput({ portalContainer }) {
     }
   }, []);
 
+   const formatTime = (ms) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    const milliseconds = Math.floor((ms % 1000) / 100).toString();
+    return `${minutes}:${seconds}.${milliseconds}`;
+  };
+
+
+
   const startRecording = async () => {
     try {
       const constraints = { audio: { deviceId: selectedMicId !== 'default' ? { exact: selectedMicId } : undefined } };
@@ -123,6 +142,12 @@ export function AIPromptInput({ portalContainer }) {
       recorder.ondataavailable = (event) => { if (event.data.size > 0) audioChunksRef.current.push(event.data); };
       recorder.onstart = () => setRecordingStatus('recording');
         recorder.onstop = () => {
+        clearInterval(timerIntervalRef.current);
+        setElapsedTime(0);
+        previouslyElapsedTimeRef.current = 0;
+        lastStartTimeRef.current = 0;
+
+
         if (isDeletingRef.current) {
           audioChunksRef.current = []; // Ensure chunks are cleared
           isDeletingRef.current = false; // Reset the flag
@@ -139,6 +164,12 @@ export function AIPromptInput({ portalContainer }) {
         mediaStreamRef.current?.getTracks().forEach(track => track.stop());
       };
       recorder.start();
+        // Start timer from scratch
+      previouslyElapsedTimeRef.current = 0;
+      lastStartTimeRef.current = Date.now();
+      timerIntervalRef.current = setInterval(() => {
+        setElapsedTime(previouslyElapsedTimeRef.current + (Date.now() - lastStartTimeRef.current));
+      }, 100);
     } catch (err) { if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') setIsRecorderBlocked(true); }
   };
 
@@ -146,6 +177,8 @@ export function AIPromptInput({ portalContainer }) {
     if (mediaRecorderRef.current?.state === 'recording') {
       mediaRecorderRef.current.pause();
       setRecordingStatus('paused');
+      clearInterval(timerIntervalRef.current);
+      previouslyElapsedTimeRef.current = elapsedTime;
     }
   };
 
@@ -153,6 +186,11 @@ export function AIPromptInput({ portalContainer }) {
     if (mediaRecorderRef.current?.state === 'paused') {
       mediaRecorderRef.current.resume();
       setRecordingStatus('recording');
+     lastStartTimeRef.current = Date.now();
+      timerIntervalRef.current = setInterval(() => {
+        // The new elapsed time is the previously stored time plus the new segment's time
+        setElapsedTime(previouslyElapsedTimeRef.current + (Date.now() - lastStartTimeRef.current));
+      }, 100);
     }
   };
 
@@ -223,14 +261,15 @@ export function AIPromptInput({ portalContainer }) {
 
         <div className="flex justify-between items-center border-t bg-transparent pt-2 px-2 mt-1 min-h-[44px]">
           <div className="flex items-center gap-1">
-            {recordingStatus === 'idle' && (
+            {/* {recordingStatus === 'idle' && ( */}
               <>
                 <Tooltip><TooltipTrigger ><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={open} type="button"><Paperclip className="h-5 w-5" /></Button></TooltipTrigger><TooltipContent container={portalContainer}><p>Attach file</p></TooltipContent></Tooltip>
                 <Tooltip><TooltipTrigger ><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={handleRecordButtonClick} type="button" disabled={isRecorderBlocked}><Mic className="h-5 w-5" /></Button></TooltipTrigger><TooltipContent container={portalContainer}><p>Start recording</p></TooltipContent></Tooltip>
                 <DropdownMenu><Tooltip><TooltipTrigger ><DropdownMenuTrigger ><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full w-7 h-7" disabled={recordingStatus !== 'idle'}><ChevronDown className="h-4 w-4" /></Button></DropdownMenuTrigger></TooltipTrigger><TooltipContent container={portalContainer}><p>Select Mic</p></TooltipContent></Tooltip><DropdownMenuContent container={portalContainer} align="start" className="w-[250px]"><DropdownMenuLabel>Microphone</DropdownMenuLabel><DropdownMenuSeparator />{isFetchingMics && <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" />Fetching...</DropdownMenuItem>}{!isFetchingMics && audioDevices.length > 0 && (<DropdownMenuRadioGroup value={selectedMicId} onValueChange={setSelectedMicId}>{audioDevices.map(mic => <DropdownMenuRadioItem key={mic.deviceId} value={mic.deviceId} className="truncate">{mic.label || `Microphone ${audioDevices.indexOf(mic) + 1}`}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup>)}{!isFetchingMics && audioDevices.length === 0 && <DropdownMenuItem disabled>{isRecorderBlocked ? 'Permission denied' : 'No mics found'}</DropdownMenuItem>}<DropdownMenuSeparator /><DropdownMenuItem onSelect={() => getAudioDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> Refresh List</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
                 {isRecorderBlocked && <p className="text-xs text-red-500 ml-2">Mic access denied.</p>}
+                
               </>
-            )}
+            {/* )} */}
 
             {recordingStatus !== 'idle' && (
               <>
@@ -240,20 +279,21 @@ export function AIPromptInput({ portalContainer }) {
                  {recordingStatus !== 'idle' && (
                 <Tooltip><TooltipTrigger ><Button variant="ghost" size="icon" className="text-red-500 hover:text-red-600 rounded-full" onClick={stopRecording}><StopCircle className="h-6 w-6" /></Button></TooltipTrigger><TooltipContent container={portalContainer}><p>Stop & Save</p></TooltipContent></Tooltip>
             )}
+             <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <p className="text-sm font-mono text-muted-foreground w-[60px]">{formatTime(elapsedTime)}</p>
+                  </div>
+
               </>
             )}
           </div>
 
           <div className="flex-1 flex items-center justify-center gap-2">
-             {recordingStatus === 'recording' && audioStream  && <AudioVisualizer mediaStream={audioStream} isPaused={false}/>}
+             { audioStream  && <AudioVisualizer mediaStream={audioStream} isPaused={recordingStatus !== 'recording'}/>}
           </div>
 
           <div className="flex-shrink-0">
-            {recordingStatus !== 'idle' ? (
-               null
-            ) : (
-                <Button size="icon" disabled={!prompt && files.length === 0} className="rounded-full h-8 w-8 md:h-9 md:w-9"><CornerDownLeft className="h-4 w-4" /></Button>
-            )}
+            <Button size="icon" disabled={!prompt && files.length === 0} className="rounded-full h-8 w-8 md:h-9 md:w-9"><ArrowUp className="h-4 w-4" /></Button>
           </div>
         </div>
         

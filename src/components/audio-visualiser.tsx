@@ -3,6 +3,8 @@ import React, { useEffect, useRef } from 'react';
 export function AudioVisualizer({ mediaStream, isPaused }) {
   const canvasRef = useRef(null);
   const animationFrameIdRef = useRef(null);
+  // This ref will now hold the amplitude values for all bars currently visible on the canvas
+  const waveformHistoryRef = useRef([]);
 
   useEffect(() => {
     if (!mediaStream || !canvasRef.current) return;
@@ -12,7 +14,7 @@ export function AudioVisualizer({ mediaStream, isPaused }) {
     
     const source = audioContext.createMediaStreamSource(mediaStream);
     const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
+    analyser.fftSize = 128;
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
     source.connect(analyser);
@@ -21,52 +23,78 @@ export function AudioVisualizer({ mediaStream, isPaused }) {
     const canvasCtx = canvas.getContext('2d');
     const WIDTH = canvas.width;
     const HEIGHT = canvas.height;
-    const centerX = WIDTH / 2;
-    const centerY = HEIGHT / 2;
+    const centerX = Math.floor(WIDTH / 2);
+    const centerY = Math.floor(HEIGHT / 2);
 
-    // --- NEW: Create a color gradient ---
-    const gradient = canvasCtx.createLinearGradient(0, 0, 0, HEIGHT);
-    gradient.addColorStop(0, 'hsl(222.2 47.4% 11.2%)'); // Primary color (top)
-    gradient.addColorStop(1, 'hsl(215.4 16.3% 46.9%)'); // Muted color (bottom)
+    const barWidth = 2;
+    const barSpacing = 2;
+    const totalBarWidth = barWidth + barSpacing;
+    const numBars = Math.floor(WIDTH / totalBarWidth);
+
+    const primaryColor = 'hsl(222.2 47.4% 11.2%)';
+    const mutedColor = 'hsl(220 8.9% 46.1%)';
+    const playheadColor = 'hsl(0 84.2% 60.2%)';
+
+    // --- NEW: Initialize the history buffer ---
+    // Pre-fill the array with zeros so it's full from the start
+    if (waveformHistoryRef.current.length === 0) {
+      waveformHistoryRef.current = new Array(numBars).fill(0);
+    }
 
     const draw = () => {
       animationFrameIdRef.current = requestAnimationFrame(draw);
       analyser.getByteFrequencyData(dataArray);
       
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        sum += dataArray[i];
+      }
+      const averageAmplitude = sum / bufferLength;
+
+      // --- NEW: Ticker-tape animation logic ---
+      // Remove the oldest value from the left
+      waveformHistoryRef.current.shift();
+      // Add the new, live value to the right
+      waveformHistoryRef.current.push(averageAmplitude);
+
       canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
       
-      const barWidth = 2.5;
-      const spacing = 1.5;
-      const numBars = Math.floor(centerX / (barWidth + spacing));
-
-      // --- NEW: Mirrored drawing logic ---
-      for (let i = 0; i < numBars; i++) {
-        // We use a value from the lower frequencies for a more "bassy" and stable visual
-        const barHeight = (dataArray[i * 2] / 255) * HEIGHT * 0.8;
+      const history = waveformHistoryRef.current;
+      
+      // --- NEW: Draw all bars based on their position relative to the playhead ---
+      for (let i = 0; i < history.length; i++) {
+        const x = i * totalBarWidth;
+        const barHeight = Math.max(2, (history[i] / 128) * HEIGHT * 0.9);
         
-        // Use the gradient for the fill color
-        canvasCtx.fillStyle = gradient;
-
-        const x = i * (barWidth + spacing);
-
-        // Draw the right bar, expanding from the center
-        canvasCtx.fillRect(centerX + x, centerY - barHeight / 2, barWidth, barHeight);
+        // --- Core Coloring Logic ---
+        // If the bar's x position is less than the center, it has "passed"
+        if (x < centerX) {
+          canvasCtx.fillStyle = primaryColor;
+        } else {
+          canvasCtx.fillStyle = mutedColor;
+        }
         
-        // Draw the left (mirrored) bar
-        canvasCtx.fillRect(centerX - x - barWidth, centerY - barHeight / 2, barWidth, barHeight);
+        canvasCtx.fillRect(x, centerY - barHeight / 2, barWidth, barHeight);
       }
+      
+      // Draw the central playhead last, so it's on top
+      canvasCtx.lineWidth = 2;
+      canvasCtx.strokeStyle = playheadColor;
+      canvasCtx.beginPath();
+      canvasCtx.moveTo(centerX, 0);
+      canvasCtx.lineTo(centerX, HEIGHT);
+      canvasCtx.stroke();
     };
 
     if (isPaused) {
       cancelAnimationFrame(animationFrameIdRef.current);
-      // Clear canvas to show it has stopped
-      canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
     } else {
       draw();
     }
 
     return () => {
       cancelAnimationFrame(animationFrameIdRef.current);
+      // Don't reset history on stop, just on unmount/stream change
       source.disconnect();
       analyser.disconnect();
       if (audioContext.state !== 'closed') {
@@ -75,5 +103,12 @@ export function AudioVisualizer({ mediaStream, isPaused }) {
     };
   }, [mediaStream, isPaused]);
 
-  return <canvas ref={canvasRef} width="150" height="32" className="transition-opacity duration-300" />;
+  // Reset the history when the component unmounts
+  useEffect(() => {
+    return () => {
+      waveformHistoryRef.current = [];
+    };
+  }, []);
+
+  return <canvas ref= {canvasRef} width="200" height="40" className="transition-opacity duration-300" />;
 };
