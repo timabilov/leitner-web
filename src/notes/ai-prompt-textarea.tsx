@@ -22,8 +22,15 @@ import {
   File, Image, X, Paperclip, CornerDownLeft, Mic, 
   StopCircle, UploadCloud, Download, ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2,
   ChevronUp,
-  ArrowUp
+  ArrowUp,
+  FileText
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Zoom from 'react-medium-image-zoom'
+import 'react-medium-image-zoom/dist/styles.css'
+import { cn } from "@/lib/utils";
+
 
 // --- AudioPreview Sub-Component (for completed recordings) ---
 const AudioPreview = ({ file, onRemove, portalContainer }) => {
@@ -88,6 +95,7 @@ export function AIPromptInput({ portalContainer }) {
   const [selectedMicId, setSelectedMicId] = useState('default');
   const [isFetchingMics, setIsFetchingMics] = useState(false);
  const [elapsedTime, setElapsedTime] = useState(0);
+  const [previewFile, setPreviewFile] = useState<File | null>(null); // For PDF preview dialog
 
 
   const mediaRecorderRef = useRef(null);
@@ -248,10 +256,18 @@ export function AIPromptInput({ portalContainer }) {
                 return <AudioPreview key={file.name + index} file={file} onRemove={removeFile(file)} portalContainer={portalContainer} />;
               }
               return (
-                <div key={file.name + index} className="group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted">
-                  <div className="text-muted-foreground">{file.type.startsWith('image/') ? <Image className="h-4 w-4" /> : <File className="h-4 w-4" />}</div>
+                <div onClick={() => {
+                  if (file.type === "application/pdf") setPreviewFile(file)
+                }} key={file.name + index} className={(file.type === "application/pdf" ? " cursor-pointer ": " ") +  "group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"}>
+                  <div className="text-muted-foreground">{file.type.startsWith('image/') ? <Image className="h-4 w-4" /> : <File className="h-4 w-4"/>}</div>
                   <span className="max-w-[120px] truncate font-medium">{file.name}</span>
-                  {file.type.startsWith('image/') && <img src={file.preview} alt={file.name} className="h-8 w-8 rounded object-cover border ml-1" />}
+                  {file.type.startsWith('image/') && (
+                     <Zoom>
+                      <img src={file.preview} alt={file.name} className="h-8 w-8 rounded object-cover border ml-1" />
+                    </Zoom>
+
+        
+                  )}
                   <Button variant="ghost" size="icon" className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={removeFile(file)}><X className="h-3 w-3" /></Button>
                 </div>
               );
@@ -265,7 +281,7 @@ export function AIPromptInput({ portalContainer }) {
               <>
                 <Tooltip><TooltipTrigger ><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={open} type="button"><Paperclip className="h-5 w-5" /></Button></TooltipTrigger><TooltipContent container={portalContainer}><p>Attach file</p></TooltipContent></Tooltip>
                 <Tooltip><TooltipTrigger ><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={handleRecordButtonClick} type="button" disabled={isRecorderBlocked}><Mic className="h-5 w-5" /></Button></TooltipTrigger><TooltipContent container={portalContainer}><p>Start recording</p></TooltipContent></Tooltip>
-                <DropdownMenu><Tooltip><TooltipTrigger ><DropdownMenuTrigger ><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full w-7 h-7" disabled={recordingStatus !== 'idle'}><ChevronDown className="h-4 w-4" /></Button></DropdownMenuTrigger></TooltipTrigger><TooltipContent container={portalContainer}><p>Select Mic</p></TooltipContent></Tooltip><DropdownMenuContent container={portalContainer} align="start" className="w-[250px]"><DropdownMenuLabel>Microphone</DropdownMenuLabel><DropdownMenuSeparator />{isFetchingMics && <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" />Fetching...</DropdownMenuItem>}{!isFetchingMics && audioDevices.length > 0 && (<DropdownMenuRadioGroup value={selectedMicId} onValueChange={setSelectedMicId}>{audioDevices.map(mic => <DropdownMenuRadioItem key={mic.deviceId} value={mic.deviceId} className="truncate">{mic.label || `Microphone ${audioDevices.indexOf(mic) + 1}`}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup>)}{!isFetchingMics && audioDevices.length === 0 && <DropdownMenuItem disabled>{isRecorderBlocked ? 'Permission denied' : 'No mics found'}</DropdownMenuItem>}<DropdownMenuSeparator /><DropdownMenuItem onSelect={() => getAudioDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> Refresh List</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+                <DropdownMenu><Tooltip><TooltipTrigger ><DropdownMenuTrigger ><Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full w-8 h-8" disabled={recordingStatus !== 'idle'}><ChevronDown className="h-4 w-4" /></Button></DropdownMenuTrigger></TooltipTrigger><TooltipContent container={portalContainer}><p>Select Mic</p></TooltipContent></Tooltip><DropdownMenuContent container={portalContainer} align="start" className="w-[350px]"><DropdownMenuLabel>Microphone</DropdownMenuLabel><DropdownMenuSeparator />{isFetchingMics && <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" />Fetching...</DropdownMenuItem>}{!isFetchingMics && audioDevices.length > 0 && (<DropdownMenuRadioGroup value={selectedMicId} onValueChange={setSelectedMicId}>{audioDevices.map(mic => <DropdownMenuRadioItem key={mic.deviceId} value={mic.deviceId} className="truncate">{mic.label || `Microphone ${audioDevices.indexOf(mic) + 1}`}</DropdownMenuRadioItem>)}</DropdownMenuRadioGroup>)}{!isFetchingMics && audioDevices.length === 0 && <DropdownMenuItem disabled>{isRecorderBlocked ? 'Permission denied' : 'No mics found'}</DropdownMenuItem>}<DropdownMenuSeparator /><DropdownMenuItem onSelect={() => getAudioDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> Refresh List</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
                 {isRecorderBlocked && <p className="text-xs text-red-500 ml-2">Mic access denied.</p>}
                 
               </>
@@ -299,6 +315,97 @@ export function AIPromptInput({ portalContainer }) {
         
         {isDragActive && (<div className="absolute inset-0 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center z-10 border-2 border-primary border-dashed"><div className="flex flex-col items-center gap-2 text-primary font-medium"><div className="p-4 rounded-full bg-primary/10"><UploadCloud className="h-8 w-8" /></div><p>Drop files to attach</p></div></div>)}
       </div>
+       <FilePreviewDialog
+        file={previewFile}
+        onClose={() => setPreviewFile(null)}
+      />
+
     </div>
   );
 }
+
+
+const FilePreview = ({ file, onRemove, onPreview }: { file: File; onRemove: () => void; onPreview: () => void; }) => {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const isPdf = file.type === "application/pdf";
+  const isImage = file.type.startsWith("image/");
+
+  useEffect(() => {
+    if (isImage || file.type.startsWith("audio/")) {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [file, isImage]);
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const renderPreview = () => {
+    if (isImage && previewUrl) {
+      return ( 
+        <Zoom>
+          <img src={previewUrl} alt={file.name} className="w-16 h-16 object-cover rounded-md" />
+        </Zoom>
+      );
+    }
+    if (file.type.startsWith("audio/") && previewUrl) {
+      return <audio src={previewUrl} controls className="h-10 w-full max-w-xs" />;
+    }
+    const Icon = isPdf ? FileText : File;
+    return (
+      <div 
+        onClick={isPdf ? onPreview : undefined}
+        className={cn("w-16 h-16 flex items-center justify-center bg-secondary rounded-md", isPdf && "cursor-pointer hover:bg-secondary/80")}
+      >
+        <Icon className="w-8 h-8 text-secondary-foreground" />
+      </div>
+    );
+  };
+
+  return (
+    <li className="flex items-center justify-between p-2 bg-muted rounded-lg gap-4">
+      <div className="shrink-0">{renderPreview()}</div>
+      <div className="flex-grow min-w-0">
+        <p className="text-sm font-medium truncate">{file.name}</p>
+        <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+      </div>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" onClick={onRemove} className="h-7 w-7 shrink-0">
+            <X className="h-4 w-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent><p>Remove file</p></TooltipContent>
+      </Tooltip>
+    </li>
+  );
+};
+
+const FilePreviewDialog = ({ file, onClose }: { file: File | null; onClose: () => void; }) => {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (file && file.type === "application/pdf") {
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [file]);
+
+  if (!file || !previewUrl || file.type !== "application/pdf") return null;
+
+  return (
+    <Dialog open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-6xl w-6xl h-[90vh] flex flex-col">
+        <DialogHeader><DialogTitle className="truncate">{file.name}</DialogTitle></DialogHeader>
+        <div className="py-4 flex-1 h-0">
+          <embed src={previewUrl} type="application/pdf" className="w-full h-full z-50" />
+         </div>
+       </DialogContent>
+        </Dialog>
+  );
+};
