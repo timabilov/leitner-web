@@ -19,16 +19,16 @@ function App() {
 
   return (    
      <QueryClientProvider client={queryClient}>
-      <GoogleOAuthProvider clientId="241687352985-umb35edcp1011r61tnvekch5suuu6ldk.apps.googleusercontent.com">
         <TooltipProvider>
+      <GoogleOAuthProvider clientId="241687352985-umb35edcp1011r61tnvekch5suuu6ldk.apps.googleusercontent.com">
             <Routes>
                <Route path="/" Component={Login}/>
                <Route path="/notes" Component={Notes}/> 
             </Routes>
             <Login />
          <Toaster />
-      </TooltipProvider>
       </GoogleOAuthProvider>
+      </TooltipProvider>
      </QueryClientProvider>     
 
 

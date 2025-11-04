@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { axiosInstance, uploadToCFFromPath } from "@/services/auth";
+import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL, ISO_TO_LANGUAGE } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";

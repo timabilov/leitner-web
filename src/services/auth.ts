@@ -2,7 +2,8 @@ import axios from 'axios';
 import createAuthRefreshInterceptor from 'axios-auth-refresh';
 import { API_BASE_URL } from './config';
 import { useUserStore } from '@/store/userStore';
-
+import JSZip from 'jszip';
+import { toast } from 'sonner'; // Or your preferred toast library
 export const axiosInstance = axios.create({
   // set default headers here
 });
@@ -62,113 +63,180 @@ export const registerPushToken = async (token: string) => {
     token,
     'platform': 'web'
   });
-}
+} 
 
-export const wait = ms => new Promise(r => setTimeout(r, ms));
+/*
+ * [WEB VERSION] Uploads a File object to a pre-signed PUT URL.
+ * Replaces `uploadToCFFromPath`.
+ * 
+ * @param {string} note_id - The ID of the note for logging/context.
+ * @param {string} putUrl - The pre-signed URL to upload the file to.
+ * @param {File} file - The File object from a browser input.
+ * @param {string} [defaultMimeType='application/octet-stream'] - A fallback MIME type.
+ * @returns {Promise<Response>} The response from the fetch call.
+ */
+export const uploadFileToCF = async (
+  note_id,
+  putUrl,
+  fileToUpload, // Changed from filePath to a more descriptive name
+  fileName,
+  file
+) => {
+  if (!fileToUpload) {
+    throw new Error('A File or Blob object is required for upload.');
+  }
 
-export const retryOperation = async (operation, delay, retries) =>{
-  return await new Promise((resolve, reject) => {
-    return operation()
-      .then(resolve)
-      .catch(reason => {
-        console.log(
-          'Task failed retries left: ',
-          retries,
-          ' reason: ' + reason,
-        );
-        if (retries > 0) {
-          return wait(delay)
-            .then(retryOperation.bind(null, operation, delay, retries - 1))
-            .then(resolve)
-            .catch(reject);
-        }
-        return reject(reason);
-      });
-  });
-}
+  // Use the Blob's size property. This works for both Blobs and Files.
+  const size = fileToUpload.size;
+  const mimeType = fileToUpload.type || 'application/zip'; // Get type from blob, fallback to zip
+
+  try {
+    const responseFile = await axiosInstance.get(fileToUpload, {
+      // --- THIS IS THE CRITICAL FIX ---
+      // Tell Axios to expect binary data, not JSON.
+      responseType: 'blob',
+    });
+
+    // With responseType: 'blob', response.data IS the Blob object itself.
+
+    const response = await retryOperation(
+      async () => {
+        // --- THIS IS THE CORE FIX ---
+        // Axios's second argument is the request body. We pass the Blob/File directly.
+        // The third argument is the config object.
+        const uploadResponse = await axiosInstance.put(putUrl, responseFile.data, {
+          headers: {
+            // This is critical. We explicitly set the Content-Type.
+            // This header object will override any default headers (like Authorization)
+            // from your global axiosInstance, which is required for pre-signed URLs.
+            'Content-Type': mimeType,
+          },
+        });
+
+        // Axios throws an error on non-2xx status codes automatically,
+        // which works perfectly with our retryOperation.
+        return uploadResponse;
+      },
+      1500, // 1.5 second delay
+      3     // 3 retries
+    );
+
+    console.log(
+      `File "${fileName}" uploaded successfully for note ${note_id}!`,
+      `Size: ${(size / 1024).toFixed(2)} KB`
+    );
+
+    return response;
+  } catch (error) {
+    const errorMessage = error.response ? `Status ${error.response.status}` : error.message;
+    console.error(
+      `Final error after retries for file "${fileName}" on note ${note_id}:`,
+      errorMessage,
+      error
+    );
+    throw error;
+  }
+};
+
+
   
 
+  /**
+ * Creates a zip file in the browser's memory from text and file attachments.
+ * 
+ * @param {File[]} attachments - An array of File objects.
+ * @param {string} noteText - The text content of the note.
+ * @param {object} sentryContext - Optional context for Sentry error reporting.
+ * @returns {Promise<Blob | null>} A promise that resolves with the zip file as a Blob, or null on failure.
+ */
+export const createZip = async (attachments, noteText, sentryContext = {}) => {
+  // 1. Check for content (same as before)
+  if (attachments.length === 0 && !noteText?.trim()) {
+    toast.error('No Content', {
+      description: 'Please add text or attachments to create a note.',
+    });
+    return null;
+  }
 
-export const uploadToCFFromPath = async (
-    note_id: string,
-    imagePutUrl: string, // Changed `any` to `string` for clarity
-    defaultMimeType: string, // Changed `any` to `string`
-    imagePath: string, // Changed `any` to `string`
-  ) => {
-    // Normalize file path (Expo usually handles file:// correctly, but we ensure compatibility)
-    const platformPath = imagePath;
-    console.log('Platform from to upload:', platformPath);
-    // Get file metadata (size)
-    let size: number | undefined;
-    try {
-      const fileInfo = imagePath
-      if (!fileInfo) {
-        throw new Error('File does not exist or is a directory');
-      }
-      size = fileInfo.size;
-    } catch (err) {
-      console.warn('Error getting file info:', err);
-      // Sentry.captureException(err, {
-      //   extra: {
-      //     image_path: platformPath,
-      //     note_id: note_id
-      //   },
-      // });
-      console.warn('File probably does not exist:', platformPath);
-      throw err;
+  // 2. Initialize JSZip
+  const zip = new JSZip();
+
+  try {
+    // 3. Handle the note text
+    // Instead of writing to a file system, we create a Blob in memory.
+    if (noteText?.trim()) {
+      const textBlob = new Blob([noteText.trim()], { type: 'text/plain' });
+      zip.file('note.txt', textBlob);
     }
-  
-    // Determine MIME type
-    const mimeType = mime.default.getType(platformPath) || defaultMimeType;
-  
-    // Perform the upload with retry logic
-    try {
-      const response = await retryOperation(
-        async () => {
-          // Read file as a blob-like structure (Expo file URI can be used directly with fetch)
-          const response = await fetch(imagePutUrl, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': mimeType,
-            },
-            body: {
-              uri: imagePath, // Expo fetch handles file:// URIs correctly
-              type: mimeType,
-              name: imagePath.split('/').pop() || 'file', // Extract filename
-            },
-          });
-  
-          if (!response.ok) {
-            throw new Error(
-              `Upload failed with status ${response.status}: ${await response.text()}`,
-            );
-          }
-  
-          return response;
-        },
-        1500,
-        3,
-      );
-  
-      // Handle success
-      console.log(
-        'File uploaded successfully!',
-        note_id,
-        platformPath,
-        ((size || 0) / 1024).toFixed(2) + ' KB',
-      );
-      // Optionally invalidate queries or update cache
-      // queryClient.invalidateQueries(['products-list']);
-  
-      return response;
-    } catch (error: any) {
-      console.warn('Error on file upload:', error, platformPath);
-      // Sentry.captureException(error, {
-      //   extra: {
-      //     image_path: platformPath,
-      //     note_id: note_id,
-      //   },
-      // });
+
+    // 4. Handle attachments
+    // We assume `attachments` is an array of File objects.
+    // The File object itself contains the data and name.
+    attachments.forEach((file) => {
+      // The first argument is the filename, the second is the file data.
+      zip.file(file.name, file);
+    });
+
+    // 5. Generate the zip file as a Blob
+    // This happens asynchronously in memory.
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+     // Create the temporary, in-memory path (Object URL) for the Blob
+    // const zipPath = URL.createObjectURL(zipBlob);
+
+    const zipFileName = `my-archive_${Date.now()}.zip`;
+      const zipFile = new File([zipBlob], zipFileName, {
+        type: "application/zip"
+      });
+      console.log("Created File object with name:", zipFile);
+
+      // Create a temporary URL for the download link
+      const downloadUrl = URL.createObjectURL(zipFile);
+
+
+  return { zipBlob, zipPath: downloadUrl, zipFileName,  zipFile };
+
+  } catch (error) {
+    console.error('Error creating zip:', error);
+    toast.error('Error', {
+      description: 'Failed to create the zip file.',
+    });
+    // Sentry reporting remains the same
+    // Sentry.captureException(error, { extra: sentryContext });
+    return null;
+  }
+};
+
+
+
+/* A simple promise-based wait function.
+ * @param {number} delay - The time to wait in milliseconds.
+ * @returns {Promise<void>}
+ */
+const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+
+
+/*
+ * Retries a promise-based operation a specified number of times with a delay.
+ * @param {() => Promise<any>} operation - The async function to run.
+ * @param {number} delay - The delay between retries in milliseconds.
+ * @param {number} retries - The number of remaining retries.
+ * @returns {Promise<any>}
+ */
+export const retryOperation = async (operation, delay, retries) => {
+  try {
+    const result = await operation();
+    return result;
+  } catch (error) {
+    // Axios provides more detailed error messages, which is helpful here
+    const errorMessage = error.response ? `Status ${error.response.status}: ${error.response.data}` : error.message;
+    console.log(
+      `Task failed. Retries left: ${retries}. Reason: ${errorMessage}`
+    );
+    if (retries > 0) {
+      await wait(delay);
+      return retryOperation(operation, delay, retries - 1);
+    } else {
       throw error;
     }
-  };
+  }
+};

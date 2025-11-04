@@ -30,11 +30,17 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
 import { cn } from "@/lib/utils";
+import { axiosInstance, createZip, uploadFileToCF } from '@/services/auth';
+import { API_BASE_URL } from '@/services/config';
+import { useMutation } from '@tanstack/react-query';
+import { useUserStore } from '@/store/userStore';
+import { toast } from 'sonner';
 
 
 // --- AudioPreview Sub-Component (for completed recordings) ---
 const AudioPreview = ({ file, onRemove, portalContainer }) => {
   const [isPlaying, setIsPlaying] = useState(false);
+
   const audioRef = useRef(null);
 
   const togglePlayPause = (e) => {
@@ -86,6 +92,10 @@ const AudioPreview = ({ file, onRemove, portalContainer }) => {
 
 // --- Main AIPromptInput Component ---
 export function AIPromptInput({ portalContainer }) {
+    const { companyId, userId, email, isLoggedIn, photo, fullName } =
+      useUserStore();
+  const selectedFolder = useUserStore(store => store.selectedFolder);
+
   const [prompt, setPrompt] = useState('');
   const [files, setFiles] = useState([]);
   const [recordingStatus, setRecordingStatus] = useState('idle'); // 'idle', 'recording', 'paused'
@@ -94,9 +104,12 @@ export function AIPromptInput({ portalContainer }) {
   const [audioDevices, setAudioDevices] = useState([]);
   const [selectedMicId, setSelectedMicId] = useState('default');
   const [isFetchingMics, setIsFetchingMics] = useState(false);
- const [elapsedTime, setElapsedTime] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [previewFile, setPreviewFile] = useState<File | null>(null); // For PDF preview dialog
-
+  const [zipPath, setZipPath] = useState<string | null>(null);
+  const [noteId, setNoteId] = useState<string | null>(null);
+  const [zipBlob, setZipBlob] = useState<string>();
+  const [zipData, setZipData] = useState<any>();
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -243,6 +256,114 @@ export function AIPromptInput({ portalContainer }) {
 
   const { getRootProps, getInputProps, isDragActive, open } = useDropzone({ onDrop, noClick: true, noKeyboard: true, accept: { 'image/*': [], 'application/pdf': [], 'audio/*': [] } });
 
+
+  const saveNote = async () => {
+     const zipData  = await createZip(files, prompt);
+     console.log("zipdata is", zipData);
+     setZipData(zipData)
+    if (zipData?.zipPath) {
+      setZipPath(zipData?.zipPath);
+      setZipBlob(zipData.zipBlob)
+       draftNoteMutation.mutate({
+        note_type: 'multi',
+        name: 'New Recording',
+        file_name: zipData.zipFileName,
+        transcript: 'Not transcribed yet',
+        language: 'en',
+        youtube_url: null,
+        folder_id: selectedFolder?.id,
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (zipData && noteId) generateUploadLink.mutate({zipPath: zipPath, noteId, file_name: zipData.zipFileName })
+  }, [zipData, noteId]);
+
+
+  const draftNoteMutation = useMutation({
+    mutationFn: (newNote: any) => {
+      return axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/create`, newNote);
+    },
+    onSuccess: (response) => {
+      console.log('Draft Note Success:', response.data);
+      setNoteId(response?.data.id);
+      console.log(response?.data.id)
+      // generateUploadLink.mutate({zipPath: zipPath, noteId: response?.data.id})
+    },
+    onError: (error: any) => {
+      console.error('Draft Note Error:', error.response?.data);
+    }
+  });
+
+
+  const generateUploadLink = useMutation({
+    mutationFn: ({file_name, noteId }) => {
+      console.log("file_name is", file_name, noteId)
+      return axiosInstance.put(API_BASE_URL + `/company/${companyId}/notes/${noteId}/generateFileUploadLink`, {
+        file_name,
+        // file_type: 'application/zip',
+      });
+    },
+    onSuccess: (response) => {
+      const uploadUrl = response.data.upload_url;
+      console.log('Upload URL generated:', uploadUrl);
+      try {
+        console.log("----")
+        uploadFileToCF(noteId, uploadUrl, zipPath, zipData.zipFile?.name, zipData.zipFile ).then(() => {
+          console.log('Upload to CF completed');
+          markUploadAsFinished.mutate(noteId);
+          
+        }).catch(error => {
+          // handleFailedGenerateUploadLink(uploadUrl);
+          console.log(error)
+        });
+      } catch (error) {
+          console.log(error)
+      }
+    },
+    onError: (error) => {
+      console.log('Generate upload link error:', error.response?.data);
+      //  Sentry.captureException("Failed while uploadToCFFromPath ", {
+      //   extra: {  noteId, materialZipUri, error },
+      // })
+    },
+  });
+
+
+const markUploadAsFinished = useMutation({
+    mutationFn: (noteId: string) => {
+      return axiosInstance.put(API_BASE_URL + `/company/${companyId}/notes/${noteId}/setAsUploaded`, {});
+    },
+    onSuccess: () => {
+      console.log('Note marked as finished!');
+      toast.success("Note has been created");
+    },
+    onError: (error) => {
+      console.log('Mark upload as finished error:', error.response?.data);
+    //   Sentry.captureException(error,
+    //     {
+    //       extra: {
+    //         noteId,
+    //         companyId,
+    //         materialZipUri,
+    //       },
+    //     }
+    //   );
+      console.log("Sorry, couldn't start processing your note. Please try again by creating new one.")
+    //   queryClient.invalidateQueries(['notes'])
+    //   queryClient.invalidateQueries(['profile'])
+    //   setTimeout(() => {
+    //     router.dismissAll();
+    //   }, 1000);
+      // noteLogger.error(noteId, `Error marking upload as finished: ${error.response?.data}`)
+    },
+  });
+
+
+
+
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div {...getRootProps()} className={`relative rounded-xl border bg-background p-2 transition-all ${recordingStatus !== 'idle' ? 'border-primary ring-2 ring-primary/20' : 'border-input focus-within:ring-2 focus-within:ring-ring focus-within:border-primary'}`}>
@@ -309,7 +430,7 @@ export function AIPromptInput({ portalContainer }) {
           </div>
 
           <div className="flex-shrink-0">
-            <Button size="icon" disabled={!prompt && files.length === 0} className="rounded-full h-8 w-8 md:h-9 md:w-9"><ArrowUp className="h-4 w-4" /></Button>
+            <Button onClick={() => saveNote()} size="icon" /*disabled={!prompt && files.length === 0}*/ className="rounded-full h-8 w-8 md:h-9 md:w-9"><ArrowUp className="h-4 w-4" /></Button>
           </div>
         </div>
         
