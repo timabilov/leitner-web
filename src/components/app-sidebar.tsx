@@ -1,19 +1,17 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarHeader,
-  SidebarGroupLabel,
   SidebarGroupContent,
   SidebarMenuButton,
   SidebarMenu,
-  SidebarMenuItem
+  SidebarMenuItem,
+  SidebarFooter
 } from "@/components/ui/sidebar"
-import { IconInnerShadowBottom } from "@tabler/icons-react"
-import { Calendar, Home, Inbox, Search, FolderOpen } from "lucide-react"
+import { Calendar, Home, Inbox, FolderOpen } from "lucide-react"
 import { Link } from "react-router-dom"
-import img from './adaptive-icon.png';
+import CreateFolder from "./create-folder"
 
 
 export function AppSidebar({ ...props }) {
@@ -65,7 +63,7 @@ const items = [
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
+              <SidebarMenuButton className="cursor-pointer inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-4 py-2 has-[>svg]:px-3 text-sidebar-foreground hover:bg-sidebar-accent w-full justify-start" tooltip={item.title}>
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>
               </SidebarMenuButton>
@@ -77,6 +75,9 @@ const items = [
         {/* <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
+      <SidebarFooter>
+         <CreateFolder />
+      </SidebarFooter>
     </Sidebar>
   )
 }

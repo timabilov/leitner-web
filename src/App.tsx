@@ -1,20 +1,20 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import { Button } from "@/components/ui/button"
 import Notes from './notes'
 import Login from './login'
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Route, Routes } from 'react-router'
 import { Toaster } from 'sonner'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './components/ui/tooltip'
+import { TooltipProvider } from './components/ui/tooltip'
+import NoteDetail from './note-detail'
+import { useUserStore } from './store/userStore'
 
 const queryClient = new QueryClient();
 
 
 function App() {
+   const { userId } = useUserStore();
   const [count, setCount] = useState(0)
 
   return (    
@@ -22,10 +22,20 @@ function App() {
         <TooltipProvider>
       <GoogleOAuthProvider clientId="241687352985-umb35edcp1011r61tnvekch5suuu6ldk.apps.googleusercontent.com">
             <Routes>
-               <Route path="/" Component={Login}/>
-               <Route path="/notes" Component={Notes}/> 
+               {
+                  userId && (
+                     <>
+                        <Route path="/notes/:noteId" element={<NoteDetail />}/> 
+                        <Route path="/notes" element={<Notes />}/> 
+                     </>
+                  )  } : (
+                     <>
+                        <Route path="/" element={<Login />}/>
+                     </>
+                  )
+             
+              
             </Routes>
-            <Login />
          <Toaster />
       </GoogleOAuthProvider>
       </TooltipProvider>

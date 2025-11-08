@@ -78,39 +78,36 @@ export const registerPushToken = async (token: string) => {
 export const uploadFileToCF = async (
   note_id,
   putUrl,
-  fileToUpload, // Changed from filePath to a more descriptive name
-  fileName,
-  file
+  file, // Changed from filePath to a more descriptive name
 ) => {
-  if (!fileToUpload) {
+  if (!file) {
     throw new Error('A File or Blob object is required for upload.');
   }
 
   // Use the Blob's size property. This works for both Blobs and Files.
-  const size = fileToUpload.size;
-  const mimeType = fileToUpload.type || 'application/zip'; // Get type from blob, fallback to zip
+  const mimeType =  'application/zip'; // Get type from blob, fallback to zip
 
   try {
-    const responseFile = await axiosInstance.get(fileToUpload, {
-      // --- THIS IS THE CRITICAL FIX ---
-      // Tell Axios to expect binary data, not JSON.
-      responseType: 'blob',
-    });
-
-    // With responseType: 'blob', response.data IS the Blob object itself.
+   
 
     const response = await retryOperation(
       async () => {
         // --- THIS IS THE CORE FIX ---
         // Axios's second argument is the request body. We pass the Blob/File directly.
         // The third argument is the config object.
-        const uploadResponse = await axiosInstance.put(putUrl, responseFile.data, {
+        const uploadResponse = await axiosInstance.put(putUrl, file, {
           headers: {
             // This is critical. We explicitly set the Content-Type.
             // This header object will override any default headers (like Authorization)
             // from your global axiosInstance, which is required for pre-signed URLs.
-            'Content-Type': mimeType,
+            'Content-Type': mimeType
           },
+           withCredentials: false,
+          transformRequest: [(data, headers) => {
+            // Remove any default headers that might interfere, especially Content-Encoding
+            delete headers['Content-Encoding'];
+            return data;
+          }],
         });
 
         // Axios throws an error on non-2xx status codes automatically,
@@ -122,15 +119,15 @@ export const uploadFileToCF = async (
     );
 
     console.log(
-      `File "${fileName}" uploaded successfully for note ${note_id}!`,
-      `Size: ${(size / 1024).toFixed(2)} KB`
+      `File uploaded successfully for note ${note_id}!`,
+      //`Size: ${(size / 1024).toFixed(2)} KB`
     );
 
     return response;
   } catch (error) {
     const errorMessage = error.response ? `Status ${error.response.status}` : error.message;
     console.error(
-      `Final error after retries for file "${fileName}" on note ${note_id}:`,
+      `Final error after retries for file "${file}" on note ${note_id}:`,
       errorMessage,
       error
     );
@@ -149,60 +146,55 @@ export const uploadFileToCF = async (
  * @param {object} sentryContext - Optional context for Sentry error reporting.
  * @returns {Promise<Blob | null>} A promise that resolves with the zip file as a Blob, or null on failure.
  */
-export const createZip = async (attachments, noteText, sentryContext = {}) => {
-  // 1. Check for content (same as before)
+export const createZip = async (attachments, noteText) => {
+  // --- Part 1: Create Zip Data (Equivalent to Python's zipfile + BytesIO) ---
+  
   if (attachments.length === 0 && !noteText?.trim()) {
-    toast.error('No Content', {
-      description: 'Please add text or attachments to create a note.',
-    });
-    return null;
+    toast.error('No Content', { description: 'Please add text or attachments.' });
+    return false;
   }
 
-  // 2. Initialize JSZip
   const zip = new JSZip();
-
+  
   try {
-    // 3. Handle the note text
-    // Instead of writing to a file system, we create a Blob in memory.
+    // Add note text if it exists
     if (noteText?.trim()) {
-      const textBlob = new Blob([noteText.trim()], { type: 'text/plain' });
-      zip.file('note.txt', textBlob);
+      zip.file("note.txt", noteText.trim());
     }
 
-    // 4. Handle attachments
-    // We assume `attachments` is an array of File objects.
-    // The File object itself contains the data and name.
+    // Add attachments
     attachments.forEach((file) => {
-      // The first argument is the filename, the second is the file data.
       zip.file(file.name, file);
     });
 
-    // 5. Generate the zip file as a Blob
-    // This happens asynchronously in memory.
+    // Generate the raw binary data of the zip file.
+    // This `zipBlob` is the direct JS equivalent of Python's `zip_content`.
     const zipBlob = await zip.generateAsync({ type: 'blob' });
-     // Create the temporary, in-memory path (Object URL) for the Blob
-    // const zipPath = URL.createObjectURL(zipBlob);
+    console.log(`JS: In-memory zip created. Size: ${zipBlob.size} bytes`);
 
-    const zipFileName = `my-archive_${Date.now()}.zip`;
-      const zipFile = new File([zipBlob], zipFileName, {
-        type: "application/zip"
-      });
-      console.log("Created File object with name:", zipFile);
+    // --- Part 2: Upload the Data (Equivalent to Python's requests.put) ---
 
-      // Create a temporary URL for the download link
-      const downloadUrl = URL.createObjectURL(zipFile);
+    console.log("JS: Preparing to send PUT request to pre-signed URL...");
 
+    // This is the direct JS equivalent of Python's `requests.put(url, data=zip_content, headers=...)`
 
-  return { zipBlob, zipPath: downloadUrl, zipFileName,  zipFile };
+    console.log("JS: Upload successful!");
+    toast.success("Note uploaded successfully!");
+    return zip
 
   } catch (error) {
-    console.error('Error creating zip:', error);
-    toast.error('Error', {
-      description: 'Failed to create the zip file.',
-    });
-    // Sentry reporting remains the same
-    // Sentry.captureException(error, { extra: sentryContext });
-    return null;
+    console.error("JS: An error occurred during the create/upload process:", error);
+    
+    // Provide a more helpful error message for the user
+    if (error.code === "ERR_NETWORK") {
+        toast.error("Upload Failed: CORS Error", {
+            description: "The storage server is not configured to accept uploads from this website. This is a server-side CORS issue.",
+        });
+    } else {
+        toast.error("Upload Failed", { description: error.message });
+    }
+    
+    return false;
   }
 };
 

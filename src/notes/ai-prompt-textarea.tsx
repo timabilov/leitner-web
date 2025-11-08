@@ -259,15 +259,13 @@ export function AIPromptInput({ portalContainer }) {
 
   const saveNote = async () => {
      const zipData  = await createZip(files, prompt);
-     console.log("zipdata is", zipData);
      setZipData(zipData)
-    if (zipData?.zipPath) {
-      setZipPath(zipData?.zipPath);
-      setZipBlob(zipData.zipBlob)
+     const fileName =  `archive-${Date.now()}.zip`;
+    if (zipData) {
        draftNoteMutation.mutate({
         note_type: 'multi',
         name: 'New Recording',
-        file_name: zipData.zipFileName,
+        file_name: `archive-.zip`,
         transcript: 'Not transcribed yet',
         language: 'en',
         youtube_url: null,
@@ -277,7 +275,7 @@ export function AIPromptInput({ portalContainer }) {
   }
 
   useEffect(() => {
-    if (zipData && noteId) generateUploadLink.mutate({zipPath: zipPath, noteId, file_name: zipData.zipFileName })
+    if (zipData && noteId) generateUploadLink.mutate({noteId, file_name: "archive-123.zip" })
   }, [zipData, noteId]);
 
 
@@ -288,7 +286,6 @@ export function AIPromptInput({ portalContainer }) {
     onSuccess: (response) => {
       console.log('Draft Note Success:', response.data);
       setNoteId(response?.data.id);
-      console.log(response?.data.id)
       // generateUploadLink.mutate({zipPath: zipPath, noteId: response?.data.id})
     },
     onError: (error: any) => {
@@ -299,7 +296,6 @@ export function AIPromptInput({ portalContainer }) {
 
   const generateUploadLink = useMutation({
     mutationFn: ({file_name, noteId }) => {
-      console.log("file_name is", file_name, noteId)
       return axiosInstance.put(API_BASE_URL + `/company/${companyId}/notes/${noteId}/generateFileUploadLink`, {
         file_name,
         // file_type: 'application/zip',
@@ -309,8 +305,7 @@ export function AIPromptInput({ portalContainer }) {
       const uploadUrl = response.data.upload_url;
       console.log('Upload URL generated:', uploadUrl);
       try {
-        console.log("----")
-        uploadFileToCF(noteId, uploadUrl, zipPath, zipData.zipFile?.name, zipData.zipFile ).then(() => {
+        uploadFileToCF(noteId, uploadUrl, zipData).then(() => {
           console.log('Upload to CF completed');
           markUploadAsFinished.mutate(noteId);
           

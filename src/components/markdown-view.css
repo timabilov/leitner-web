@@ -1,0 +1,157 @@
+/* 
+  This CSS file directly translates your React Native style object.
+  We assume you have CSS variables for your theme colors. If not,
+  you can replace them with hex codes.
+*/
+
+/* This is the equivalent of the 'body' and 'list_item' styles */
+.markdown-content {
+  color: var(--on-surface-color, #333); /* theme.colors.onSurface */
+  font-family: 'Your-Common-Font', sans-serif; /* styles.common.fontFamily */
+  padding: 25px;
+}
+
+/* Equivalent of 'text' style */
+.markdown-content p,
+.markdown-content li {
+  margin-bottom: 25px;
+}
+
+/* Headings */
+.markdown-content h1 {                    /* ms(17) */
+  margin-bottom: 7px;                    /* ms(7) */
+}
+
+.markdown-content h2 {
+  margin-bottom: 5px;
+}
+
+.markdown-content h3 {
+  margin-bottom: 3px;
+}
+
+
+
+/* Equivalent of 'code_inline' */
+.markdown-content code {
+  color: var(--tertiary-color, #007bff);
+  background-color: var(--background-color, #f8f9fa);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* Equivalent of 'fence' (code blocks) */
+.markdown-content pre {
+  color: var(--tertiary-color, #007bff);
+  background-color: var(--background-color, #f8f9fa);
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto; /* For horizontal scrolling */
+}
+
+/* The <pre> tag wraps the <code> tag in code blocks, so we reset the inner code style */
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+/* Lists */
+.markdown-content ul,
+.markdown-content ol {
+  margin-top: 7px;    /* marginVertical */
+  margin-bottom: 7px; /* marginVertical */
+}
+
+/* Blockquotes */
+.markdown-content blockquote {
+  color: var(--black-color, #000); /* theme.colors.black */
+  border-left: 4px solid #ccc;
+  padding-left: 1rem;
+  margin-left: 0;
+  font-style: italic;
+}
+
+/* Horizontal Rule */
+.markdown-content hr {
+  background-color: var(--on-surface-color, #333);
+  height: 1px;
+  border: none;
+}
+
+/* Table styling */
+.markdown-content table {
+  border: 1px solid var(--on-surface-color, #ccc);
+  border-radius: 3px;
+  border-collapse: collapse; /* Essential for web table styling */
+  margin: 1em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid var(--on-surface-color, #ccc);
+  padding: 8px;
+}
+
+.markdown-content tr {
+  border-bottom: 1px solid var(--on-surface-color, #ccc);
+}
+
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-top: 7px;
+  margin-bottom: 1em; /* Add space AFTER lists */
+}
+
+/* Add space below blockquotes */
+.markdown-content blockquote {
+  /* ... other styles ... */
+  margin-bottom: 1em; /* Add space AFTER blockquotes */
+}
+
+/* Add space below code blocks */
+.markdown-content pre {
+  /* ... other styles ... */
+  margin-bottom: 1em; /* Add space AFTER code blocks */
+}
+
+
+
+
+.markdown-content p strong{
+  text-indent: 0; /* Apply the indent only to these "normal" paragraphs */
+}
+
+/* Target the custom class we added to all <strong> tags */
+.markdown-content .markdown-strong {
+  /*
+    This is the most important part. `inline-block` allows the element
+    to sit within the flow of text (like an inline element) but also
+    accepts vertical margin and padding (like a block element).
+  */
+  display: inline-block;
+}
+
+
+
+/*
+  `2em` means the space will be equal to the width of two capital "M" characters
+  in the current font size. It scales perfectly if you change the font size.
+  You can also use a fixed value like `30px`.
+*/
+
+/* --- OPTIONAL: Prevent Indentation After a Heading --- */
+/*
+  In traditional typography, the very first paragraph after a heading is
+  often NOT indented. If you want this behavior, you can add this rule.
+  The `+` is the "adjacent sibling combinator." This rule says:
+  "Select any paragraph that comes IMMEDIATELY after any heading."
+*/
+.markdown-content h1 + p,
+.markdown-content h2 + p,
+.markdown-content h3 + p,
+.markdown-content h4 + p,
+.markdown-content h5 + p,
+.markdown-content h6 + p {
+  text-indent: 0;
+}
