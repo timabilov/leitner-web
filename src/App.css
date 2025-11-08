@@ -104,3 +104,8 @@
   left: calc(50% - 0.5rem);
   top: calc(50% - 0.5rem);
 }
+
+
+div[role=separator] {
+  background-color: oklch(98.5% 0.001 106.423);
+}

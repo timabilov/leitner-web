@@ -13,7 +13,7 @@ import { FlashcardsTab } from "./flashcard-tab";
 import { AIQuizTab } from "./quiz-tab";
 import QuizHardPenIcon from "./QuizHardPenIcon";
 import FlashcardIcon from "./FlashcardIcon";
-import { ChevronDown } from "lucide-react";
+import { BrainCircuit, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Breadcrumb,
@@ -24,6 +24,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const POLLING_INTERVAL_MS = 5000;
 
@@ -90,6 +92,19 @@ const NoteDetail = () => {
     } else {
       console.warn(`Element with id "${id}" not found.`);
     }
+  };
+
+   const handleOpenQuizModal = () => {
+    // In the future, this will open your Quiz modal.
+    // For now, we can just log a message.
+    console.log("Opening AI Quiz Modal...");
+    alert("This will open the AI Quiz modal.");
+  };
+
+  const handleOpenFlashcardsModal = () => {
+    // In the future, this will open your Flashcards modal.
+    console.log("Opening Flashcards Modal...");
+    alert("This will open the Flashcards modal.");
   };
 
   return (
@@ -160,13 +175,32 @@ const NoteDetail = () => {
               onValueChange={setActiveTab}
               className="flex flex-col flex-1 mt-4 overflow-hidden"
             >
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="transcript">Transcript</TabsTrigger>
-                <TabsTrigger value="quiz">AI Quiz</TabsTrigger>
-                <TabsTrigger value="flashcard">Flashcards</TabsTrigger>
-              </TabsList>
-
+              <div className="flex flex-row justify-between">
+                <TabsList >
+                  <TabsTrigger className='data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-transparent' value="overview">
+                    Overview
+                  </TabsTrigger>
+                  <TabsTrigger className='data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-transparent' value="transcript">Transcript</TabsTrigger>
+                  {/* <TabsTrigger className='data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-transparent' value="quiz">
+                    <QuizHardPenIcon />
+                    AI Quiz
+                    </TabsTrigger>
+                  <TabsTrigger className='data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-transparent' value="flashcard">
+                    <FlashcardIcon />
+                    Flashcards
+                  </TabsTrigger> */}
+                </TabsList>
+                <div>
+                    <Button size="default" variant="outline" className="cursor-pointer"  onClick={() => setIsOpen(true)}>
+                      <QuizHardPenIcon />
+                      AI Quiz
+                    </Button>
+                    <Button size="default" variant="outline" className="cursor-pointer"  onClick={() => setIsOpen(true)}>
+                      <FlashcardIcon />
+                      Flashcard
+                    </Button>
+                </div>
+              </div>
               {/* --- The FIXED PanelGroup for the Transcript Tab --- */}
               {/* <TabsContent value="transcript" className="flex-1 mt-4">
               <PanelGroup direction="horizontal" className="h-full rounded-lg border">
@@ -233,7 +267,22 @@ const NoteDetail = () => {
                   </PanelResizeHandle>
                   <Panel defaultSize={30} minSize={20}>
                     <div className="h-full p-2 overflow-y-auto">
-                      {/* ... Topics Sidebar ... */}
+                     {topics.length > 0 ? (
+                            <div className="space-y-1">
+                              {topics.map((topic, index) => (
+                                <button
+                                  onClick={() => {
+                                    setSelectedTopic(topic);
+                                    // Scroll inside the transcript panel
+                                    scrollToIdInContainer(slugify(topic), transcriptPanelRef);
+                                  }}
+                                  key={index}
+                                  className={`w-full text-left p-4 rounded-md ...`}
+                                >
+                                </button>
+                              ))}
+                            </div>
+                          ) : (<p className="p-4 text-sm text-muted-foreground">No topics found.</p>)}
                     </div>
                   </Panel>
                 </PanelGroup>
@@ -241,7 +290,52 @@ const NoteDetail = () => {
 
               {/* --- The SCROLLING content for other tabs --- */}
                   <TabsContent value="overview" className="flex-1 min-h-0 py-8 overflow-y-auto">
-                    <MarkdownView>{note?.md_summary_ai}</MarkdownView>
+                    <PanelGroup
+                  direction="horizontal"
+                  className="h-full rounded-lg border"
+                >
+                  <Panel defaultSize={70} minSize={30}>
+                    <div
+                      ref={transcriptPanelRef}
+                      className="h-full p-4 overflow-y-auto"
+                    >
+                        <MarkdownView>{note?.md_summary_ai}</MarkdownView>
+                    </div>
+                  </Panel>
+                  <PanelResizeHandle className="w-2.5 flex items-center justify-center ...">
+                    <div className="h-10 w-1 rounded-full bg-border" />
+                  </PanelResizeHandle>
+                  <Panel defaultSize={30} minSize={20}>
+                     <div className="space-y-2">
+                    <h4 className="font-semibold text-lg px-2">AI Tools</h4>
+                    {/* Quiz Card */}
+
+                    {/* Flashcards Card */}
+                    
+                      <Card 
+                        className="transition-all hover:shadow-md hover:border-primary/20 cursor-pointer"
+                        onClick={handleOpenFlashcardsModal}
+                      >
+                        <CardHeader className="flex flex-row items-center justify-between p-4">
+                          <div className="space-y-1">
+                            <CardTitle className="text-base">Flashcards</CardTitle>
+                            <CardDescription className="text-xs">Review key concepts</CardDescription>
+                          </div>
+                          <FlashcardIcon className="h-8 w-8 text-muted-foreground" />
+                        </CardHeader>
+                      </Card>
+  
+                  </div>
+      
+
+                    
+
+                    <div className="h-full p-2 overflow-y-auto">
+                      {/* ... Topics Sidebar ... */}
+                    </div>
+                  </Panel>
+                </PanelGroup>
+
                   </TabsContent>
 
               <TabsContent value="quiz" className="flex-1 py-8 overflow-y-auto">
