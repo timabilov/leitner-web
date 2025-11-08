@@ -41,9 +41,9 @@ const Layout = ({ children, title, containerRef }) => {
           - `ref={containerRef}`: Attaches the ref for your in-page scrolling functions.
         */}
         <main 
-          ref={containerRef}
+         ref={containerRef}
           id="main-container"
-          className="flex-1 overflow-y-auto p-4 md:p-6"
+          className="flex-1 flex flex-col relative overflow-hidden p-4 md:p-6"
         >
           {/* All your page content (like NoteDetail) goes here and will scroll inside this main tag. */}
           {children}
