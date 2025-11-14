@@ -10,7 +10,13 @@ import { TooltipProvider } from './components/ui/tooltip'
 import NoteDetail from './note-detail'
 import { useUserStore } from './store/userStore'
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+   defaultOptions: {
+      queries: {
+         refetchOnWindowFocus: false, // default: true
+      },
+  },
+});
 
 
 function App() {

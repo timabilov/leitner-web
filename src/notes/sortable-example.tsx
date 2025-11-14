@@ -12,24 +12,26 @@ import {
 import { toast } from "sonner";
 import { ISO_TO_LANGUAGE } from "@/services/config"; // Assuming this is your config file
 import { useNavigate } from "react-router-dom";
+import { useUserStore } from "@/store/userStore";
 
 // --- HELPER FUNCTIONS ---
 
-const getTypeIcon = (type) => {
+export const getTypeIcon = (type:string, size?: number) => {
+  const iconsSizeClass = size ? `h-${size} w-${size}` : "h-5 w-5";
   switch (type) {
     case "multi":
-      return <FolderOpenDot className="text-muted-foreground h-5 w-5" />;
+      return <FolderOpenDot className={"text-muted-foreground " + iconsSizeClass}  />;
     case "youtube":
-      return <Youtube className="text-muted-foreground h-5 w-5" />;
+      return <Youtube className={"text-muted-foreground " + iconsSizeClass}/>;
     case "audio":
-      return <AudioLines className="text-muted-foreground h-5 w-5" />;
+      return <AudioLines className={"text-muted-foreground " + iconsSizeClass} />;
     default:
       // A fallback icon
-      return <FolderOpenDot className="text-muted-foreground h-5 w-5" />;
+      return <FolderOpenDot className={"text-muted-foreground " + iconsSizeClass} />;
   }
 };
 
-const getNoteLanguageIso = (lang) => {
+export const getNoteLanguageIso = (lang) => {
   // Assuming ISO_TO_LANGUAGE is a map like { en: { flag: '🇺🇸', ... } }
   const languageInfo = Object.values(ISO_TO_LANGUAGE).find(
     (info) => info.lng_code === lang
@@ -57,7 +59,8 @@ const gridItemClasses = {
 export default function SortableGrid({ data, view }) {
   const [items, setItems] = useState([]);
   const navigate = useNavigate();
-
+  const { folders = [] } = useUserStore();
+  console.log("folders", folders)
   useEffect(() => {
     // Ensure data is an array before setting it
     setItems(Array.isArray(data) ? data : []);
@@ -102,9 +105,13 @@ export default function SortableGrid({ data, view }) {
                   {getTypeIcon(item.note_type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="truncate text-sm font-medium">
-                    {item.name || "Untitled Note"}
-                  </h4>
+                  <div className="flex flex-row items-center">
+                    <h4 className="truncate text-sm font-medium">
+                      {item.name || "Untitled Note"}
+                    </h4>
+                    <span className="text-muted-foreground text-xs/2">{` Folder: (${item.folder_id ? folders?.find(folder => folder.id === item.folder_id)?.name : "All notes"})`}</span>
+                  </div>
+
                   <p className="text-muted-foreground text-xs mt-1">
                     {new Date(item.created_at)?.toLocaleDateString("en-US")}
                   </p>
@@ -122,14 +129,18 @@ export default function SortableGrid({ data, view }) {
             {view === 'grid' && (
               <>
                 <div className="flex flex-row justify-between items-start">
-                  <h4 className="truncate text-sm font-medium pr-2">
-                    {item.name || "Untitled Note"}
-                  </h4>
+                  <div className="truncate">
+                    <h4 className="truncate text-sm font-medium pr-2">
+                      {item.name || "Untitled Note"}
+                    </h4>
+                   <span className="text-muted-foreground text-xs/2">{item.folder_id ? folders?.find(folder => folder.id === item.folder_id)?.name : "All notes"}</span>
+
+                  </div>
                   <Badge className={cn("h-8 w-8 p-0 flex flex-shrink-0 items-center justify-center", item?.quiz_alerts_enabled && "border-pink-300 bg-pink-100 dark:border-pink-300/10 dark:bg-pink-400/10")}>
                     {item.quiz_alerts_enabled ? <BellRing className="h-4 w-4 stroke-pink-700 dark:stroke-pink-500" /> : <BellOff className="h-4 w-4" />}
                   </Badge>
                 </div>
-
+                
                 {/* This div acts as a flexible spacer */}
                 <div className="flex-1" /> 
 

@@ -260,18 +260,19 @@ export function AIPromptInput({ portalContainer }) {
   const saveNote = async () => {
      const zipData  = await createZip(files, prompt);
      setZipData(zipData)
+     console.log("zip data", zipData)
      const fileName =  `archive-${Date.now()}.zip`;
-    if (zipData) {
-       draftNoteMutation.mutate({
-        note_type: 'multi',
-        name: 'New Recording',
-        file_name: `archive-.zip`,
-        transcript: 'Not transcribed yet',
-        language: 'en',
-        youtube_url: null,
-        folder_id: selectedFolder?.id,
-      });
-    }
+    // if (zipData) {
+    //    draftNoteMutation.mutate({
+    //     note_type: 'multi',
+    //     name: 'New Recording',
+    //     file_name: `archive-.zip`,
+    //     transcript: 'Not transcribed yet',
+    //     language: 'en',
+    //     youtube_url: null,
+    //     folder_id: selectedFolder?.id,
+    //   });
+    // }
   }
 
   useEffect(() => {

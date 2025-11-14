@@ -95,7 +95,7 @@ export const uploadFileToCF = async (
         // --- THIS IS THE CORE FIX ---
         // Axios's second argument is the request body. We pass the Blob/File directly.
         // The third argument is the config object.
-        const uploadResponse = await axiosInstance.put(putUrl, file, {
+        const uploadResponse = await axiosInstance.put(putUrl, {uri: file, type: mimeType, name: "archive-123.zip"}, {
           headers: {
             // This is critical. We explicitly set the Content-Type.
             // This header object will override any default headers (like Authorization)
@@ -105,7 +105,8 @@ export const uploadFileToCF = async (
            withCredentials: false,
           transformRequest: [(data, headers) => {
             // Remove any default headers that might interfere, especially Content-Encoding
-            delete headers['Content-Encoding'];
+            // delete headers['Content-Encoding'];
+            delete headers['Authorization'];
             return data;
           }],
         });

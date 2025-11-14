@@ -8,22 +8,19 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import {
-  CheckCircle2,
-  XCircle,
   ArrowRight,
   RotateCw,
   ArrowLeft,
   BrainCircuit,
   Star,
   Zap,
-  Info,
   CircleAlert,
   Lightbulb,
+  Dot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
@@ -31,7 +28,7 @@ import QuizPenIcon from "./quiz-pen-icon";
 import QuizHardPenIcon from "./QuizHardPenIcon";
 import QuizBonusPenIcon from "./QuizBonusPenIcon";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import CatLogo from "./cat-logo";
 import GiftIcon from "./GiftIcon";
 import {GradientProgress}  from '@/components/gradient-progress'
@@ -62,13 +59,20 @@ const LevelCard = ({
       onClick={() => !isDisabled && onSelect(level)}
     >
       <CardHeader className="items-center">
-        {level === "easy" ? (
-          <QuizPenIcon />
-        ) : level === "hard" ? (
-          <QuizHardPenIcon />
-        ) : (
-          <QuizBonusPenIcon />
-        )}
+        <div className="flex flex-row justify-between">
+          {level === "easy" ? (
+            <QuizPenIcon />
+          ) : level === "hard" ? (
+            <QuizHardPenIcon />
+          ) : (
+            <QuizBonusPenIcon />
+          )}
+          <div className="flex flex-row items-center">
+              <Dot className="text-pink-500 -mr-3.5"/>
+              <Dot className={" -mr-3.5 " + (level === "hard" || level === "bonus" ? "text-pink-500" :"text-pink-200")}/>
+              <Dot className={level === "bonus" ? "text-pink-500" :"text-pink-200"}/>
+          </div>
+        </div>
 
         {/* Use a brighter text color for better contrast on the darker background */}
         <CardTitle className="text-foreground">{title}</CardTitle>
@@ -82,7 +86,7 @@ const LevelCard = ({
         {lastScore !== null ? (
           <div className="text-sm">
             <p className="font-semibold text-primary">
-              {`Last Score: ${lastScore.correct}/${count}`}
+              {`Last Score: ${lastScore}/${count}`}
             </p>
           </div>
         ) : (
@@ -113,22 +117,33 @@ const LevelCard = ({
  * @param {object} props
  * @param {Array<{question_text: string, options: string[], answer: string, complexity_level: string, user_answer: string}>} [props.quizData]
  */
-export function AIQuizTab({ quizData, noteId }) {
+export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   const { companyId, userId } = useUserStore();
 
-  const [quizLevel, setQuizLevel] = useState(null);
+
   const [activeQuestions, setActiveQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const queryClient = useQueryClient();
+
+    const getLastAnsweredDate = (questions: any[]) => {
+    const answeredDates = questions
+      .filter((q: any) => q.user_answered_date)
+      .map((q: any) => new Date(q.user_answered_date));
+    return answeredDates.length > 0
+      ? new Date(Math.max(...answeredDates)).toLocaleDateString()
+      : "Not taken";
+  };
+
 
   const quizLevels = useMemo(() => {
     const levels = {
-      easy: { count: 0, lastScore: null, questions: [] },
-      hard: { count: 0, lastScore: null, questions: [] },
-      bonus: { count: 0, lastScore: null, questions: [] },
+      easy: { count: 0, lastScore: null, questions: [], lastTaken: null },
+      hard: { count: 0, lastScore: null, questions: [], lastTaken: null  },
+      bonus: { count: 0, lastScore: null, questions: [], lastTaken: null  },
     };
     if (!Array.isArray(quizData)) return levels;
 
@@ -148,6 +163,7 @@ export function AIQuizTab({ quizData, noteId }) {
         const group = groups[level];
         levels[level].count = group.questions.length;
         levels[level].questions = group.questions;
+        levels[level].lastTaken = getLastAnsweredDate(group.questions);
         if (group.answered > 0) {
           levels[level].lastScore = {
             correct: group.correct,
@@ -179,7 +195,58 @@ export function AIQuizTab({ quizData, noteId }) {
   const canProceedWithAdvancedQuiz = totalProgress >= 0.7;
   console.log("canProceedWithAdvancedQuiz", canProceedWithAdvancedQuiz);
 
-  const answerQuestionMutation = useMutation({
+
+  const handleLevelSelect = (level) => {
+    const questionsForLevel = quizLevels[level]?.questions || [];
+    if (questionsForLevel.length > 0) {
+      setQuizLevel(level);
+      setActiveQuestions(questionsForLevel);
+      setCurrentQuestionIndex(0);
+      setSelectedAnswer(null);
+      setScore(0);
+      setIsFinished(false);
+      setShowFeedback(false);
+    }
+  };
+
+  const handleBackToSelection = () => {
+    setQuizLevel(null);
+    queryClient.invalidateQueries([`notes-${noteId}`])
+    // todo maybe refetch
+  }
+
+   const totalQuestions = activeQuestions.length;
+  const currentQuestion = activeQuestions[currentQuestionIndex];
+  const correctAnswer =
+    currentQuestion?.options[parseInt(currentQuestion?.answer)];
+  const isCorrect = selectedAnswer === correctAnswer;
+  const progressValue = (currentQuestionIndex / totalQuestions) * 100;
+
+  const handleCheckAnswer = (option, index) => {
+    setSelectedAnswer(option)
+    if (option) {
+      setShowFeedback(true);
+      answerQuestionMutation.mutate({ questionId: currentQuestion?.id , answer: index})
+      if (option === correctAnswer) {
+        setScore(score + 1);
+      }
+    }
+  };
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+      setCurrentQuestionIndex((prev) => prev + 1);
+      setSelectedAnswer(null);
+      setShowFeedback(false);
+    } else {
+      setIsFinished(true);
+    }
+  };
+  const handleRestartQuiz = () => {
+    queryClient.invalidateQueries([`notes-${noteId}`])
+    handleLevelSelect(quizLevel);
+  }
+
+   const answerQuestionMutation = useMutation({
     mutationFn: (data: { questionId: number; answer: number }) => {
       return axiosInstance.post(
         `${API_BASE_URL}/company/${companyId}/notes/${noteId}/questions/${data.questionId}/answer`,
@@ -195,29 +262,7 @@ export function AIQuizTab({ quizData, noteId }) {
     },
   });
 
-  const handleLevelSelect = (level) => {
-    const questionsForLevel = quizLevels[level]?.questions || [];
-    if (questionsForLevel.length > 0) {
-      setQuizLevel(level);
-      setActiveQuestions(questionsForLevel);
-      setCurrentQuestionIndex(0);
-      setSelectedAnswer(null);
-      setScore(0);
-      setIsFinished(false);
-      setShowFeedback(false);
-    }
-  };
 
-  const getLastAnsweredDate = (questions: any[]) => {
-    const answeredDates = questions
-      .filter((q: any) => q.user_answered_date)
-      .map((q: any) => new Date(q.user_answered_date));
-    return answeredDates.length > 0
-      ? new Date(Math.max(...answeredDates)).toLocaleDateString()
-      : "Not taken";
-  };
-
-  const handleBackToSelection = () => setQuizLevel(null);
 
   if (!quizData || quizData.length === 0) {
     return (
@@ -238,7 +283,7 @@ export function AIQuizTab({ quizData, noteId }) {
         <div className="grid grid-cols-12 gap-8 mb-10">
           <div className="col-span-12">
             <Alert className="flex items-center justify-between">
-              <Avatar className="rounded-sm bg-zinc-300 flex items-center">
+              <Avatar className="rounded-sm bg-gray-950  flex items-center">
                 <CatLogo />
               </Avatar>
               <div className="flex-1 flex-col justify-center gap-1">
@@ -261,9 +306,9 @@ export function AIQuizTab({ quizData, noteId }) {
             description="Quick questions to test core concepts."
             icon={<Star className="h-8 w-8 text-green-500" />}
             count={quizLevels.easy.count}
-            lastScore={quizLevels.easy.lastScore}
+            lastScore={progressEasy}
             onSelect={handleLevelSelect}
-            lastTakenDate={getLastAnsweredDate(activeQuestions)}
+            lastTakenDate={quizLevels.easy.lastTaken}
           />
           <LevelCard
             level="hard"
@@ -271,9 +316,9 @@ export function AIQuizTab({ quizData, noteId }) {
             description="In-depth questions requiring more thought."
             icon={<BrainCircuit className="h-8 w-8 text-orange-500" />}
             count={quizLevels.hard.count}
-            lastScore={quizLevels.hard.lastScore}
+            lastScore={progressHard}
             onSelect={handleLevelSelect}
-            lastTakenDate={getLastAnsweredDate(activeQuestions)}
+            lastTakenDate={quizLevels.hard.lastTaken}
           />
           <LevelCard
             level="bonus"
@@ -281,9 +326,9 @@ export function AIQuizTab({ quizData, noteId }) {
             description="Challenging questions that connect multiple ideas."
             icon={<Zap className="h-8 w-8 text-red-500" />}
             count={quizLevels.bonus.count}
-            lastScore={quizLevels.bonus.lastScore}
+            lastScore={0}
             onSelect={handleLevelSelect}
-            lastTakenDate={getLastAnsweredDate(activeQuestions)}
+            lastTakenDate={quizLevels.bonus.lastTaken}
             isLocked={!canProceedWithAdvancedQuiz}
           />
         </div>
@@ -291,32 +336,6 @@ export function AIQuizTab({ quizData, noteId }) {
     );
   }
 
-  const totalQuestions = activeQuestions.length;
-  const currentQuestion = activeQuestions[currentQuestionIndex];
-  const correctAnswer =
-    currentQuestion.options[parseInt(currentQuestion.answer)];
-  const isCorrect = selectedAnswer === correctAnswer;
-  const progressValue = (currentQuestionIndex / totalQuestions) * 100;
-
-  const handleAnswerSelect = (option) => {
-    if (!showFeedback) setSelectedAnswer(option);
-  };
-  const handleCheckAnswer = () => {
-    if (selectedAnswer) {
-      setShowFeedback(true);
-      if (isCorrect) setScore(score + 1);
-    }
-  };
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < totalQuestions - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
-    } else {
-      setIsFinished(true);
-    }
-  };
-  const handleRestartQuiz = () => handleLevelSelect(quizLevel);
 
   if (isFinished) {
     const finalPercentage = Math.round((score / totalQuestions) * 100);
@@ -324,7 +343,6 @@ export function AIQuizTab({ quizData, noteId }) {
       <Card className="w-full max-w-2xl mx-auto text-center">
         <CardHeader>
           <CardTitle className="text-2xl">Quiz Completed!</CardTitle>
-          {/* <CardDescription>Here's how you did.</CardDescription> */}
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-4xl font-bold">
@@ -334,7 +352,6 @@ export function AIQuizTab({ quizData, noteId }) {
             {finalPercentage}%
           </p>
             <GradientProgress value={finalPercentage} className="w-full" />
-          {/* <Progress value={finalPercentage} className="w-full bg-" /> */}
         </CardContent>
         <CardFooter className="flex-col sm:flex-row gap-2">
           <Button onClick={handleRestartQuiz} className="w-full sm:flex-1">
@@ -343,7 +360,7 @@ export function AIQuizTab({ quizData, noteId }) {
           <Button
             variant="ghost"
             onClick={handleBackToSelection}
-            className="w-full sm:flex-1"
+            className="w-full sm:flex-1 cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 mr-2" /> Change Difficulty
           </Button>
@@ -351,16 +368,37 @@ export function AIQuizTab({ quizData, noteId }) {
       </Card>
     );
   }
-
+  
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
-      <Button
-        variant="ghost"
-        onClick={handleBackToSelection}
-        className="self-start text-muted-foreground"
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" /> Change Difficulty
-      </Button>
+      <div className="flex flex-row justify-between">
+        <Button
+          variant="outline"
+          onClick={handleBackToSelection}
+          className="self-start text-muted-foreground cursor-pointer"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" /> Change Difficulty
+        </Button>
+        {showFeedback ? (
+        <div className="flex flex-col items-center gap-4">
+          <Button onClick={handleNextQuestion} className="w-full sm:w-auto cursor-pointer">
+            {currentQuestionIndex === totalQuestions - 1
+              ? "Finish Quiz"
+              : "Next"}
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        </div>
+      ) : (
+        <Button
+          onClick={handleCheckAnswer}
+          // disabled={selectedAnswer === null}
+          className="w-full sm:w-auto self-center"
+        >
+          Check Answer
+        </Button>
+      )}
+
+      </div>
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm font-medium text-muted-foreground">
           <span>
@@ -368,7 +406,8 @@ export function AIQuizTab({ quizData, noteId }) {
           </span>
           <span>Score: {score}</span>
         </div>
-        <Progress value={progressValue} />
+        {/* <Progress value={progressValue} /> */}
+        <GradientProgress value={progressValue} className="w-full" />
       </div>
       <Card>
         <CardHeader>
@@ -383,7 +422,9 @@ export function AIQuizTab({ quizData, noteId }) {
             return (
               <button
                 key={index}
-                onClick={() => handleAnswerSelect(option)}
+                onClick={() => {
+                  handleCheckAnswer(option, index)
+                }}
                 disabled={showFeedback}
                 className={cn(
                   "w-full text-left p-4 border rounded-lg transition-all text-sm font-medium",
@@ -415,21 +456,9 @@ export function AIQuizTab({ quizData, noteId }) {
               </AlertDescription>
             </Alert>
           ) : null}
-          <Button onClick={handleNextQuestion} className="w-full sm:w-auto">
-            {currentQuestionIndex === totalQuestions - 1
-              ? "Finish Quiz"
-              : "Next"}
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
         </div>
       ) : (
-        <Button
-          onClick={handleCheckAnswer}
-          disabled={selectedAnswer === null}
-          className="w-full sm:w-auto self-center"
-        >
-          Check Answer
-        </Button>
+        null
       )}
     </div>
   );

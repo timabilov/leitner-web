@@ -1,8 +1,11 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useUserStore } from "@/store/userStore";
 import { AppSidebar } from "./app-sidebar"; // Your sidebar component
 import Header from "./header";
 import { SidebarInset, SidebarProvider } from "./ui/sidebar";
+import { Button } from "./ui/button";
+import AIIcon from "@/note-detail/AIIcon";
+import AiModal from "./ai-modal";
 
 /**
  * The main layout component with a STICKY sidebar and SCROLLABLE content.
@@ -12,6 +15,7 @@ import { SidebarInset, SidebarProvider } from "./ui/sidebar";
  * @param {React.RefObject<HTMLElement>} props.containerRef - A ref for the main scrollable element.
  */
 const Layout = ({ children, title, containerRef }) => {
+  const [showModal, setShowModal] = useState<boolean>(false)
   const { photo, fullName } = useUserStore();
   const shortName =
     fullName && fullName.split(" ").length > 1
@@ -29,7 +33,7 @@ const Layout = ({ children, title, containerRef }) => {
       <AppSidebar variant="sidebar" />
       
       {/* 2. The Content Area: This container will take the remaining space. */}
-      <SidebarInset className="flex flex-1 flex-col overflow-hidden">
+      <SidebarInset className="flex flex-1 flex-col">
         
         {/* The Header is part of the content area and will also NOT scroll. */}
         <Header photo={photo} shortName={shortName} title={title} />
@@ -43,7 +47,7 @@ const Layout = ({ children, title, containerRef }) => {
         <main 
          ref={containerRef}
           id="main-container"
-          className="flex-1 flex flex-col relative overflow-hidden p-4 md:p-6"
+          className="flex-1 flex flex-col relative p-4 md:p-6"
         >
           {/* All your page content (like NoteDetail) goes here and will scroll inside this main tag. */}
           {children}

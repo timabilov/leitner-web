@@ -18,6 +18,7 @@ interface UserStore {
   pushTokenRegistered?: boolean;
   subscriptionStatus: 'free' | 'pro' | 'pro_plus' | 'trial';
   selectedFolder?: {name: string, id: number, items: any};
+  folders?: {name: string, id: number, items: any}[];
   effectiveSubscription: 'pro_plus';
   companyTrialStarted?: number; // ms
   companyTrialDays?: number;
@@ -54,6 +55,7 @@ interface UserStore {
   ) => void;
   clearStore: () => void;
   setCountryCode: (code: string) => void;
+  setFolders: (folders:  {name: string, id: number, items: any}[]) => void;
 }
 
 export const useUserStore = create<UserStore>()(
@@ -69,6 +71,7 @@ export const useUserStore = create<UserStore>()(
       pushToken: undefined,
       notificationsDenied: undefined,
       pushTokenRegistered: undefined,
+      folders: [],
       subscriptionStatus: 'free',
       effectiveSubscription: 'pro_plus',
       companyTrialStarted: undefined,
@@ -86,6 +89,7 @@ export const useUserStore = create<UserStore>()(
       setRefreshToken: (token) => set({ refreshToken: token }),
       setSubscriptionStatus: (status) => set({ subscriptionStatus: status }),
       setSelectedFolder: (selectedFolder?) => set({ selectedFolder }),
+      setFolders: (folders) => set({folders}),
       setEffectiveSubscription: (subscription) => set({ effectiveSubscription: subscription }),
       setCompanyTrialStarted: (timestamp) => set({ companyTrialStarted: timestamp }),
       setCompanyTrialDays: (days) => set({ companyTrialDays: days }),

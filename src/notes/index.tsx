@@ -6,7 +6,7 @@ import { API_BASE_URL } from "@/services/config";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
-import { FolderArchive, Youtube } from "lucide-react";
+import { CircleAlert, FolderArchive, Youtube } from "lucide-react";
 
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -21,6 +21,10 @@ import CreateYoutubeNote from "./create-youtube-note";
 import CreateMultiNote from "./create-multi-note";
 import { AIPromptInput } from "./ai-prompt-textarea";
 import Layout from "@/components/layout";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Avatar } from "@/components/ui/avatar";
+import CatLogo from "@/note-detail/cat-logo";
+import CatPenIcon from "./cat-pen-icon";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -117,10 +121,24 @@ const Notes = ({ children }: any) => {
     <Layout>
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className=" sm:flex p-4 mt-4 flex-row justify-center ">
-            <p className="text-muted-foreground text-2xl tracking-tight">
+          <div className=" w-full max-w-2xl m-auto mt-8">
+             <Alert className="flex items-center justify-between border-none">
+              <Avatar className="h-16 w-16 rounded-md bg-gray-950 flex items-center mr-2">
+                {/* <CatLogo /> */}
+                <CatPenIcon />
+              </Avatar>
+              <div className="flex-1 flex-col justify-between gap-1">
+                <AlertTitle className="flex-1 text-xl">Learning Experience!</AlertTitle>
+                <AlertDescription className=" text-xl">
+                  {" "}
+               {`Hey ${fullName}, do you want to create new note?`}
+                </AlertDescription>
+              </div>
+            </Alert>
+
+            {/* <p className="text-muted-foreground text-2xl tracking-tight">
               {`Hey ${fullName}, do you want to create new note?`}
-            </p>
+            </p> */}
             {/* <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
                 Create new
                 </h3> */}
