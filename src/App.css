@@ -111,10 +111,6 @@ div[role=separator] {
 }
 
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 @layer components {
 /*
 Target the Skeleton component by its class.
