@@ -9,6 +9,9 @@ import {
   AudioLines,
   Image,
   TriangleAlert,
+  File,
+  School2Icon,
+  Text,
 } from "lucide-react";
 import { ISO_TO_LANGUAGE } from "@/services/config"; // Assuming this is your config file
 import { GradientProgress } from "@/components/gradient-progress";
@@ -41,6 +44,12 @@ export const getTypeIcon = (type: string, size?: number) => {
       );
     case "image":
       return <Image className={"text-muted-foreground " + iconsSizeClass} />;
+    case "pdf":
+      return <File className={"text-muted-foreground " + iconsSizeClass} />;
+    case 'test':
+        return <School2Icon className={"text-muted-foreground " + iconsSizeClass} />;
+    case "text":
+      return <Text className={"text-muted-foreground " + iconsSizeClass} />;
     default:
       // A fallback icon
       return (
@@ -80,6 +89,15 @@ const NoteCard = ({ item, view }) => {
       >
         {/* --- LIST VIEW RENDER --- */}
         {view === "list" && (
+          isItemProcessing  ? (
+            <div className="flex items-center space-x-4">
+              <Skeleton className="h-12 w-12 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-[250px]" />
+                <Skeleton className="h-4 w-[200px]" />
+              </div>
+            </div>
+          ) :
           <>
             <div className="bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg mr-4">
               {getTypeIcon(item.note_type)}
@@ -140,7 +158,19 @@ const NoteCard = ({ item, view }) => {
         )}
 
         {/* --- GRID VIEW RENDER --- */}
-        {(view === "grid" &&  !isItemProcessing) ? (
+        {view === "grid"  && (
+          isItemProcessing  ? (
+            <div className="flex flex-col  space-x-4 justify-between min-h-[100px]">
+              <div>
+                  <Skeleton className="h-4 w-[250px]" />
+                  <Skeleton className="h-4 w-[200px] mt-4" />
+              </div>
+              <div className="space-y-2 flex flex-row justify-between items-end">
+                <Skeleton className="h-4 w-[200px]" />
+                <Skeleton className="h-12 w-12 rounded-full" />
+              </div>
+            </div>
+          ) : 
           <>
             <div className="flex flex-row justify-between items-start">
               <div className="truncate">
@@ -201,15 +231,6 @@ const NoteCard = ({ item, view }) => {
               </div>
             </div>
           </>
-        ): (
-          <div className="flex items-center space-x-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-[250px]" />
-              <Skeleton className="h-4 w-[200px]" />
-            </div>
-          </div>
-
         )}
       </div>
     </SortableItem>

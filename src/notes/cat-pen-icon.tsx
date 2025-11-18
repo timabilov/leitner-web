@@ -72,8 +72,8 @@ const CatPenIcon = () => {
           y2="26.5598"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#7B79B6" />
-          <stop offset="1" stop-color="#B071A1" />
+          <stop stopColor="#7B79B6" />
+          <stop offset="1" stopColor="#B071A1" />
         </linearGradient>
         <linearGradient
           id="paint1_linear_36_1541"
@@ -84,7 +84,7 @@ const CatPenIcon = () => {
           gradientUnits="userSpaceOnUse"
         >
           <stop />
-          <stop offset="1" stop-color="white" />
+          <stop offset="1" stopColor="white" />
         </linearGradient>
         <linearGradient
           id="paint2_linear_36_1541"
@@ -95,7 +95,7 @@ const CatPenIcon = () => {
           gradientUnits="userSpaceOnUse"
         >
           <stop />
-          <stop offset="1" stop-color="white" />
+          <stop offset="1" stopColor="white" />
         </linearGradient>
         <linearGradient
           id="paint3_linear_36_1541"
@@ -106,7 +106,7 @@ const CatPenIcon = () => {
           gradientUnits="userSpaceOnUse"
         >
           <stop />
-          <stop offset="1" stop-color="white" />
+          <stop offset="1" stopColor="white" />
         </linearGradient>
         <linearGradient
           id="paint4_linear_36_1541"
@@ -116,8 +116,8 @@ const CatPenIcon = () => {
           y2="60.263"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#418CBD" />
-          <stop offset="1" stop-color="#7684BD" />
+          <stop stopColor="#418CBD" />
+          <stop offset="1" stopColor="#7684BD" />
         </linearGradient>
       </defs>
     </svg>

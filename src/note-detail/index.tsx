@@ -20,7 +20,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
-import AiModal from "@/components/ai-modal";
+import AiModal from "./ai-modal";
 import { Badge } from "@/components/ui/badge";
 import {
   Tooltip,
@@ -33,9 +33,9 @@ import JSZip from "jszip";
 export const POLLING_INTERVAL_MS = 5000;
 import Zoom from "react-medium-image-zoom";
 import { AudioPlayer } from "@/components/AudioPlayer";
-import { FilePreviewDialog } from "@/components/FilePreviewDialog";
+import { FilePreviewDialog } from "@/components/file-preview-dialog";
 
-const extractYouTubeID = (url) => {
+const extractYouTubeID = (url:string) => {
   if (!url) return null;
   const regex =
     /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
@@ -72,7 +72,7 @@ const NoteDetail = () => {
     },
     enabled: !!companyId,
     refetchInterval: (query) => {
-      console.log("::::", query.state?.data?.data?.quiz_status)
+      console.log("::::quiz_status", query.state?.data?.data?.quiz_status)
       const isGenerating =
         query.state?.data?.data?.quiz_status === "in_progress" ||
         query.state?.data?.data?.quiz_status === "ready_to_generate";
@@ -227,34 +227,6 @@ const NoteDetail = () => {
     }
   };
 
-  const scrollToIdInContainer = (id, containerRef) => {
-    const container = containerRef.current;
-    if (!container) return;
-    const element = container.querySelector(`#${id}`);
-    if (element) {
-      const topPosition = element.offsetTop - 80; // Offset for sticky header
-      container.scrollTo({
-        top: topPosition,
-        behavior: "smooth",
-      });
-    } else {
-      console.warn(`Element with id "${id}" not found.`);
-    }
-  };
-
-  const handleOpenQuizModal = () => {
-    // In the future, this will open your Quiz modal.
-    // For now, we can just log a message.
-    console.log("Opening AI Quiz Modal...");
-    alert("This will open the AI Quiz modal.");
-  };
-
-  const handleOpenFlashcardsModal = () => {
-    // In the future, this will open your Flashcards modal.
-    console.log("Opening Flashcards Modal...");
-    alert("This will open the Flashcards modal.");
-  };
-
   return (
     <Layout title={note?.name} containerRef={mainContainerRef}>
       <div className="flex flex-col h-full">
@@ -357,19 +329,19 @@ const NoteDetail = () => {
               )}
 
               {!isProcessingFiles && (
-                <div>
+                <div className="max-w-full">
                   {textContent && (
-                    <pre className="mt-2">{textContent}</pre>
+                    <pre className="mt-2 whitespace-pre-wrap">{textContent}</pre>
                   )}
 
                   <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-8">
-                    {imagePaths.map((img) => (
-                      <Zoom>
+                    {imagePaths.map((img, index) => (
+                      <Zoom key={index}>
                       <div key={img.name} className="group relative">
                         <img
                           src={img.url}
                           alt={img.name}
-                          className="h-30 w-30 cursor-pointer rounded-lg object-cover border transition-transform duration-300 group-hover:scale-105"
+                          className="h-30 w-full cursor-pointer rounded-lg object-cover border transition-transform duration-300 group-hover:scale-105"
                         />
                         <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           {img.name}
@@ -379,13 +351,13 @@ const NoteDetail = () => {
                     ))}
                   </div>
 
-                  {audioPaths.map((audio) => (
-                    <div key={audio.name} className="w-full mt-6 mb-6">
+                  {audioPaths.map((audio, index) => (
+                    <div key={audio.name + index} className="w-full mt-6 mb-6">
                          <AudioPlayer key={audio.name} audio={audio} />
                     </div>
                   ))}
                       {pdfPaths.map((pdf, index) => (
-                        <div className="flex flex-row items-center hover:bg-muted mt-2">
+                        <div className="flex flex-row items-center hover:bg-muted mt-2" key={index}>
                           <Dot/>
                           <li 
                             onClick={() =>  setPDF(pdf) }
@@ -452,22 +424,18 @@ const NoteDetail = () => {
                   >
                     Transcript
                   </TabsTrigger>
-                  {/* <TabsTrigger className='data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-transparent' value="quiz">
-                    <QuizHardPenIcon />
-                    AI Quiz
-                    </TabsTrigger>
-                  <TabsTrigger className='data-[state=active]:bg-primary dark:data-[state=active]:bg-primary data-[state=active]:text-primary-foreground dark:data-[state=active]:text-primary-foreground dark:data-[state=active]:border-transparent' value="flashcard">
-                    <FlashcardIcon />
-                    Flashcards
-                  </TabsTrigger> */}
                 </TabsList>
-                <AiModal
-                  noteId={noteId}
-                  noteQuery={noteQuery}
-                  isPolling={isPolling}
-                  setIsPolling={setIsPolling}
-                  startPollingForQuiz={startPollingForQuiz}
-                />
+                {
+                   !note?.processing_error_message && (
+                     <AiModal
+                       noteId={noteId}
+                       noteQuery={noteQuery}
+                       isPolling={isPolling}
+                       setIsPolling={setIsPolling}
+                       startPollingForQuiz={startPollingForQuiz}
+                     />
+                   )
+                }
               </div>
               <Card className="relative rounded-md border-t-inherit shadow-md z-10 -mt-[30px]">
                 <TabsContent
@@ -512,6 +480,13 @@ const NoteDetail = () => {
                   className="flex-1 min-h-0 py-8 overflow-y-auto"
                 >
                   <CardContent className="p-6 text-sm text-muted-foreground border-none">
+                    {
+                      note?.processing_error_message  && (
+                        <p className="text-sm font-medium text-destructive">
+                          {note?.processing_error_message}
+                        </p>
+                      )
+                    }
                     <MarkdownView>{note?.md_summary_ai}</MarkdownView>
                   </CardContent>
                 </TabsContent>

@@ -30,8 +30,8 @@ const GiftIcon = () => {
           y2="33.25"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FB5D61" />
-          <stop offset="1" stop-color="#C24894" />
+          <stop stopColor="#FB5D61" />
+          <stop offset="1" stopColor="#C24894" />
         </linearGradient>
         <linearGradient
           id="paint1_linear_96_1046"
@@ -41,8 +41,8 @@ const GiftIcon = () => {
           y2="33.2502"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#FB5D61" />
-          <stop offset="1" stop-color="#C24894" />
+          <stop stopColor="#FB5D61" />
+          <stop offset="1" stopColor="#C24894" />
         </linearGradient>
       </defs>
     </svg>

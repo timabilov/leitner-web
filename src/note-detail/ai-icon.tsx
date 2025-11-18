@@ -24,8 +24,8 @@ const AIIcon = () => {
           y2="12.583"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#E8759C" />
-          <stop offset="1" stop-color="#8BA8DB" />
+          <stop stopColor="#E8759C" />
+          <stop offset="1" stopColor="#8BA8DB" />
         </linearGradient>
         <linearGradient
           id="paint1_linear_72_472"
@@ -35,8 +35,8 @@ const AIIcon = () => {
           y2="12.9989"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#E8759C" />
-          <stop offset="1" stop-color="#8BA8DB" />
+          <stop stopColor="#E8759C" />
+          <stop offset="1" stopColor="#8BA8DB" />
         </linearGradient>
       </defs>
     </svg>

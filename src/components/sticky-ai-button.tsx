@@ -1,9 +1,6 @@
-'use client';
-
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle } from 'lucide-react'; // Example icon for the alert
-import AIIcon from '@/note-detail/AIIcon';
+import AIIcon from '@/note-detail/ai-icon';
 
 /**
  * An animated sticky button that expands on hover into an alert block.

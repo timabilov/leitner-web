@@ -22,8 +22,8 @@ const FlashcardIcon = () => {
           y2="21.5"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#61D7FF" />
-          <stop offset="1" stop-color="white" />
+          <stop stopColor="#61D7FF" />
+          <stop offset="1" stopColor="white" />
         </linearGradient>
         <clipPath id="clip0_31_1492">
           <rect

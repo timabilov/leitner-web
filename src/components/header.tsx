@@ -4,24 +4,30 @@ import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Select from "./select";
-import { BellOff, BellRing, ChevronDown, Search } from "lucide-react";
-import { Input } from "./ui/input";
+import { BellOff, BellRing, ChevronDown, Loader2Icon, Search } from "lucide-react";
 import { AnimatedTooltip } from "./ui/motion-tooltip";
 import { useState, useId, useEffect } from "react";
 import { Switch } from "./ui/switch";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 
 const Header = ({
   isAlertEnabled,
   showAlertBadge,
+  search,
+  isSearching
 }: {
   title?: string;
   isAlertEnabled?: boolean;
   showAlertBadge?: boolean;
+  search: (val?: string) => void;
+  isSearching: boolean
 }) => {
   const { companyId, photo, fullName } = useUserStore();
   const [checked, setChecked] = useState<boolean>(!!isAlertEnabled);
+  const [searchValue, setSearchValue] = useState<string | undefined>("");
+
   const { setFolders } = useUserStore()
   const id = useId();
 
@@ -53,12 +59,30 @@ const Header = ({
       <div className="flex w-full items-center gap-1 justify-between">
         <div className="relative w-fit flex flex-row justify-start">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
-          <Input
-            placeholder="Search notes..."
-            // value={searchQuery}
-            // onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 w-2xl z-30"
-          />
+
+          <InputGroup>
+            <InputGroupInput
+              placeholder="Search notes..."
+              value={searchValue}
+              onChange={(e) => {
+                setSearchValue(e.target.value)
+                search(e.target.value)
+              }}
+              className="pl-10 w-2xl z-30"
+
+            />
+          {
+            isSearching ?  (
+              <InputGroupAddon align="inline-end">
+                <Loader2Icon className="animate-spin text-pink-500"/>
+              </InputGroupAddon>
+            ) : <div className="w-[28px]" />
+             
+          }
+        </InputGroup>
+
+
+          
         </div>
         {showAlertBadge && (
           <>

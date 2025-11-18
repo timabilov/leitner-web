@@ -25,12 +25,12 @@ import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 import QuizPenIcon from "./quiz-pen-icon";
-import QuizHardPenIcon from "./QuizHardPenIcon";
-import QuizBonusPenIcon from "./QuizBonusPenIcon";
+import QuizHardPenIcon from "./quiz-hard-pen-icon";
+import QuizBonusPenIcon from "./quiz-bonus-pen-icon";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import CatLogo from "./cat-logo";
-import GiftIcon from "./GiftIcon";
+import GiftIcon from "./gift-icon";
 import {GradientProgress}  from '@/components/gradient-progress'
 // --- Helper sub-component for the level selection cards ---
 const LevelCard = ({

@@ -62,7 +62,6 @@ const CreateYoutubeNote = () => {
 
     useEffect(() => {
     const timeoutId = setTimeout(() => {
-        console.log("validateYouTubeUrl(urlInputValue)", validateYouTubeUrl(urlInputValue))
         setIsValid(validateYouTubeUrl(urlInputValue))
         }, 1000);
         return () => clearTimeout(timeoutId);

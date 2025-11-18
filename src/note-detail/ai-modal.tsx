@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -9,46 +8,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL, ISO_TO_LANGUAGE } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-import { ArrowLeft, BellOff, BellRing, Plus } from "lucide-react";
-import { useNavigate } from "react-router";
-import { cn } from "@/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import AIIcon from "@/note-detail/AIIcon";
-import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import QuizHardPenIcon from "@/note-detail/QuizHardPenIcon";
-import FlashcardIcon from "@/note-detail/FlashcardIcon";
-import { StickyAiButton } from "./sticky-ai-button";
+import AIIcon from "@/note-detail/ai-icon";
+import { Card, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import QuizHardPenIcon from "@/note-detail/quiz-hard-pen-icon";
+import FlashcardIcon from "@/note-detail/flashcard-icon";
+import { StickyAiButton } from "../components/sticky-ai-button";
 import { FlashcardsTab } from "@/note-detail/flashcard-tab";
 import { AIQuizTab } from "@/note-detail/quiz-tab";
-import { POLLING_INTERVAL_MS } from "@/note-detail";
-import { GenericAILoading } from "./GenericAILoading";
-import { Badge } from "./ui/badge";
-import { Switch } from "./ui/switch";
-import { Avatar } from "./ui/avatar";
+import { GenericAILoading } from "../components/generic-ai-loading";
+import { Switch } from "../components/ui/switch";
+import { Avatar } from "../components/ui/avatar";
 import CatPenIcon from "@/notes/cat-pen-icon";
 
-const availableLanguages = [
-  { iso: "auto", flag: "🤖", language: "Auto" },
-  ...Object.entries(ISO_TO_LANGUAGE).map(([iso, data]) => ({
-    iso,
-    ...data,
-  })),
-];
 
 const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQuiz }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -210,7 +188,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
         ) : view === "quiz" ? (
             <AIQuizTab quizLevel={quizLevel} setQuizLevel={setQuizLevel} quizData={noteQuery?.data?.data?.questions} noteId={noteId} />
         ) : (
-          <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 py-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <Card
               className="transition-all hover:shadow-lg hover:border-primary/30 cursor-pointer"
               onClick={() => setView("quiz")}

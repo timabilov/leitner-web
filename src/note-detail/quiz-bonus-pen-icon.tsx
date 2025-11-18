@@ -22,8 +22,8 @@ const QuizBonusPenIcon = ({ color, width = "20", height = "20" }) => {
           y2="31"
           gradientUnits="userSpaceOnUse"
         >
-          <stop stop-color="#F3111C" />
-          <stop offset="1" stop-color="#C14895" />
+          <stop stopColor="#F3111C" />
+          <stop offset="1" stopColor="#C14895" />
         </linearGradient>
         <clipPath id="clip0_31_1471">
           <rect width="24" height="24" fill="white" />

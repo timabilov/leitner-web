@@ -3,10 +3,10 @@ import { redirect } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
-import { CircleAlert, FolderArchive, Plus, Youtube } from "lucide-react";
+import { FolderArchive, Plus, SearchX, Youtube } from "lucide-react";
 
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -18,13 +18,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import CreateYoutubeNote from "./create-youtube-note";
-import CreateMultiNote from "./create-multi-note";
 import { AIPromptInput } from "./ai-prompt-textarea";
 import Layout from "@/components/layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
-import CatLogo from "@/note-detail/cat-logo";
 import CatPenIcon from "./cat-pen-icon";
+import debounce from 'lodash.debounce';
+import {GradientProgress} from '@/components/gradient-progress'
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -37,31 +37,34 @@ const isNoteInLoadingState = (note: any) => {
 const Notes = ({ children }: any) => {
   const { companyId, isLoggedIn, fullName } = useUserStore();
   const queryClient = useQueryClient();
-  const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<string>("grid");
-
-  useEffect(() => {
-    console.log("viewMode", viewMode);
-  }, [viewMode])
+  const [isPolling, setIsPolling] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   
   const notesQuery = useQuery({
     queryKey: ["notes"],
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       return axiosInstance.get(
         API_BASE_URL + `/company/${companyId}/notes/all`
       );
     },
-    enabled: !!companyId,
-    refetchInterval: (data) => {
-      const notes = data?.data?.notes;
-      if (!notes || !Array.isArray(notes) || notes.length === 0) {
+    enabled: !!companyId || isPolling,
+    refetchInterval: (query) => {
+      const notes =  query.state?.data?.data.notes;
+      if ((!notes || !Array.isArray(notes) || notes.length === 0) || !isPolling) {
         return false;
       }
-      const hasLoadingNotes = notes.some(isNoteInLoadingState);
-      return hasLoadingNotes ? 5000 : false; // Poll every 5 seconds if there are loading notes
+      const hasLoadingNotes = !!notes.some(isNoteInLoadingState);
+      if (hasLoadingNotes){
+        return 5000; // Poll every 5 seconds if there are loading notes
+      }
+      else {
+        setIsPolling(false);
+        return false;
+      }
+
     },
     throwOnError: (error) => {
       console.error("Get notes error:", error);
@@ -69,29 +72,47 @@ const Notes = ({ children }: any) => {
     },
   });
 
-  // const searchNotesQuery = useQuery({
-  //   queryKey: ["searchNotes", searchQuery],
-  //   queryFn: () => searchNotes(searchQuery),
-  //   enabled: true,
-  //   throwOnError: (error) => {
-  //     console.error("Search error:", error);
-  //     return false;
-  //   },
-  // });
 
-  // const debouncedSearch = useCallback(
-  //   debounce((value: string) => {
-  //     setSearchQuery(value);
-  //   }, 300),
-  //   []
-  // );
 
-  // const onRefresh = useCallback(() => {
-  //   notesQuery.refetch();
-  //   if (searchNotesQuery) {
-  //     queryClient.invalidateQueries(["searchNotes"]);
-  //   }
-  // }, [notesQuery, searchQuery, queryClient]);
+    useEffect(() => {
+    if (isPolling) notesQuery.refetch();
+  }, [isPolling]);
+
+
+  const searchNotesQuery = useQuery({
+    queryKey: ["searchNotes", searchQuery],
+    queryFn: () => searchNotes(searchQuery),
+    enabled: true,
+    throwOnError: (error) => {
+      console.error("Search error:", error);
+      return false;
+    },
+  });
+
+   const searchNotes = async (query: string) => {
+    try {
+      console.log('Searching notes with query:', query);
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const filteredNotes = (notesQuery.data?.data?.notes || []).filter(note =>
+            note.name.toLowerCase().includes(query.toLowerCase())
+          );
+          console.log('Filtered Notes:', filteredNotes.length);
+          resolve(filteredNotes);
+        }, 500);
+      });
+    } catch (error) {
+      throw new Error('Failed to search notes');
+    }
+  };
+
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setSearchQuery(value);
+    }, 300),
+    []
+  );
+
 
   // const getIcon = (noteType: string) => {
   //   switch (noteType) {
@@ -118,7 +139,7 @@ const Notes = ({ children }: any) => {
   }
 
   return (
-    <Layout>
+    <Layout search={debouncedSearch} searchValue={searchQuery} isSearching={searchNotesQuery.isPending} >
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className=" w-full max-w-2xl m-auto mt-8">
@@ -179,7 +200,7 @@ const Notes = ({ children }: any) => {
             </Card>
           </div>
           <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
-            <AIPromptInput />
+            <AIPromptInput setIsPolling={setIsPolling}/>
           </div>
           {/* <img src="./adaptive-icon.png" />  */}
           <div className="sm:flex justify-between p-4 mt-4">
@@ -189,17 +210,17 @@ const Notes = ({ children }: any) => {
             <ButtonGroup
               orientation="horizontal"
               aria-label="Media controls"
-              className="h-fit"
+              className="h-fit border rounded-md"
             >
               <Button
-                variant="outline"
+                 variant={viewMode === "grid" ? "secondary" : "ghost"}
                 size="icon"
                 onClick={() => setViewMode("grid")}
               >
                 <Grid3X3 className="h-4 w-4" />
               </Button>
               <Button
-                variant="outline"
+                variant={viewMode === "list" ? "secondary" : "ghost"}
                 size="icon"
                 onClick={() => setViewMode("list")}
               >
@@ -214,11 +235,28 @@ const Notes = ({ children }: any) => {
                 : "grid-cols-1"
             }
           >
-            <SortableGrid
-              data={notesQuery?.data?.data?.notes}
-              view={viewMode}
-              setView={setViewMode}
-            />
+            {
+              /*searchQuery && searchNotesQuery.isPending*/ true ? (
+                <div className="max-w-4xl flex  flex-row justify-center m-auto mt-8 mb-8">
+                  <GradientProgress value={90} toAnimate={true}/>
+                </div>
+              ) :
+              searchQuery && searchNotesQuery.isFetched && searchNotesQuery.data?.length === 0 ? (
+                <div className="flex flex-col items-center mt-8 mb-8">
+                  <SearchX className="text-muted-foreground" size={70}/>
+                  <h2 className="scroll-m-20  pb-2 text-3xl font-semibold text-muted-foreground mt-4">
+                    No results found
+                  </h2>
+                </div>
+
+              ) : (
+                <SortableGrid
+                  data={searchQuery ? (searchNotesQuery.data || []) :notesQuery?.data?.data?.notes}
+                  view={viewMode}
+                  setView={setViewMode}
+                />
+              )
+            }
           </div>
         </div>
       </div>

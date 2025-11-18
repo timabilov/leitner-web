@@ -1,11 +1,9 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useUserStore } from "@/store/userStore";
 import { AppSidebar } from "./app-sidebar"; // Your sidebar component
 import Header from "./header";
 import { SidebarInset, SidebarProvider } from "./ui/sidebar";
-import { Button } from "./ui/button";
-import AIIcon from "@/note-detail/AIIcon";
-import AiModal from "./ai-modal";
+
 
 /**
  * The main layout component with a STICKY sidebar and SCROLLABLE content.
@@ -14,7 +12,7 @@ import AiModal from "./ai-modal";
  * @param {string} props.title - The title for the page header.
  * @param {React.RefObject<HTMLElement>} props.containerRef - A ref for the main scrollable element.
  */
-const Layout = ({ children, title, containerRef }) => {
+const Layout = ({ children, title, containerRef, search, searchValue, isSearching }) => {
   const [showModal, setShowModal] = useState<boolean>(false)
   const { photo, fullName } = useUserStore();
   const shortName =
@@ -36,7 +34,7 @@ const Layout = ({ children, title, containerRef }) => {
       <SidebarInset className="flex flex-1 flex-col">
         
         {/* The Header is part of the content area and will also NOT scroll. */}
-        <Header photo={photo} shortName={shortName} title={title} />
+        <Header photo={photo} shortName={shortName} title={title} search={search} searchValue={searchValue} isSearching={isSearching}/>
         
         {/* 
           --- THIS IS THE SCROLLABLE CONTAINER ---

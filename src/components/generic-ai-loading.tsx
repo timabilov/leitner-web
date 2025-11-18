@@ -21,8 +21,8 @@ const PlaceholderSparkleIcon = ({ className }) => (
         y2="12.583"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#E8759C" />
-        <stop offset="1" stop-color="#8BA8DB" />
+        <stop stopColor="#E8759C" />
+        <stop offset="1" stopColor="#8BA8DB" />
       </linearGradient>
     </defs>
   </svg>
