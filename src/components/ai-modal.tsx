@@ -39,6 +39,8 @@ import { POLLING_INTERVAL_MS } from "@/note-detail";
 import { GenericAILoading } from "./GenericAILoading";
 import { Badge } from "./ui/badge";
 import { Switch } from "./ui/switch";
+import { Avatar } from "./ui/avatar";
+import CatPenIcon from "@/notes/cat-pen-icon";
 
 const availableLanguages = [
   { iso: "auto", flag: "🤖", language: "Auto" },
@@ -142,7 +144,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
         <StickyAiButton onClick={() => setIsOpen(true)} />
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-4xl max-w-3xl">
         <DialogHeader>
             {
                 (!isLoading) && (
@@ -178,6 +180,11 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
             />
         ) : noteQuery.data?.data?.quiz_status !== 'generated' ? (
           <div className="flex flex-col items-center justify-center text-center p-8">
+             <Avatar className="h-16 w-16 rounded-md bg-gray-950 flex items-center mb-8 ">
+                {/* <CatLogo /> */}
+                <CatPenIcon />
+              </Avatar>
+
             <h3 className="text-xl font-semibold text-foreground mb-2">
               Unlock Your AI Tools
             </h3>
@@ -203,7 +210,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
         ) : view === "quiz" ? (
             <AIQuizTab quizLevel={quizLevel} setQuizLevel={setQuizLevel} quizData={noteQuery?.data?.data?.questions} noteId={noteId} />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <Card
               className="transition-all hover:shadow-lg hover:border-primary/30 cursor-pointer"
               onClick={() => setView("quiz")}

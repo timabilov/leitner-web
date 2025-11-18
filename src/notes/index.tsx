@@ -6,7 +6,7 @@ import { API_BASE_URL } from "@/services/config";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
-import { CircleAlert, FolderArchive, Youtube } from "lucide-react";
+import { CircleAlert, FolderArchive, Plus, Youtube } from "lucide-react";
 
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -172,23 +172,17 @@ const Notes = ({ children }: any) => {
               <CardContent className="flex flex-col h-full border-t py-3 cursor-pointer">
                 <p className="flex justify-between items-center text-link hover:underline font-medium group transition-colors duration-200">
                   Multi note
-                  <CreateMultiNote />
+                  {/* <CreateMultiNote /> */}
+                    <Plus className="mr-2 h-4 w-4" />
                 </p>
               </CardContent>
             </Card>
           </div>
           <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
-            {/* <Search className="text-muted-foreground absolute top-1/2 h-4 w-4 -translate-y-1/2 transform" /> */}
-            {/* <Input
-                            placeholder="Search notes..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 max-w-2xl"
-                        /> */}
             <AIPromptInput />
           </div>
           {/* <img src="./adaptive-icon.png" />  */}
-          <div className="hidden sm:flex justify-between p-4 mt-4">
+          <div className="sm:flex justify-between p-4 mt-4">
             <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
               All notes
             </h3>
@@ -213,11 +207,10 @@ const Notes = ({ children }: any) => {
               </Button>
             </ButtonGroup>
           </div>
-
           <div
             className={
               viewMode === "grid"
-                ? "xs:grid-cols-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4"
+                   ? "xs:grid-cols-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4"
                 : "grid-cols-1"
             }
           >

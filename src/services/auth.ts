@@ -79,6 +79,7 @@ export const uploadFileToCF = async (
   note_id,
   putUrl,
   file, // Changed from filePath to a more descriptive name
+  fileName
 ) => {
   if (!file) {
     throw new Error('A File or Blob object is required for upload.');
@@ -95,7 +96,7 @@ export const uploadFileToCF = async (
         // --- THIS IS THE CORE FIX ---
         // Axios's second argument is the request body. We pass the Blob/File directly.
         // The third argument is the config object.
-        const uploadResponse = await axiosInstance.put(putUrl, {uri: file, type: mimeType, name: "archive-123.zip"}, {
+        const uploadResponse = await axiosInstance.put(putUrl,file, {
           headers: {
             // This is critical. We explicitly set the Content-Type.
             // This header object will override any default headers (like Authorization)
@@ -109,6 +110,7 @@ export const uploadFileToCF = async (
             delete headers['Authorization'];
             return data;
           }],
+  
         });
 
         // Axios throws an error on non-2xx status codes automatically,
@@ -196,6 +198,51 @@ export const createZip = async (attachments, noteText) => {
     }
     
     return false;
+  }
+};
+
+export const createZip2 = async (attachments, noteText) => {
+  // 1. Check for content.
+  if (!attachments || (attachments.length === 0 && !noteText?.trim())) {
+    toast.error('No Content', {
+      description: 'Please add text or attachments to create a note.',
+    });
+    return null;
+  }
+
+  const zip = new JSZip();
+  
+  try {
+    // 2. Add note text to the zip if it exists.
+    if (noteText?.trim()) {
+      zip.file("note.txt", noteText.trim());
+    }
+
+    // 3. Add all file attachments.
+    attachments.forEach((file) => {
+      zip.file(file.name, file);
+    });
+
+    // 4. Generate the zip file's raw data as a Blob.
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    console.log(`Zip data (Blob) created. Size: ${zipBlob.size} bytes`);
+
+    // 5. Create a unique filename.
+    const fileName = `note_${Date.now()}.zip`;
+
+    // 6. Create the temporary, in-memory "file URL" (Object URL).
+    // This can be used in `href` attributes for download links.
+    const fileUrl = URL.createObjectURL(zipBlob);
+    
+    // 7. Return all three required pieces of information.
+    return { zipBlob, fileName, fileUrl };
+
+  } catch (error) {
+    console.error("Error occurred during zip creation:", error);
+    toast.error("Zip Creation Failed", {
+      description: "There was an error preparing your file. Please try again.",
+    });
+    return null;
   }
 };
 

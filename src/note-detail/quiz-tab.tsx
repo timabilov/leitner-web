@@ -299,7 +299,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
             </Alert>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
           <LevelCard
             level="easy"
             title="Easy"

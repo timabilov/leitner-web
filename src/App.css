@@ -109,3 +109,29 @@
 div[role=separator] {
   background-color: oklch(98.5% 0.001 106.423);
 }
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+/*
+Target the Skeleton component by its class.
+The default animate-pulse uses a background color. We can add
+a more noticeable opacity animation to it.
+*/
+.animate-pulse {
+animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+}
+
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { AudioVisualizer } from '@/components/audio-visualiser'; // Adjust path if needed
 
@@ -19,22 +19,19 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 
 // --- Lucide Icon Imports ---
 import { 
-  File, Image, X, Paperclip, CornerDownLeft, Mic, 
+  File, Image, X, Paperclip, Mic, 
   StopCircle, UploadCloud, Download, ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2,
-  ChevronUp,
   ArrowUp,
-  FileText
 } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
-import { cn } from "@/lib/utils";
-import { axiosInstance, createZip, uploadFileToCF } from '@/services/auth';
+import { axiosInstance, createZip2, uploadFileToCF } from '@/services/auth';
 import { API_BASE_URL } from '@/services/config';
 import { useMutation } from '@tanstack/react-query';
 import { useUserStore } from '@/store/userStore';
 import { toast } from 'sonner';
+import { FilePreviewDialog } from '@/components/FilePreviewDialog';
+import { Spinner } from '@/components/ui/spinner';
 
 
 // --- AudioPreview Sub-Component (for completed recordings) ---
@@ -106,9 +103,7 @@ export function AIPromptInput({ portalContainer }) {
   const [isFetchingMics, setIsFetchingMics] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [previewFile, setPreviewFile] = useState<File | null>(null); // For PDF preview dialog
-  const [zipPath, setZipPath] = useState<string | null>(null);
   const [noteId, setNoteId] = useState<string | null>(null);
-  const [zipBlob, setZipBlob] = useState<string>();
   const [zipData, setZipData] = useState<any>();
 
   const mediaRecorderRef = useRef(null);
@@ -117,7 +112,6 @@ export function AIPromptInput({ portalContainer }) {
   const hasFetchedMics = useRef(false);
   const isDeletingRef = useRef(false); // NEW: The flag to signal deletion intent
  const timerIntervalRef = useRef(null);
-  const startTimeRef = useRef(0);
  // --- NEW: Robust Timer Refs (Accumulator Pattern) ---
   const lastStartTimeRef = useRef(0);
   const previouslyElapsedTimeRef = useRef(0);
@@ -258,25 +252,23 @@ export function AIPromptInput({ portalContainer }) {
 
 
   const saveNote = async () => {
-     const zipData  = await createZip(files, prompt);
+     const zipData  = await createZip2 (files, prompt);
      setZipData(zipData)
-     console.log("zip data", zipData)
-     const fileName =  `archive-${Date.now()}.zip`;
-    // if (zipData) {
-    //    draftNoteMutation.mutate({
-    //     note_type: 'multi',
-    //     name: 'New Recording',
-    //     file_name: `archive-.zip`,
-    //     transcript: 'Not transcribed yet',
-    //     language: 'en',
-    //     youtube_url: null,
-    //     folder_id: selectedFolder?.id,
-    //   });
-    // }
+    if (zipData) {
+       draftNoteMutation.mutate({
+        note_type: 'multi',
+        name: 'New Recording',
+        file_name: zipData.fileName,
+        transcript: 'Not transcribed yet',
+        language: 'en',
+        youtube_url: null,
+        folder_id: selectedFolder?.id,
+      });
+    }
   }
 
   useEffect(() => {
-    if (zipData && noteId) generateUploadLink.mutate({noteId, file_name: "archive-123.zip" })
+    if (zipData && noteId) generateUploadLink.mutate({noteId, file_name: zipData?.fileName })
   }, [zipData, noteId]);
 
 
@@ -306,10 +298,9 @@ export function AIPromptInput({ portalContainer }) {
       const uploadUrl = response.data.upload_url;
       console.log('Upload URL generated:', uploadUrl);
       try {
-        uploadFileToCF(noteId, uploadUrl, zipData).then(() => {
+        uploadFileToCF(noteId, uploadUrl, zipData.zipBlob, zipData.fileName).then(() => {
           console.log('Upload to CF completed');
           markUploadAsFinished.mutate(noteId);
-          
         }).catch(error => {
           // handleFailedGenerateUploadLink(uploadUrl);
           console.log(error)
@@ -333,6 +324,10 @@ const markUploadAsFinished = useMutation({
     },
     onSuccess: () => {
       console.log('Note marked as finished!');
+      setNoteId(null);
+      setAudioStream(null);
+      setPrompt("");
+      setFiles([]);
       toast.success("Note has been created");
     },
     onError: (error) => {
@@ -382,8 +377,6 @@ const markUploadAsFinished = useMutation({
                      <Zoom>
                       <img src={file.preview} alt={file.name} className="h-8 w-8 rounded object-cover border ml-1" />
                     </Zoom>
-
-        
                   )}
                   <Button variant="ghost" size="icon" className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={removeFile(file)}><X className="h-3 w-3" /></Button>
                 </div>
@@ -426,10 +419,20 @@ const markUploadAsFinished = useMutation({
           </div>
 
           <div className="flex-shrink-0">
-            <Button onClick={() => saveNote()} size="icon" /*disabled={!prompt && files.length === 0}*/ className="rounded-full h-8 w-8 md:h-9 md:w-9"><ArrowUp className="h-4 w-4" /></Button>
+            <Button
+              onClick={() => saveNote()}
+              size="icon" 
+              disabled={draftNoteMutation.isPending ||  markUploadAsFinished.isPending || generateUploadLink.isPending}
+              className="rounded-full h-8 w-8 md:h-9 md:w-9">
+                {
+                  draftNoteMutation.isPending ||  markUploadAsFinished.isPending || generateUploadLink.isPending ? (
+                    <Spinner color='#C04796' />
+                  ) :  <ArrowUp className="h-4 w-4" />
+                }
+               
+              </Button>
           </div>
         </div>
-        
         {isDragActive && (<div className="absolute inset-0 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center z-10 border-2 border-primary border-dashed"><div className="flex flex-col items-center gap-2 text-primary font-medium"><div className="p-4 rounded-full bg-primary/10"><UploadCloud className="h-8 w-8" /></div><p>Drop files to attach</p></div></div>)}
       </div>
        <FilePreviewDialog
@@ -440,89 +443,3 @@ const markUploadAsFinished = useMutation({
     </div>
   );
 }
-
-
-const FilePreview = ({ file, onRemove, onPreview }: { file: File; onRemove: () => void; onPreview: () => void; }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const isPdf = file.type === "application/pdf";
-  const isImage = file.type.startsWith("image/");
-
-  useEffect(() => {
-    if (isImage || file.type.startsWith("audio/")) {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-  }, [file, isImage]);
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
-
-  const renderPreview = () => {
-    if (isImage && previewUrl) {
-      return ( 
-        <Zoom>
-          <img src={previewUrl} alt={file.name} className="w-16 h-16 object-cover rounded-md" />
-        </Zoom>
-      );
-    }
-    if (file.type.startsWith("audio/") && previewUrl) {
-      return <audio src={previewUrl} controls className="h-10 w-full max-w-xs" />;
-    }
-    const Icon = isPdf ? FileText : File;
-    return (
-      <div 
-        onClick={isPdf ? onPreview : undefined}
-        className={cn("w-16 h-16 flex items-center justify-center bg-secondary rounded-md", isPdf && "cursor-pointer hover:bg-secondary/80")}
-      >
-        <Icon className="w-8 h-8 text-secondary-foreground" />
-      </div>
-    );
-  };
-
-  return (
-    <li className="flex items-center justify-between p-2 bg-muted rounded-lg gap-4">
-      <div className="shrink-0">{renderPreview()}</div>
-      <div className="flex-grow min-w-0">
-        <p className="text-sm font-medium truncate">{file.name}</p>
-        <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-      </div>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" onClick={onRemove} className="h-7 w-7 shrink-0">
-            <X className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent><p>Remove file</p></TooltipContent>
-      </Tooltip>
-    </li>
-  );
-};
-
-const FilePreviewDialog = ({ file, onClose }: { file: File | null; onClose: () => void; }) => {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (file && file.type === "application/pdf") {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-  }, [file]);
-
-  if (!file || !previewUrl || file.type !== "application/pdf") return null;
-
-  return (
-    <Dialog open={true} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-6xl w-6xl h-[90vh] flex flex-col">
-        <DialogHeader><DialogTitle className="truncate">{file.name}</DialogTitle></DialogHeader>
-        <div className="py-4 flex-1 h-0">
-          <embed src={previewUrl} type="application/pdf" className="w-full h-full z-50" />
-         </div>
-       </DialogContent>
-        </Dialog>
-  );
-};

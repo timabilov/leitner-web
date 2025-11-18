@@ -3,10 +3,9 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/services/config";
 import { axiosInstance } from "@/services/auth";
 import { useUserStore } from "@/store/userStore";

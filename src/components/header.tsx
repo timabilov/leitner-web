@@ -4,11 +4,13 @@ import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Select from "./select";
-import { BellOff, BellRing, Search } from "lucide-react";
+import { BellOff, BellRing, ChevronDown, Search } from "lucide-react";
 import { Input } from "./ui/input";
 import { AnimatedTooltip } from "./ui/motion-tooltip";
 import { useState, useId, useEffect } from "react";
 import { Switch } from "./ui/switch";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
+import { Button } from "./ui/button";
 
 const Header = ({
   isAlertEnabled,
@@ -103,12 +105,26 @@ const Header = ({
             data={foldersQuery?.data?.folders || []}
             loading={isLoadingFolders}
           />
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={photo} />
-            <AvatarFallback className=" bg-orange-500 text-white">
-              {shortName}
-            </AvatarFallback>
-          </Avatar>
+          <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Button variant="ghost" className="flex items-center gap-2">
+                 <Avatar className="h-9 w-9">
+                    <AvatarImage src={photo} />
+                    <AvatarFallback className=" bg-orange-500 text-white">
+                      {shortName}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <span className="xs:hidden md:inline">{fullName}</span>
+                  <ChevronDown className="h-4 w-4 md:inline" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem>Profile</DropdownMenuItem>
+                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuItem>Sign out</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
         {/* <div classNam
             e="relative max-w-md flex-1 h-2"></div> */}

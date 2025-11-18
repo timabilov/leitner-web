@@ -47,7 +47,7 @@ const Layout = ({ children, title, containerRef }) => {
         <main 
          ref={containerRef}
           id="main-container"
-          className="flex-1 flex flex-col relative p-4 md:p-6"
+          className="flex-1 flex flex-col relative p-4 md:p-6 overflow-y-auto"
         >
           {/* All your page content (like NoteDetail) goes here and will scroll inside this main tag. */}
           {children}
