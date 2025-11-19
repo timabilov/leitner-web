@@ -1,22 +1,20 @@
-// --- NEW AudioPreview Sub-Component ---
-// You can place this inside the AIPromptInput.jsx file, before the main component.
-
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { AudioWaveform, Download, StopCircle, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-
-
+import { useTranslation } from "react-i18next"; // Import the hook
 
 type Props = {
     file: any,
     onRemove: any;
 }
-const AudioPreview = ({ file, onRemove }:Props) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
 
-  const togglePlayPause = (e) => {
+const AudioPreview = ({ file, onRemove }: Props) => {
+  const { t } = useTranslation(); // Initialize the hook
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const togglePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent parent click events
     if (isPlaying) {
       audioRef.current?.pause();
@@ -62,12 +60,12 @@ const AudioPreview = ({ file, onRemove }:Props) => {
 
       {/* Download Button */}
       <Tooltip>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <a href={file.preview} download={file.name}>
             <Download className="h-4 w-4 text-muted-foreground hover:text-foreground ml-2" />
           </a>
         </TooltipTrigger>
-        <TooltipContent><p>Download Recording</p></TooltipContent>
+        <TooltipContent><p>{t("Download Recording")}</p></TooltipContent>
       </Tooltip>
       
       {/* Remove Button (from parent) */}
@@ -82,3 +80,5 @@ const AudioPreview = ({ file, onRemove }:Props) => {
     </div>
   );
 };
+
+export default AudioPreview;

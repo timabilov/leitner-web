@@ -1,6 +1,6 @@
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import remarkBreaks from 'remark-breaks'; // <-- 1. Import the plugin
+// import remarkBreaks from 'remark-breaks'; // <-- 1. Import the plugin
 import React from 'react'
 import './markdown-view.css';
 

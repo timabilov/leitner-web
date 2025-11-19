@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { AudioVisualizer } from "@/components/audio-visualiser"; // Adjust path if needed
+import { useTranslation } from "react-i18next"; // Import the hook
+import { AudioVisualizer } from "@/components/audio-visualiser";
 
 // --- Shadcn UI Imports ---
 import { Textarea } from "@/components/ui/textarea";
@@ -53,7 +54,7 @@ import { Spinner } from "@/components/ui/spinner";
 // --- AudioPreview Sub-Component (for completed recordings) ---
 const AudioPreview = ({ file, onRemove, portalContainer }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-
+  const { t } = useTranslation(); // Add translation hook
   const audioRef = useRef(null);
 
   const togglePlayPause = (e) => {
@@ -103,7 +104,7 @@ const AudioPreview = ({ file, onRemove, portalContainer }) => {
           </a>
         </TooltipTrigger>
         <TooltipContent container={portalContainer}>
-          <p>Download</p>
+          <p>{t("Download")}</p>
         </TooltipContent>
       </Tooltip>
       <Button
@@ -120,20 +121,20 @@ const AudioPreview = ({ file, onRemove, portalContainer }) => {
 
 // --- Main AIPromptInput Component ---
 export function AIPromptInput({ portalContainer, setIsPolling }) {
-  const { companyId, userId, email, isLoggedIn, photo, fullName } =
-    useUserStore();
+  const { t } = useTranslation(); // Initialize translation hook
+  const { companyId } = useUserStore();
   const selectedFolder = useUserStore((store) => store.selectedFolder);
 
   const [prompt, setPrompt] = useState("");
   const [files, setFiles] = useState([]);
-  const [recordingStatus, setRecordingStatus] = useState("idle"); // 'idle', 'recording', 'paused'
+  const [recordingStatus, setRecordingStatus] = useState("idle");
   const [audioStream, setAudioStream] = useState(null);
   const [isRecorderBlocked, setIsRecorderBlocked] = useState(false);
   const [audioDevices, setAudioDevices] = useState([]);
   const [selectedMicId, setSelectedMicId] = useState("default");
   const [isFetchingMics, setIsFetchingMics] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [previewFile, setPreviewFile] = useState<File | null>(null); // For PDF preview dialog
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [noteId, setNoteId] = useState<string | null>(null);
   const [zipData, setZipData] = useState<any>();
 
@@ -141,9 +142,8 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
   const audioChunksRef = useRef([]);
   const mediaStreamRef = useRef(null);
   const hasFetchedMics = useRef(false);
-  const isDeletingRef = useRef(false); // NEW: The flag to signal deletion intent
+  const isDeletingRef = useRef(false);
   const timerIntervalRef = useRef(null);
-  // --- NEW: Robust Timer Refs (Accumulator Pattern) ---
   const lastStartTimeRef = useRef(0);
   const previouslyElapsedTimeRef = useRef(0);
 
@@ -207,8 +207,8 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
         lastStartTimeRef.current = 0;
 
         if (isDeletingRef.current) {
-          audioChunksRef.current = []; // Ensure chunks are cleared
-          isDeletingRef.current = false; // Reset the flag
+          audioChunksRef.current = [];
+          isDeletingRef.current = false;
         } else if (audioChunksRef.current.length > 0) {
           const audioBlob = new Blob(audioChunksRef.current, {
             type: "audio/webm",
@@ -228,7 +228,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
         mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
       };
       recorder.start();
-      // Start timer from scratch
       previouslyElapsedTimeRef.current = 0;
       lastStartTimeRef.current = Date.now();
       timerIntervalRef.current = setInterval(() => {
@@ -261,7 +260,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
       setRecordingStatus("recording");
       lastStartTimeRef.current = Date.now();
       timerIntervalRef.current = setInterval(() => {
-        // The new elapsed time is the previously stored time plus the new segment's time
         setElapsedTime(
           previouslyElapsedTimeRef.current +
             (Date.now() - lastStartTimeRef.current)
@@ -276,15 +274,9 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
     }
   };
 
-  // const deleteRecording = () => {
-  //   audioChunksRef.current = []; // Discard any captured audio
-  //   stopRecording(); // Use the same stop logic to clean up the stream and state
-  // };
-
-  // MODIFIED: Delete function now sets the flag before stopping
   const deleteRecording = () => {
     isDeletingRef.current = true;
-    stopRecording(); // Trigger the onstop event, which will now see the flag
+    stopRecording();
   };
 
   const handleRecordButtonClick = async () => {
@@ -330,9 +322,9 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
     if (zipData) {
       draftNoteMutation.mutate({
         note_type: "multi",
-        name: "New Recording",
+        name: t("New Recording"),
         file_name: zipData.fileName,
-        transcript: "Not transcribed yet",
+        transcript: t("Not transcribed yet"),
         language: "en",
         youtube_url: null,
         folder_id: selectedFolder?.id,
@@ -352,14 +344,8 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
         newNote
       );
     },
-    onSuccess: (response) => {
-      console.log("Draft Note Success:", response.data);
-      setNoteId(response?.data.id);
-      // generateUploadLink.mutate({zipPath: zipPath, noteId: response?.data.id})
-    },
-    onError: (error: any) => {
-      console.error("Draft Note Error:", error.response?.data);
-    },
+    onSuccess: (response) => setNoteId(response?.data.id),
+    onError: (error: any) => console.error(error.response?.data),
   });
 
   const generateUploadLink = useMutation({
@@ -367,35 +353,16 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
       return axiosInstance.put(
         API_BASE_URL +
           `/company/${companyId}/notes/${noteId}/generateFileUploadLink`,
-        {
-          file_name,
-          // file_type: 'application/zip',
-        }
+        { file_name }
       );
     },
     onSuccess: (response) => {
       const uploadUrl = response.data.upload_url;
-      console.log("Upload URL generated:", uploadUrl);
-      try {
-        uploadFileToCF(noteId, uploadUrl, zipData.zipBlob, zipData.fileName)
-          .then(() => {
-            console.log("Upload to CF completed");
-            markUploadAsFinished.mutate(noteId);
-          })
-          .catch((error) => {
-            // handleFailedGenerateUploadLink(uploadUrl);
-            console.log(error);
-          });
-      } catch (error) {
-        console.log(error);
-      }
+      uploadFileToCF(noteId, uploadUrl, zipData.zipBlob, zipData.fileName)
+        .then(() => markUploadAsFinished.mutate(noteId))
+        .catch((error) => console.log(error));
     },
-    onError: (error) => {
-      console.log("Generate upload link error:", error.response?.data);
-      //  Sentry.captureException("Failed while uploadToCFFromPath ", {
-      //   extra: {  noteId, materialZipUri, error },
-      // })
-    },
+    onError: (error) => console.log(error.response?.data),
   });
 
   const markUploadAsFinished = useMutation({
@@ -407,33 +374,19 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
     },
     onSuccess: () => {
       setIsPolling(true);
-      console.log("Note marked as finished!");
       setNoteId(null);
       setAudioStream(null);
       setPrompt("");
       setFiles([]);
-      toast.success("Note has been created");
+      toast.success(t("Note has been created"));
     },
     onError: (error) => {
-      console.log("Mark upload as finished error:", error.response?.data);
-      //   Sentry.captureException(error,
-      //     {
-      //       extra: {
-      //         noteId,
-      //         companyId,
-      //         materialZipUri,
-      //       },
-      //     }
-      //   );
+      console.log(error.response?.data);
       console.log(
-        "Sorry, couldn't start processing your note. Please try again by creating new one."
+        t(
+          "Sorry, couldn't start processing your note. Please try again by creating new one."
+        )
       );
-      //   queryClient.invalidateQueries(['notes'])
-      //   queryClient.invalidateQueries(['profile'])
-      //   setTimeout(() => {
-      //     router.dismissAll();
-      //   }, 1000);
-      // noteLogger.error(noteId, `Error marking upload as finished: ${error.response?.data}`)
     },
   });
 
@@ -449,7 +402,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
       >
         <input {...getInputProps()} />
         <Textarea
-          placeholder="Ask anything, drag files, or start recording..."
+          placeholder={t("Ask anything, drag files, or start recording...")}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           className="min-h-[60px] w-full resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 text-base py-2.5"
@@ -517,7 +470,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
 
         <div className="flex justify-between items-center border-t bg-transparent pt-2 px-2 mt-1 min-h-[44px]">
           <div className="flex items-center gap-1">
-            {/* {recordingStatus === 'idle' && ( */}
             <>
               <Tooltip>
                 <TooltipTrigger>
@@ -532,7 +484,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent container={portalContainer}>
-                  <p>Attach file</p>
+                  <p>{t("Attach file")}</p>
                 </TooltipContent>
               </Tooltip>
               <Tooltip>
@@ -549,7 +501,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent container={portalContainer}>
-                  <p>Start recording</p>
+                  <p>{t("Start recording")}</p>
                 </TooltipContent>
               </Tooltip>
               <DropdownMenu>
@@ -567,7 +519,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
                   <TooltipContent container={portalContainer}>
-                    <p>Select Mic</p>
+                    <p>{t("Select Mic")}</p>
                   </TooltipContent>
                 </Tooltip>
                 <DropdownMenuContent
@@ -575,12 +527,12 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                   align="start"
                   className="w-[350px]"
                 >
-                  <DropdownMenuLabel>Microphone</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t("Microphone")}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {isFetchingMics && (
                     <DropdownMenuItem disabled>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Fetching...
+                      {t("Fetching...")}
                     </DropdownMenuItem>
                   )}
                   {!isFetchingMics && audioDevices.length > 0 && (
@@ -595,7 +547,9 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                           className="truncate"
                         >
                           {mic.label ||
-                            `Microphone ${audioDevices.indexOf(mic) + 1}`}
+                            t("Microphone {{number}}", {
+                              number: audioDevices.indexOf(mic) + 1,
+                            })}
                         </DropdownMenuRadioItem>
                       ))}
                     </DropdownMenuRadioGroup>
@@ -603,21 +557,22 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                   {!isFetchingMics && audioDevices.length === 0 && (
                     <DropdownMenuItem disabled>
                       {isRecorderBlocked
-                        ? "Permission denied"
-                        : "No mics found"}
+                        ? t("Permission denied")
+                        : t("No mics found")}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onSelect={() => getAudioDevices(true)}>
-                    <RefreshCw className="h-4 w-4 mr-2" /> Refresh List
+                    <RefreshCw className="h-4 w-4 mr-2" /> {t("Refresh List")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               {isRecorderBlocked && (
-                <p className="text-xs text-red-500 ml-2">Mic access denied.</p>
+                <p className="text-xs text-red-500 ml-2">
+                  {t("Mic access denied.")}
+                </p>
               )}
             </>
-            {/* )} */}
 
             {recordingStatus !== "idle" && (
               <>
@@ -633,7 +588,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent container={portalContainer}>
-                    <p>Delete</p>
+                    <p>{t("Delete")}</p>
                   </TooltipContent>
                 </Tooltip>
                 {recordingStatus === "recording" && (
@@ -649,7 +604,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent container={portalContainer}>
-                      <p>Pause</p>
+                      <p>{t("Pause")}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -666,7 +621,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent container={portalContainer}>
-                      <p>Resume</p>
+                      <p>{t("Resume")}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -683,7 +638,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent container={portalContainer}>
-                      <p>Stop & Save</p>
+                      <p>{t("Stop & Save")}</p>
                     </TooltipContent>
                   </Tooltip>
                 )}
@@ -713,7 +668,8 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
               disabled={
                 draftNoteMutation.isPending ||
                 markUploadAsFinished.isPending ||
-                generateUploadLink.isPending ||   recordingStatus === "recording" 
+                generateUploadLink.isPending ||
+                recordingStatus === "recording"
               }
               className="rounded-full h-8 w-8 md:h-9 md:w-9"
             >
@@ -721,8 +677,10 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
               markUploadAsFinished.isPending ||
               generateUploadLink.isPending ? (
                 <Spinner color="#C04796" />
+              ) : recordingStatus === "recording" ? (
+                <AudioLinesIcon />
               ) : (
-                recordingStatus === "recording"  ? <AudioLinesIcon /> : <ArrowUp className="h-4 w-4" />
+                <ArrowUp className="h-4 w-4" />
               )}
             </Button>
           </div>
@@ -733,7 +691,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
               <div className="p-4 rounded-full bg-primary/10">
                 <UploadCloud className="h-8 w-8" />
               </div>
-              <p>Drop files to attach</p>
+              <p>{t("Drop files to attach")}</p>
             </div>
           </div>
         )}

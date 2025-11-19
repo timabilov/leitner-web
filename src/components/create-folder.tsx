@@ -17,14 +17,12 @@ import { useUserStore } from "@/store/userStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next"; // Import the hook
 
 const CreateFolder = () => {
+  const { t } = useTranslation(); // Initialize the hook
   const [folderInputValue, setFolderInputValue] = useState("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
-
-  const email = useUserStore((store) => store.email);
-  const userName = useUserStore((store) => store.userName);
-  const userId = useUserStore((store) => store.userId);
   const companyId = useUserStore((store) => store.companyId);
   const queryClient = useQueryClient();
 
@@ -37,15 +35,14 @@ const CreateFolder = () => {
     onSuccess: () => {
       queryClient.refetchQueries({ queryKey: ['folders'] });
       setFolderInputValue("");
-      setIsOpen(false); // Close dialog on success
+      setIsOpen(false);
     },
     onError: (error) => {
       console.error(error);
-      alert("Error", "Failed to create folder, please try again.");
+      alert(t("Failed to create folder, please try again."));
     },
   });
 
-  // Handle dialog close (including X button)
   const handleClose = () => {
     setFolderInputValue("");
     setIsOpen(false);
@@ -53,38 +50,38 @@ const CreateFolder = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button size="default" className="cursor-pointer"  onClick={() => setIsOpen(true)}>
-          Create Folder
+      <DialogTrigger>
+        <Button size="default" className="cursor-pointer" onClick={() => setIsOpen(true)}>
+          {t("Create Folder")}
           <Plus className="ml-2 h-4 w-4" />
         </Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Save folder</DialogTitle>
+          <DialogTitle>{t("Save folder")}</DialogTitle>
           <DialogDescription>
-            This will create a new folder where you can store your notes.
+            {t("This will create a new folder where you can store your notes.")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
           <div className="grid gap-3">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{t("Name")}</Label>
             <Input
               id="name"
               value={folderInputValue}
               onChange={(e) => setFolderInputValue(e.target.value)}
               autoFocus
-              placeholder="Enter folder name"
+              placeholder={t("Enter folder name")}
             />
           </div>
         </div>
 
         <DialogFooter>
-          <DialogClose asChild>
+          <DialogClose>
             <Button variant="outline" onClick={handleClose}>
-              Cancel
+              {t("Cancel")}
             </Button>
           </DialogClose>
 
@@ -92,7 +89,7 @@ const CreateFolder = () => {
             disabled={!folderInputValue.trim() || createFolder.isPending}
             onClick={() => createFolder.mutate()}
           >
-            {createFolder.isPending ? "Saving..." : "Save"}
+            {createFolder.isPending ? t("Saving...") : t("Save")}
           </Button>
         </DialogFooter>
       </DialogContent>

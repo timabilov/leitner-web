@@ -7,7 +7,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
 import { FolderArchive, LoaderIcon, Plus, SearchX, Youtube } from "lucide-react";
-
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -24,9 +23,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import CatPenIcon from "./cat-pen-icon";
 import debounce from 'lodash.debounce';
-import {GradientProgress} from '@/components/gradient-progress'
-import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { useTranslation } from 'react-i18next';
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -38,10 +36,10 @@ const isNoteInLoadingState = (note: any) => {
 
 const Notes = ({ children }: any) => {
   const { companyId, isLoggedIn, fullName } = useUserStore();
-  const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<string>("grid");
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { t } = useTranslation(); // Translation hook
 
   
   const notesQuery = useQuery({
@@ -78,7 +76,7 @@ const Notes = ({ children }: any) => {
 
     useEffect(() => {
     if (isPolling) notesQuery.refetch();
-  }, [isPolling]);
+  }, [isPolling, notesQuery]);
 
 
   const searchNotesQuery = useQuery({
@@ -115,27 +113,6 @@ const Notes = ({ children }: any) => {
     []
   );
 
-
-  // const getIcon = (noteType: string) => {
-  //   switch (noteType) {
-  //     case "text":
-  //     case "audio":
-  //       return "mic-outline";
-  //     case "image":
-  //       return "image-outline";
-  //     case "pdf":
-  //       return "document-text-outline";
-  //     case "youtube":
-  //       return "logo-youtube";
-  //     case "test":
-  //       return "school-outline";
-  //     case "multi":
-  //       return "layers-outline";
-  //     default:
-  //       return "document-outline";
-  //   }
-  // };
-
   if (!isLoggedIn || !companyId) {
     return redirect("/login");
   }
@@ -147,24 +124,15 @@ const Notes = ({ children }: any) => {
           <div className=" w-full max-w-2xl m-auto mt-8">
              <Alert className="flex items-center justify-between border-none">
               <Avatar className="h-16 w-16 rounded-md bg-gray-950 flex items-center mr-2">
-                {/* <CatLogo /> */}
                 <CatPenIcon />
               </Avatar>
               <div className="flex-1 flex-col justify-between gap-1">
-                <AlertTitle className="flex-1 text-xl">Learning Experience!</AlertTitle>
+                <AlertTitle className="flex-1 text-xl">{t("Learning Experience")}!</AlertTitle>
                 <AlertDescription className=" text-xl">
-                  {" "}
-               {`Hey ${fullName}, do you want to create new note?`}
+                  {t('Hey , do you want to create new note', { fullName })}?
                 </AlertDescription>
               </div>
             </Alert>
-
-            {/* <p className="text-muted-foreground text-2xl tracking-tight">
-              {`Hey ${fullName}, do you want to create new note?`}
-            </p> */}
-            {/* <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-                Create new
-                </h3> */}
           </div>
           <div className="px-4 grid w-full gap-x-6 md:grid-cols-2">
             <Card className=" hover:shadow-lg transition-shadow duration-200 bg-card border-border pb-0 w-xs justify-self-end">
@@ -173,12 +141,12 @@ const Notes = ({ children }: any) => {
                   <Youtube fill="oklch(63.7% 0.237 25.331)" />
                 </CardTitle>
                 <CardDescription>
-                  For youtube videos (max 2 hours)
+                  {t("For youtube videos (max 2 hours)")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col h-full border-t py-3 cursor-pointer">
                 <p className="flex justify-between items-center text-link hover:underline font-medium group transition-colors duration-200">
-                  Youtube
+                  {t("Youtube")}
                   <CreateYoutubeNote />
                 </p>
               </CardContent>
@@ -189,13 +157,12 @@ const Notes = ({ children }: any) => {
                   <FolderArchive fill="oklch(94.5% 0.129 101.54)" />
                 </CardTitle>
                 <CardDescription>
-                  For audio, text, recording, images
+                  {t("For audio, text, recording, images")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col h-full border-t py-3 cursor-pointer">
                 <p className="flex justify-between items-center text-link hover:underline font-medium group transition-colors duration-200">
-                  Multi note
-                  {/* <CreateMultiNote /> */}
+                  {t("Multi note")}
                     <Plus className="mr-2 h-4 w-4" />
                 </p>
               </CardContent>
@@ -204,10 +171,9 @@ const Notes = ({ children }: any) => {
           <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
             <AIPromptInput setIsPolling={setIsPolling}/>
           </div>
-          {/* <img src="./adaptive-icon.png" />  */}
           <div className="sm:flex justify-between p-4 mt-4">
             <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
-              All notes
+              {t("All notes")}
             </h3>
             <ButtonGroup
               orientation="horizontal"
@@ -251,7 +217,7 @@ const Notes = ({ children }: any) => {
                 <div className="flex flex-col items-center mt-8 mb-8">
                   <SearchX className="text-muted-foreground" size={70}/>
                   <h2 className="scroll-m-20  pb-2 text-3xl font-semibold text-muted-foreground mt-4">
-                    No results found
+                    {t("No results found")}
                   </h2>
                 </div>
 

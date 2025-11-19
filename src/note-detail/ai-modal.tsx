@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { axiosInstance } from "@/services/auth";
-import { API_BASE_URL, ISO_TO_LANGUAGE } from "@/services/config";
+import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -26,9 +26,10 @@ import { GenericAILoading } from "../components/generic-ai-loading";
 import { Switch } from "../components/ui/switch";
 import { Avatar } from "../components/ui/avatar";
 import CatPenIcon from "@/notes/cat-pen-icon";
-
+import { useTranslation } from "react-i18next"; // Import the hook
 
 const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQuiz }) => {
+  const { t } = useTranslation(); // Initialize the hook
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [view, setView] = useState<"quiz" | "flash" | undefined>();
   const [quizLevel, setQuizLevel] = useState(null);
@@ -36,11 +37,6 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
   const queryClient = useQueryClient();
 
   const companyId = useUserStore((state) => state.companyId);
-
-  // Handle dialog close (including X button)
-  const handleClose = () => {
-    setIsOpen(false);
-  };
 
   const generateStudyMaterialNoteMutation = useMutation({
     mutationFn: () => {
@@ -50,71 +46,52 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
     },
     onSuccess: () => {
       setIsPolling(true);
-      startPollingForQuiz()
+      startPollingForQuiz();
       setErrorMessage(null);
     },
     onError: (error: any) => {
       setErrorMessage(
-        error.response?.data?.message || "Failed to start quiz generation"
+        error.response?.data?.message || t("Failed to start quiz generation")
       );
     },
   });
 
-     const noteAlertsMutation = useMutation({
-        mutationFn: (enabled: boolean) => {
-        return axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/toggleQuizAlerts`, {
-            enabled: enabled,
-        });
-        },
-        // 3. Implement optimistic update
-        onMutate: async (newEnabledValue: boolean) => {
-        // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-        await queryClient.cancelQueries([`notes-${noteId}`]);
-
-        // Snapshot the previous value
-        const previousNoteData = queryClient.getQueryData<any>([`notes-${noteId}`]);
-
-        // Optimistically update the cache for the specific note
-        // Assuming your query data for notes-${noteId} has a 'quizAlertEnabled' field
-        queryClient.setQueryData<any>([`notes-${noteId}`], old => {
-            if (old) {
-            return { ...old, quizAlertEnabled: newEnabledValue };
-            }
-            return old;
-        });
-
-        // Return a context object with the snapshotted value
-        return { previousNoteData };
-        },
-        onError: (error: any, newEnabledValue, context) => {
-        console.log('Error updating quiz alerts:', error.response);
-        toast.error('Failed to update quiz alerts. Please try again.');
-        // If the mutation fails, use the context for rollback
-        if (context?.previousNoteData) {
-            queryClient.setQueryData<any>([`notes-${noteId}`], context.previousNoteData);
-            // Also revert the local state if it was optimistically updated
-            //setLocalQuizAlertEnabled(context.previousNoteData.quizAlertEnabled);
+  const noteAlertsMutation = useMutation({
+    mutationFn: (enabled: boolean) => {
+      return axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/toggleQuizAlerts`, {
+        enabled: enabled,
+      });
+    },
+    onMutate: async (newEnabledValue: boolean) => {
+      await queryClient.cancelQueries({ queryKey: [`notes-${noteId}`] });
+      const previousNoteData = queryClient.getQueryData<any>([`notes-${noteId}`]);
+      queryClient.setQueryData<any>([`notes-${noteId}`], old => {
+        if (old) {
+          return { ...old, data: { ...old.data, quiz_alerts_enabled: newEnabledValue } };
         }
-        },
-        onSuccess: (data) => {
-      toast.success('Quiz alerts updated successfully!', { 
-            position: 'bottom-center',
-        });
-        // Optionally, you might not need to invalidate here if your `onMutate`
-        // already set the correct state and you trust the server.
-        // However, invalidation is safer to ensure data consistency.
-        queryClient.invalidateQueries([`notes-${noteId}`]);
-        },
-        onSettled: () => {
-        // This will run whether the mutation succeeded or failed.
-        // It's a good place to ensure data is eventually consistent with the server.
-        queryClient.invalidateQueries([`notes-${noteId}`]);
-        },
-    });
+        return old;
+      });
+      return { previousNoteData };
+    },
+    onError: (error: any, newEnabledValue, context) => {
+      toast.error(t('Failed to update quiz alerts. Please try again.'));
+      if (context?.previousNoteData) {
+        queryClient.setQueryData<any>([`notes-${noteId}`], context.previousNoteData);
+      }
+    },
+    onSuccess: () => {
+      toast.success(t('Quiz alerts updated successfully!'), {
+        position: 'bottom-center',
+      });
+      queryClient.invalidateQueries({ queryKey: [`notes-${noteId}`] });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [`notes-${noteId}`] });
+    },
+  });
 
-
-  const isLoading = noteQuery.data?.data?.quiz_status == "in_progress" || generateStudyMaterialNoteMutation.isPending;
-  const alertEnabled =  noteQuery.data?.data?.quiz_alerts_enabled
+  const isLoading = noteQuery.data?.data?.quiz_status === "in_progress" || generateStudyMaterialNoteMutation.isPending;
+  const alertEnabled = noteQuery.data?.data?.quiz_alerts_enabled;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -124,69 +101,56 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
 
       <DialogContent className="sm:max-w-4xl max-w-3xl">
         <DialogHeader>
-            {
-                (!isLoading) && (
-                    <>
-                        <DialogTitle className="flex flex-row justify-start items-center">
-                            {/* <Badge className={cn("h-8 w-8 p-0 flex items-center justify-center", alertEnabled && "border-pink-300 bg-pink-100 dark:border-pink-300/10 dark:bg-pink-400/10")}>
-                                {alertEnabled ? <BellRing className="h-4 w-4 stroke-pink-700 dark:stroke-pink-500" /> : <BellOff className="h-4 w-4" />}
-                            </Badge> */}
-                            {view === "quiz" ? alertEnabled ? "Quiz alerts": "Enable alerts"  : (view === 'flash' ? "Flashcards" : "AI Assistant")}
-                            { view === 'quiz' &&  <Switch className="ml-2" value={alertEnabled} onCheckedChange={value => noteAlertsMutation.mutate(value)} />  }
-                            {noteAlertsMutation.isPending && <Spinner className="ml-2" /> }
-                        </DialogTitle>
-                        {
-                            view === 'quiz' ? (
-                                <DialogDescription>
-                                    {`Get yourself prepared with random ${noteQuery.data?.data?.name} questions`}
-                                </DialogDescription>
-                            ) : view === 'flash' ? null : (
-                                <DialogDescription>
-                                   Choose an AI-powered tool to enhance your learning experience.
-                                </DialogDescription>
-                            )
-                        }
-                    </>
-                )
-            }
+          {!isLoading && (
+            <>
+              <DialogTitle className="flex flex-row justify-start items-center">
+                {view === "quiz" ? (alertEnabled ? t("Quiz alerts") : t("Enable alerts")) : view === 'flash' ? t("Flashcards") : t("AI Assistant")}
+                {view === 'quiz' && <Switch className="ml-2" checked={alertEnabled} onCheckedChange={value => noteAlertsMutation.mutate(value)} />}
+                {noteAlertsMutation.isPending && <Spinner className="ml-2" />}
+              </DialogTitle>
+              {view === 'quiz' ? (
+                <DialogDescription>
+                  {t("Get yourself prepared with random {{noteName}} questions", { noteName: noteQuery.data?.data?.name })}
+                </DialogDescription>
+              ) : view === 'flash' ? null : (
+                <DialogDescription>
+                  {t("Choose an AI-powered tool to enhance your learning experience.")}
+                </DialogDescription>
+              )}
+            </>
+          )}
         </DialogHeader>
         {isLoading ? (
-            <GenericAILoading
-                mainTitle="Note name"
-                subtitle={"Generating quiz"}
-                description={"It might take a minute, please wait"}
-            />
+          <GenericAILoading
+            mainTitle={noteQuery.data?.data?.name || t("Note name")}
+            subtitle={t("Generating quiz")}
+            description={t("It might take a minute, please wait")}
+          />
         ) : noteQuery.data?.data?.quiz_status !== 'generated' ? (
           <div className="flex flex-col items-center justify-center text-center p-8">
-             <Avatar className="h-16 w-16 rounded-md bg-gray-950 flex items-center mb-8 ">
-                {/* <CatLogo /> */}
-                <CatPenIcon />
-              </Avatar>
-
+            <Avatar className="h-16 w-16 rounded-md bg-gray-950 flex items-center mb-8">
+              <CatPenIcon />
+            </Avatar>
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              Unlock Your AI Tools
+              {t("Unlock Your AI Tools")}
             </h3>
-
             <p className="max-w-sm text-muted-foreground mb-8">
-              AI-powered quizzes and flashcards have not been generated for this
-              note yet. Click the button below to create them.
+              {t("AI-powered quizzes and flashcards have not been generated for this note yet. Click the button below to create them.")}
             </p>
-
             <Button
               size="lg"
-              onClick={generateStudyMaterialNoteMutation.mutate}
+              onClick={() => generateStudyMaterialNoteMutation.mutate()}
               disabled={generateStudyMaterialNoteMutation.isPending}
               className="cursor-pointer"
             >
               <AIIcon className="h-10 w-10 text-primary" />
-              Generate Quizzes & Flashcards
-              {/* )} */}
+              {t("Generate Quizzes & Flashcards")}
             </Button>
           </div>
         ) : view === "flash" ? (
-            <FlashcardsTab noteId={noteId} />
+          <FlashcardsTab noteId={noteId} />
         ) : view === "quiz" ? (
-            <AIQuizTab quizLevel={quizLevel} setQuizLevel={setQuizLevel} quizData={noteQuery?.data?.data?.questions} noteId={noteId} />
+          <AIQuizTab quizLevel={quizLevel} setQuizLevel={setQuizLevel} quizData={noteQuery?.data?.data?.questions} noteId={noteId} />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <Card
@@ -194,18 +158,15 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
               onClick={() => setView("quiz")}
             >
               <CardHeader className="flex flex-col items-center text-center p-6">
-                <div className="mb-4 p-4 bg-zinc-950  rounded-md">
+                <div className="mb-4 p-4 bg-zinc-950 rounded-md">
                   <QuizHardPenIcon className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-lg">AI Quiz</CardTitle>
+                <CardTitle className="text-lg">{t("AI Quiz")}</CardTitle>
                 <CardDescription className="text-sm">
-                  Test your knowledge with a personalized quiz based on your
-                  note.
+                  {t("Test your knowledge with a personalized quiz based on your note.")}
                 </CardDescription>
               </CardHeader>
             </Card>
-
-            {/* Flashcards Card */}
             <Card
               className="transition-all hover:shadow-lg hover:border-primary/30 cursor-pointer"
               onClick={() => setView("flash")}
@@ -214,26 +175,21 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
                 <div className="mb-4 p-4 bg-zinc-950 rounded-md">
                   <FlashcardIcon className="h-8 w-8 text-primary" />
                 </div>
-                <CardTitle className="text-lg">Flashcards</CardTitle>
+                <CardTitle className="text-lg">{t("Flashcards")}</CardTitle>
                 <CardDescription className="text-sm">
-                  Review key concepts and definitions from your note.
+                  {t("Review key concepts and definitions from your note.")}
                 </CardDescription>
               </CardHeader>
             </Card>
           </div>
         )}
-        {/* --- THIS IS THE NEW CARD LAYOUT --- */}
-
         {(view || quizLevel) && (
           <DialogFooter>
-            <Button className="cursor-pointer" type="submit" onClick={() => {
-                if (quizLevel)
-                    setQuizLevel(null);
-                else {
-                    setView(undefined)
-                }
+            <Button className="cursor-pointer" type="button" onClick={() => {
+              if (quizLevel) setQuizLevel(null);
+              else setView(undefined);
             }}>
-              {view === "quiz" && quizLevel ? "Back to quiz levels" : "Back to AI tools"}
+              {view === "quiz" && quizLevel ? t("Back to quiz levels") : t("Back to AI tools")}
             </Button>
           </DialogFooter>
         )}

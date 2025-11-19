@@ -12,9 +12,6 @@ import {
   ArrowRight,
   RotateCw,
   ArrowLeft,
-  BrainCircuit,
-  Star,
-  Zap,
   CircleAlert,
   Lightbulb,
   Dot,
@@ -32,25 +29,26 @@ import { Avatar } from "@/components/ui/avatar";
 import CatLogo from "./cat-logo";
 import GiftIcon from "./gift-icon";
 import {GradientProgress}  from '@/components/gradient-progress'
+import { useTranslation } from "react-i18next"; // Import the hook
+
 // --- Helper sub-component for the level selection cards ---
 const LevelCard = ({
   level,
   title,
   description,
-  icon,
   count,
   lastScore,
   onSelect,
   lastTakenDate,
   isLocked,
 }) => {
+  const { t } = useTranslation(); // Initialize hook
   const isDisabled = count === 0 || isLocked;
   return (
     <Card
       className={cn(
         "text-center transition-all flex flex-col relative overflow-hidden",
-        // --- THIS IS THE MAIN STYLE CHANGE ---
-        "bg-muted/50 dark:bg-muted/20 border-border", // Use a muted background color
+        "bg-muted/50 dark:bg-muted/20 border-border",
         !isDisabled &&
           "hover:shadow-lg hover:border-primary/20 hover:-translate-y-1 cursor-pointer",
         isDisabled &&
@@ -73,38 +71,35 @@ const LevelCard = ({
               <Dot className={level === "bonus" ? "text-pink-500" :"text-pink-200"}/>
           </div>
         </div>
-
-        {/* Use a brighter text color for better contrast on the darker background */}
         <CardTitle className="text-foreground">{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow space-y-2">
         <p className="text-lg font-bold text-foreground/90">
-          {count} Questions
+          {t("{{count}} Questions", { count })}
         </p>
-
         {lastScore !== null ? (
           <div className="text-sm">
             <p className="font-semibold text-primary">
-              {`Last Score: ${lastScore}/${count}`}
+              {t("Last Score: {{score}}/{{count}}", { score: lastScore, count: count })}
             </p>
           </div>
         ) : (
-          <p className="font-semibold text-primary">(Not taken yet)</p>
+          <p className="font-semibold text-primary">{t("(Not taken yet)")}</p>
         )}
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground justify-center pb-4 pt-0">
         {isDisabled
-          ? "(No questions available)"
+          ? t("(No questions available)")
           : lastTakenDate
-          ? `Last taken: ${lastTakenDate}`
+          ? t("Last taken: {{date}}", { date: lastTakenDate })
           : null}
       </CardFooter>
       {isLocked && (
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-muted/50 backdrop-blur-xs z-10">
           <GiftIcon className="h-10 w-10 text-primary mb-4" />
           <p className="font-semibold text-foreground">
-            Unlocks at 70% Quiz Completion
+            {t("Unlocks at 70% Quiz Completion")}
           </p>
         </div>
       )}
@@ -112,15 +107,9 @@ const LevelCard = ({
   );
 };
 
-/**
- * A component for an interactive quiz with difficulty levels and last score display.
- * @param {object} props
- * @param {Array<{question_text: string, options: string[], answer: string, complexity_level: string, user_answer: string}>} [props.quizData]
- */
 export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
-  const { companyId, userId } = useUserStore();
-
-
+  const { companyId } = useUserStore();
+  const { t } = useTranslation(); // Initialize hook
   const [activeQuestions, setActiveQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -129,15 +118,14 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const queryClient = useQueryClient();
 
-    const getLastAnsweredDate = (questions: any[]) => {
+  const getLastAnsweredDate = (questions: any[]) => {
     const answeredDates = questions
       .filter((q: any) => q.user_answered_date)
       .map((q: any) => new Date(q.user_answered_date));
     return answeredDates.length > 0
       ? new Date(Math.max(...answeredDates)).toLocaleDateString()
-      : "Not taken";
+      : t("Not taken");
   };
-
 
   const quizLevels = useMemo(() => {
     const levels = {
@@ -173,7 +161,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
       }
     }
     return levels;
-  }, [quizData]);
+  }, [quizData, t]);
 
   const easyQuestions = quizData?.filter(
     (question: any) => question.complexity_level === "easy"
@@ -183,18 +171,16 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   );
 
   const progressEasy = (easyQuestions || [])?.filter(
-    (q) => q.user_answer != "" && q.user_answer == q.answer
+    (q) => q.user_answer !== "" && q.user_answer === q.answer
   ).length;
   const progressHard = (hardQuestions || [])?.filter(
-    (q) => q.user_answer != "" && q.user_answer == q.answer
+    (q) => q.user_answer !== "" && q.user_answer === q.answer
   ).length;
 
   const totalProgress =
     (progressEasy + progressHard) /
-    (easyQuestions.length + hardQuestions.length);
+    ((easyQuestions?.length || 0) + (hardQuestions?.length || 0));
   const canProceedWithAdvancedQuiz = totalProgress >= 0.7;
-  console.log("canProceedWithAdvancedQuiz", canProceedWithAdvancedQuiz);
-
 
   const handleLevelSelect = (level) => {
     const questionsForLevel = quizLevels[level]?.questions || [];
@@ -211,11 +197,10 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
 
   const handleBackToSelection = () => {
     setQuizLevel(null);
-    queryClient.invalidateQueries([`notes-${noteId}`])
-    // todo maybe refetch
+    queryClient.invalidateQueries({ queryKey: [`notes-${noteId}`] });
   }
 
-   const totalQuestions = activeQuestions.length;
+  const totalQuestions = activeQuestions.length;
   const currentQuestion = activeQuestions[currentQuestionIndex];
   const correctAnswer =
     currentQuestion?.options[parseInt(currentQuestion?.answer)];
@@ -232,6 +217,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
       }
     }
   };
+
   const handleNextQuestion = () => {
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
@@ -241,37 +227,31 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
       setIsFinished(true);
     }
   };
+
   const handleRestartQuiz = () => {
-    queryClient.invalidateQueries([`notes-${noteId}`])
+    queryClient.invalidateQueries({ queryKey: [`notes-${noteId}`] });
     handleLevelSelect(quizLevel);
   }
 
-   const answerQuestionMutation = useMutation({
+  const answerQuestionMutation = useMutation({
     mutationFn: (data: { questionId: number; answer: number }) => {
       return axiosInstance.post(
         `${API_BASE_URL}/company/${companyId}/notes/${noteId}/questions/${data.questionId}/answer`,
-        { answer: data.answer + "" }
+        { answer: String(data.answer) }
       );
     },
-    onSuccess: (response) => {
-      console.log("Answer submitted successfully:", response.data);
-    },
-    onError: (error) => {
-      // Sentry.captureException(error, { extra: { companyId, userId } });
-      console.error("Error submitting answer:", error.response?.data);
-    },
+    onSuccess: (response) => console.log("Answer submitted", response.data),
+    onError: (error) => console.error("Error submitting answer:", error.response?.data),
   });
-
-
 
   if (!quizData || quizData.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center text-center p-8 border rounded-lg bg-muted/50 h-64">
         <h3 className="text-lg font-semibold text-muted-foreground">
-          No Quiz Available
+          {t("No Quiz Available")}
         </h3>
         <p className="text-sm text-muted-foreground mt-2">
-          AI has not generated a quiz for this note yet.
+          {t("AI has not generated a quiz for this note yet.")}
         </p>
       </div>
     );
@@ -283,16 +263,13 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
         <div className="grid grid-cols-12 gap-8 mb-10">
           <div className="col-span-12">
             <Alert className="flex items-center justify-between">
-              <Avatar className="rounded-sm bg-gray-950  flex items-center">
+              <Avatar className="rounded-sm bg-gray-950 flex items-center">
                 <CatLogo />
               </Avatar>
               <div className="flex-1 flex-col justify-center gap-1">
-                <AlertTitle className="flex-1">Learning Experience!</AlertTitle>
+                <AlertTitle className="flex-1">{t("Learning Experience!")}</AlertTitle>
                 <AlertDescription>
-                  {" "}
-                  Our app boosts learning with personalized quiz alerts,
-                  analyzing performance to send reminders for challenging
-                  questions, tailoring your mastery of the material.
+                  {t("Our app boosts learning with personalized quiz alerts, analyzing performance to send reminders for challenging questions, tailoring your mastery of the material.")}
                 </AlertDescription>
               </div>
               <CircleAlert />
@@ -302,9 +279,8 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
         <div className="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
           <LevelCard
             level="easy"
-            title="Easy"
-            description="Quick questions to test core concepts."
-            icon={<Star className="h-8 w-8 text-green-500" />}
+            title={t("Easy")}
+            description={t("Quick questions to test core concepts.")}
             count={quizLevels.easy.count}
             lastScore={progressEasy}
             onSelect={handleLevelSelect}
@@ -312,9 +288,8 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
           />
           <LevelCard
             level="hard"
-            title="Hard"
-            description="In-depth questions requiring more thought."
-            icon={<BrainCircuit className="h-8 w-8 text-orange-500" />}
+            title={t("Hard")}
+            description={t("In-depth questions requiring more thought.")}
             count={quizLevels.hard.count}
             lastScore={progressHard}
             onSelect={handleLevelSelect}
@@ -322,11 +297,10 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
           />
           <LevelCard
             level="bonus"
-            title="Advanced"
-            description="Challenging questions that connect multiple ideas."
-            icon={<Zap className="h-8 w-8 text-red-500" />}
+            title={t("Advanced")}
+            description={t("Challenging questions that connect multiple ideas.")}
             count={quizLevels.bonus.count}
-            lastScore={0}
+            lastScore={0} // Bonus score not tracked this way
             onSelect={handleLevelSelect}
             lastTakenDate={quizLevels.bonus.lastTaken}
             isLocked={!canProceedWithAdvancedQuiz}
@@ -336,13 +310,12 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
     );
   }
 
-
   if (isFinished) {
     const finalPercentage = Math.round((score / totalQuestions) * 100);
     return (
       <Card className="w-full max-w-2xl mx-auto text-center">
         <CardHeader>
-          <CardTitle className="text-2xl">Quiz Completed!</CardTitle>
+          <CardTitle className="text-2xl">{t("Quiz Completed!")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-4xl font-bold">
@@ -355,14 +328,14 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
         </CardContent>
         <CardFooter className="flex-col sm:flex-row gap-2">
           <Button onClick={handleRestartQuiz} className="w-full sm:flex-1">
-            <RotateCw className="h-4 w-4 mr-2" /> Try Again
+            <RotateCw className="h-4 w-4 mr-2" /> {t("Try Again")}
           </Button>
           <Button
             variant="ghost"
             onClick={handleBackToSelection}
             className="w-full sm:flex-1 cursor-pointer"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" /> Change Difficulty
+            <ArrowLeft className="h-4 w-4 mr-2" /> {t("Change Difficulty")}
           </Button>
         </CardFooter>
       </Card>
@@ -377,24 +350,24 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
           onClick={handleBackToSelection}
           className="self-start text-muted-foreground cursor-pointer"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" /> Change Difficulty
+          <ArrowLeft className="h-4 w-4 mr-2" /> {t("Change Difficulty")}
         </Button>
         {showFeedback ? (
         <div className="flex flex-col items-center gap-4">
           <Button onClick={handleNextQuestion} className="w-full sm:w-auto cursor-pointer">
             {currentQuestionIndex === totalQuestions - 1
-              ? "Finish Quiz"
-              : "Next"}
+              ? t("Finish Quiz")
+              : t("Next")}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
       ) : (
         <Button
-          onClick={handleCheckAnswer}
-          // disabled={selectedAnswer === null}
+          onClick={() => handleCheckAnswer(selectedAnswer, currentQuestion.options.indexOf(selectedAnswer))}
+          disabled={selectedAnswer === null}
           className="w-full sm:w-auto self-center"
         >
-          Check Answer
+          {t("Check Answer")}
         </Button>
       )}
 
@@ -402,11 +375,10 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
       <div className="space-y-2">
         <div className="flex items-center justify-between text-sm font-medium text-muted-foreground">
           <span>
-            Question {currentQuestionIndex + 1} of {totalQuestions}
+            {t("Question {{current}} of {{total}}", { current: currentQuestionIndex + 1, total: totalQuestions })}
           </span>
-          <span>Score: {score}</span>
+          <span>{t("Score: {{score}}", { score })}</span>
         </div>
-        {/* <Progress value={progressValue} /> */}
         <GradientProgress value={progressValue} className="w-full" />
       </div>
       <Card>
@@ -422,9 +394,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
             return (
               <button
                 key={index}
-                onClick={() => {
-                  handleCheckAnswer(option, index)
-                }}
+                onClick={() => setSelectedAnswer(option)}
                 disabled={showFeedback}
                 className={cn(
                   "w-full text-left p-4 border rounded-lg transition-all text-sm font-medium",
@@ -445,20 +415,14 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
           })}
         </CardContent>
       </Card>
-      {showFeedback ? (
-        <div className="flex flex-col items-center gap-4">
-          {!isCorrect ? (
-            <Alert className="border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400">
-              <Lightbulb />
-              <AlertTitle>Hint</AlertTitle>
-              <AlertDescription className="text-amber-600/80 dark:text-amber-400/80">
-                {`Hint ${currentQuestion.explanation}`}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-        </div>
-      ) : (
-        null
+      {showFeedback && !isCorrect && (
+        <Alert className="border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400">
+          <Lightbulb />
+          <AlertTitle>{t("Hint")}</AlertTitle>
+          <AlertDescription className="text-amber-600/80 dark:text-amber-400/80">
+            {currentQuestion.explanation}
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );
