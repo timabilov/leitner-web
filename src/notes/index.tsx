@@ -6,7 +6,7 @@ import { API_BASE_URL } from "@/services/config";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
-import { FolderArchive, Plus, SearchX, Youtube } from "lucide-react";
+import { FolderArchive, LoaderIcon, Plus, SearchX, Youtube } from "lucide-react";
 
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -25,6 +25,8 @@ import { Avatar } from "@/components/ui/avatar";
 import CatPenIcon from "./cat-pen-icon";
 import debounce from 'lodash.debounce';
 import {GradientProgress} from '@/components/gradient-progress'
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -236,9 +238,13 @@ const Notes = ({ children }: any) => {
             }
           >
             {
-              /*searchQuery && searchNotesQuery.isPending*/ true ? (
+              searchQuery && searchNotesQuery.isPending ? (
                 <div className="max-w-4xl flex  flex-row justify-center m-auto mt-8 mb-8">
-                  <GradientProgress value={90} toAnimate={true}/>
+                  <LoaderIcon
+                      role="status"
+                      aria-label="Loading"
+                      className={cn("size-8 animate-spin ")}
+                    />
                 </div>
               ) :
               searchQuery && searchNotesQuery.isFetched && searchNotesQuery.data?.length === 0 ? (

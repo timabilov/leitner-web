@@ -26,18 +26,20 @@ const GradientProgress = React.forwardRef(({ className, value, ...props }, ref) 
            `overflow-hidden` is CRITICAL to clip the shimmering gradient.
       */}
       <ProgressPrimitive.Indicator
-        className="
-          h-full w-full flex-1 
-          transition-transform duration-500 ease-out 
-          bg-[length:200%_auto] /* Make the background twice as wide */
-          animate-shimmer      /* Apply our new shimmer animation */
-        "
-        style={{ 
-          transform: `translateX(-${100 - (value || 0)}%)`,
-          // The gradient is now the background of the indicator itself.
-          backgroundImage: 'linear-gradient(to right, #FE5E5F, #C04796, #FE5E5F)',
-        }}
-      />
+        className="h-full w-full flex-1 transition-all relative overflow-hidden rounded-md"
+        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+      >
+        {/* 
+          3. The Shimmering Gradient: This is a very wide div that lives inside the Indicator.
+             The `animate-progress-indeterminate` class makes it slide back and forth forever.
+        */}
+        <div 
+          className="absolute top-0 left-0 bottom-0 w-[200%] h-full animate-progress-indeterminate"
+          style={{
+            backgroundImage: 'linear-gradient(to right, #FE5E5F, #C04796, #FE5E5F)',
+          }}
+        />
+      </ProgressPrimitive.Indicator>
     </ProgressPrimitive.Root>
   );
 });
