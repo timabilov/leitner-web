@@ -6,7 +6,7 @@ import { API_BASE_URL } from "@/services/config";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
-import { FolderArchive, LoaderIcon, Plus, SearchX, Youtube } from "lucide-react";
+import { FolderArchive, Loader2Icon, LoaderIcon, Plus, Search, SearchX, Youtube } from "lucide-react";
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -25,6 +25,7 @@ import CatPenIcon from "./cat-pen-icon";
 import debounce from 'lodash.debounce';
 import { cn } from "@/lib/utils";
 import { useTranslation } from 'react-i18next';
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -123,7 +124,7 @@ const Notes = ({ children }: any) => {
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className=" w-full max-w-2xl m-auto mt-8">
              <Alert className="flex items-center justify-between border-none">
-              <Avatar className="h-16 w-16 rounded-md bg-gray-950 flex items-center mr-2">
+              <Avatar className="h-16 w-16 rounded-full bg-gray-950 flex items-center mr-2">
                 <CatPenIcon />
               </Avatar>
               <div className="flex-1 flex-col justify-between gap-1">
@@ -195,6 +196,25 @@ const Notes = ({ children }: any) => {
                 <List className="h-4 w-4" />
               </Button>
             </ButtonGroup>
+          </div>
+          <div className="p-4 relative w-full flex flex-row justify-start">
+            <InputGroup>
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+              <InputGroupInput
+                placeholder={t("Search notes...")}
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  debouncedSearch(e.target.value);
+                }}
+                className="pl-10 w-2xl z-30"
+              />
+              {searchNotesQuery.isPending ? (
+                <InputGroupAddon align="inline-end">
+                  <Loader2Icon className="animate-spin text-pink-500" />
+                </InputGroupAddon>
+              ) : <div className="w-[28px]" />}
+            </InputGroup>
           </div>
           <div
             className={

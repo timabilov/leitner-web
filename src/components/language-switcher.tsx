@@ -51,14 +51,15 @@ export function LanguageSwitcher() {
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger>
         <Button
-          variant="ghost"
-          className="w-[180px] justify-start focus-visible:ring-0 focus-visible:ring-offset-0"
+          variant="outline"
+          className="justify-start focus-visible:ring-0 focus-visible:ring-offset-0"
         >
           {selectedLanguage ? (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center">
+                <Languages/>
                 <span className="mr-2 text-lg">{selectedLanguage.flag}</span>
-                <span>{selectedLanguage.language}</span>
+                {/* <span>{selectedLanguage.language}</span> */}
               </div>
               <ChevronDown className="h-4 w-4" />
             </div>

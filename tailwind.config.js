@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const { fontFamily } = require("tailwindcss/defaultTheme");
+
 module.exports = {
   // ...
   theme: {
@@ -28,6 +30,9 @@ module.exports = {
         'progress-indeterminate': 'progress-indeterminate 1.5s ease-in-out infinite',
         shimmer: 'shimmer 3s ease-in-out infinite',
       },
+    },
+    fontFamily: {
+        sans: ["Montserrat", ...fontFamily.sans],
     },
   },
   plugins: [require("tailwindcss-animate")],

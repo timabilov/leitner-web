@@ -6,6 +6,850 @@ html, body, #root {
   height: 100%; */
 }
 
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-Thin.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 100;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-ThinItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Light (Weight 200) --- */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-ExtraLight.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 200;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-ExtraLightItalic.ttf') format('truetype');
+}
+
+/* --- Light (Weight 300) --- */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-LightItalic.ttf') format('truetype');
+}
+
+/* --- Regular (Weight 400) --- */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-Italic.ttf') format('truetype');
+}
+
+/* --- Medium (Weight 500) --- */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-MediumItalic.ttf') format('truetype');
+}
+
+/* --- Semi-Bold (Weight 600) --- */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-SemiBoldItalic.ttf') format('truetype');
+}
+
+/* --- Bold (Weight 700) --- */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-BoldItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Bold (Weight 800) --- */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-ExtraBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-ExtraBoldItalic.ttf') format('truetype');
+}
+
+/* --- Black (Weight 900) --- */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-Black.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: italic;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./assets/fonts/Montserrat-BlackItalic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-Thin.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 100;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-ThinItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Light (Weight 200) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-ExtraLight.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 200;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-ExtraLightItalic.ttf') format('truetype');
+}
+
+/* --- Light (Weight 300) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-LightItalic.ttf') format('truetype');
+}
+
+/* --- Regular (Weight 400) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-Italic.ttf') format('truetype');
+}
+
+/* --- Medium (Weight 500) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-MediumItalic.ttf') format('truetype');
+}
+
+/* --- Semi-Bold (Weight 600) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-SemiBoldItalic.ttf') format('truetype');
+}
+
+/* --- Bold (Weight 700) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-BoldItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Bold (Weight 800) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-ExtraBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-ExtraBoldItalic.ttf') format('truetype');
+}
+
+/* --- Black (Weight 900) --- */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-Black.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./assets/fonts/Inter_28pt-BlackItalic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-LightItalic.ttf') format('truetype');
+}
+
+/* --- Regular (Weight 400) --- */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-Italic.ttf') format('truetype');
+}
+
+/* --- Medium (Weight 500) --- */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-MediumItalic.ttf') format('truetype');
+}
+
+/* --- Semi-Bold (Weight 600) --- */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-SemiBoldItalic.ttf') format('truetype');
+}
+
+/* --- Bold (Weight 700) --- */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-BoldItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Bold (Weight 800) --- */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-ExtraBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans-ExtraBoldItalic.ttf') format('truetype');
+}
+
+
+/*
+-----------------------------------------------------------------
+ Family 2: Open Sans Condensed
+-----------------------------------------------------------------
+*/
+
+/* --- Light (Weight 300) --- */
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-LightItalic.ttf') format('truetype');
+}
+
+/* --- Regular (Weight 400) --- */
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-Italic.ttf') format('truetype');
+}
+
+/* --- Medium (Weight 500) --- */
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-MediumItalic.ttf') format('truetype');
+}
+
+/* --- Semi-Bold (Weight 600) --- */
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-SemiBoldItalic.ttf') format('truetype');
+}
+
+/* --- Bold (Weight 700) --- */
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-BoldItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Bold (Weight 800) --- */
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-ExtraBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans Condensed';
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_Condensed-ExtraBoldItalic.ttf') format('truetype');
+}
+
+
+/*
+-----------------------------------------------------------------
+ Family 3: Open Sans SemiCondensed
+-----------------------------------------------------------------
+*/
+
+/* --- Light (Weight 300) --- */
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-LightItalic.ttf') format('truetype');
+}
+
+/* --- Regular (Weight 400) --- */
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-Italic.ttf') format('truetype');
+}
+
+/* --- Medium (Weight 500) --- */
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-MediumItalic.ttf') format('truetype');
+}
+
+/* --- Semi-Bold (Weight 600) --- */
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-SemiBoldItalic.ttf') format('truetype');
+}
+
+/* --- Bold (Weight 700) --- */
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-BoldItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Bold (Weight 800) --- */
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-ExtraBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Open Sans SemiCondensed';
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/OpenSans_SemiCondensed-ExtraBoldItalic.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-Thin.ttf') format('truetype');
+}
+
+/* --- Extra-Light (Weight 200) --- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-ExtraLight.ttf') format('truetype');
+}
+
+/* --- Light (Weight 300) --- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-Light.ttf') format('truetype');
+}
+
+/* --- Regular (Weight 400) --- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-Regular.ttf') format('truetype');
+}
+
+/* --- Medium (Weight 500) --- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-Medium.ttf') format('truetype');
+}
+
+/* --- Semi-Bold (Weight 600) --- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-SemiBold.ttf') format('truetype');
+}
+
+/* --- Bold (Weight 700) --- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-Bold.ttf') format('truetype');
+}
+
+/* --- Extra-Bold (Weight 800) --- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-ExtraBold.ttf') format('truetype');
+}
+
+/* --- Black (Weight 900) --- */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./assets/fonts/Geist-Black.ttf') format('truetype');
+}
+
+/* Passion One */
+
+@font-face {
+  font-family: 'Passion One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/PassionOne-Regular.ttf') format('truetype');
+}
+
+
+@font-face {
+  font-family: 'Passion One';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/PassionOne-Bold.ttf') format('truetype');
+}
+
+
+@font-face {
+  font-family: 'Passion One';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./assets/fonts/PassionOne-Black.ttf') format('truetype');
+}
+
+
+
+/*Poppins*/
+
+/* --- Thin (Weight 100) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 100;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-Thin.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 100;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-ThinItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Light (Weight 200) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-ExtraLight.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 200;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-ExtraLightItalic.ttf') format('truetype');
+}
+
+/* --- Light (Weight 300) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-Light.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-LightItalic.ttf') format('truetype');
+}
+
+/* --- Regular (Weight 400) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-Regular.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-Italic.ttf') format('truetype');
+}
+
+/* --- Medium (Weight 500) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-Medium.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-MediumItalic.ttf') format('truetype');
+}
+
+/* --- Semi-Bold (Weight 600) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-SemiBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-SemiBoldItalic.ttf') format('truetype');
+}
+
+/* --- Bold (Weight 700) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-Bold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-BoldItalic.ttf') format('truetype');
+}
+
+/* --- Extra-Bold (Weight 800) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-ExtraBold.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 800;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-ExtraBoldItalic.ttf') format('truetype');
+}
+
+/* --- Black (Weight 900) --- */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-Black.ttf') format('truetype');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: italic;
+  font-weight: 900;
+  font-display: swap;
+  src: url('./assets/fonts/Poppins-BlackItalic.ttf') format('truetype');
+}
+
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -121,7 +965,7 @@ html, body, #root {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
   }
 }
 
@@ -169,4 +1013,23 @@ a more noticeable opacity animation to it.
   50% {
     opacity: 0.1;
   }
+}
+
+
+/* *{
+  font-family: "Open Sans";
+  letter-spacing: normal;
+  font-family: "Geist";
+} */
+
+
+/* .menu-item-label {
+  color: #171717cc !important;
+} */
+
+
+.menu-logo {
+  /* font-family: "Poppins"; */
+  font-weight: 500;
+  font-size: 20px;
 }

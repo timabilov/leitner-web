@@ -18,6 +18,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next"; // Import the hook
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 const CreateFolder = () => {
   const { t } = useTranslation(); // Initialize the hook
@@ -51,10 +52,17 @@ const CreateFolder = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger>
-        <Button size="default" className="cursor-pointer" onClick={() => setIsOpen(true)}>
-          {t("Create Folder")}
-          <Plus className="ml-2 h-4 w-4" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger>
+            <Button size="default" variant={"ghost"} className="cursor-pointer" onClick={() => setIsOpen(true)}>
+              {/* {t("Create Folder")} */}
+              <Plus className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {t("Create Folder")}
+          </TooltipContent>
+        </Tooltip>
       </DialogTrigger>
 
       <DialogContent>

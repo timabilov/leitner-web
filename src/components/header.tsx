@@ -13,6 +13,7 @@ import { Button } from "./ui/button";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 import { LanguageSwitcher } from "./language-switcher";
 import { useTranslation } from "react-i18next"; // Import the hook
+import CreateFolder from "./create-folder";
 
 const Header = ({
   isAlertEnabled,
@@ -59,8 +60,8 @@ const Header = ({
 
   return (
     <header className="bg-background/90 z-20 p-2 sticky top-0 flex h-[var(--header-height)] shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-[var(--header-height)]">
-      <div className="flex w-full items-center gap-1 justify-between">
-        <div className="relative w-fit flex flex-row justify-start">
+      <div className="flex w-full items-center gap-1 justify-end">
+        {/* <div className="relative w-fit flex flex-row justify-start">
           <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
           <InputGroup>
             <InputGroupInput
@@ -78,7 +79,7 @@ const Header = ({
               </InputGroupAddon>
             ) : <div className="w-[28px]" />}
           </InputGroup>
-        </div>
+        </div> */}
         {showAlertBadge && (
           <AnimatedTooltip
             className=""
@@ -117,13 +118,14 @@ const Header = ({
             ]}
           />
         )}
-        <LanguageSwitcher />
+        
         <div className="relative flex justify-end items-center gap-2">
+          <CreateFolder />
           <Select
             data={foldersQuery?.data?.folders || []}
             loading={isLoadingFolders}
           />
-          <DropdownMenu>
+          {/* <DropdownMenu>
             <DropdownMenuTrigger>
               <Button variant="ghost" className="flex items-center gap-2">
                 <Avatar className="h-9 w-9">
@@ -141,7 +143,8 @@ const Header = ({
               <DropdownMenuItem>{t("Settings")}</DropdownMenuItem>
               <DropdownMenuItem>{t("Sign out")}</DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
+          <LanguageSwitcher />
         </div>
       </div>
     </header>

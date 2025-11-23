@@ -14,7 +14,7 @@ import { SidebarInset, SidebarProvider } from "./ui/sidebar";
  */
 const Layout = ({ children, title, containerRef, search, searchValue, isSearching }) => {
   const [showModal, setShowModal] = useState<boolean>(false)
-  const { photo, fullName } = useUserStore();
+  const { photo, fullName, email } = useUserStore();
   const shortName =
     fullName && fullName.split(" ").length > 1
       ? `${fullName.split(" ")[0][0]}${fullName.split(" ")[1][0]}`?.toLowerCase()
@@ -28,7 +28,7 @@ const Layout = ({ children, title, containerRef, search, searchValue, isSearchin
     >
       {/* 1. The Sidebar: It is a direct child of the flex container. */}
       {/*    It will have its own fixed width and will NOT scroll. */}
-      <AppSidebar variant="sidebar" />
+      <AppSidebar variant="sidebar" photo={photo} fullName={fullName} email={email} />
       
       {/* 2. The Content Area: This container will take the remaining space. */}
       <SidebarInset className="flex flex-1 flex-col">
