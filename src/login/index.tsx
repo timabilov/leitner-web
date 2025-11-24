@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, Mic, ChevronDown, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,28 +33,22 @@ export const SparkleHot = ({ className }) => (
 
 // --- 2. Animated Grid Background Component ---
 const AnimatedGrid = () => {
-  // CONFIGURATION
-  const squareSize = 80; // Bigger squares
-  const gap = 4;         // Gap between squares to make corners visible
-  const radius = 12;     // Rounded corners size
-  const strokeColor = "#f4f4f5"; // zinc-100
-  const activeColor = "#e4e4e7"; // zinc-200
-  
-  // Calculate the actual size of the rectangle shape inside the pattern
+  const squareSize = 80;
+  const gap = 4;
+  const radius = 12;
+  const strokeColor = "#f4f4f5"; 
+  const activeColor = "#e4e4e7"; 
   const rectSize = squareSize - gap; 
-  // Offset to center the rect within the grid cell
   const offset = gap / 2;
 
-  // Generate random squares to light up
   const flickeringSquares = useMemo(() => {
-    const cols = 30; // Fewer columns needed since squares are bigger
+    const cols = 30;
     const rows = 20;
     const squares = [];
     
     for (let i = 0; i < 20; i++) {
       squares.push({
         id: i,
-        // Calculate grid position
         col: Math.floor(Math.random() * cols),
         row: Math.floor(Math.random() * rows),
         delay: Math.random() * 5,
@@ -76,7 +70,6 @@ const AnimatedGrid = () => {
             y="0"
             patternUnits="userSpaceOnUse"
           >
-            {/* The Static Grid Square */}
             <rect 
               x={offset} 
               y={offset} 
@@ -90,10 +83,8 @@ const AnimatedGrid = () => {
           </pattern>
         </defs>
         
-        {/* Draw the base grid */}
         <rect width="100%" height="100%" fill="url(#grid-pattern)" />
 
-        {/* Draw the Flickering Squares */}
         <svg x="0" y="0" className="overflow-visible">
           {flickeringSquares.map((sq) => (
             <motion.rect
@@ -102,7 +93,7 @@ const AnimatedGrid = () => {
               y={sq.row * squareSize + offset}
               width={rectSize}
               height={rectSize}
-              rx={radius} // Match the radius of the grid
+              rx={radius}
               fill={activeColor}
               initial={{ opacity: 0 }}
               animate={{ opacity: [0, 0.6, 0] }}
@@ -117,13 +108,97 @@ const AnimatedGrid = () => {
         </svg>
       </svg>
       
-      {/* Gradient fade at bottom */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
     </div>
   );
 };
 
-// --- 3. Main Login Page ---
+// --- 3. Floating Blobs Component (The new Animation) ---
+const FloatingBlobs = () => {
+  const containerRef = useRef(null);
+  const blobRefs = useRef([]);
+
+  // Configuration
+  const blobCount = 3;
+  // Distinct colors similar to the CodePen
+  const colors = ["bg-purple-400", "bg-cyan-400", "bg-pink-400"];
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Initialize blob data
+    const blobs = Array.from({ length: blobCount }).map((_, i) => ({
+      x: Math.random() * (window.innerWidth - 200),
+      y: Math.random() * (window.innerHeight - 200),
+      vx: (Math.random() - 0.5) * 1.5, // Random X velocity
+      vy: (Math.random() - 0.5) * 1.5, // Random Y velocity
+      el: blobRefs.current[i],
+    }));
+
+    let animationFrameId;
+
+    const animate = () => {
+      // Logic from CodePen: update coords and bounce
+      blobs.forEach((blob) => {
+        if (!blob.el) return;
+
+        blob.x += blob.vx;
+        blob.y += blob.vy;
+
+        // Bounce horizontally
+        if (blob.x <= -100 || blob.x >= window.innerWidth - 200) {
+          blob.vx *= -1;
+        }
+
+        // Bounce vertically
+        if (blob.y <= -100 || blob.y >= window.innerHeight - 200) {
+          blob.vy *= -1;
+        }
+
+        // Apply translation
+        // We use translate3d for GPU acceleration
+        blob.el.style.transform = `translate3d(${blob.x}px, ${blob.y}px, 0)`;
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, []);
+
+  return (
+    <div 
+      ref={containerRef} 
+      className="absolute inset-0 -z-10 overflow-hidden pointer-events-none blobs"
+    >
+      {Array.from({ length: blobCount }).map((_, i) => (
+        <div
+          key={i}
+          ref={(el) => (blobRefs.current[i] = el)}
+          className={`
+            absolute 
+            w-80 h-80 md:w-96 md:h-96 
+            rounded-full 
+            opacity-40
+            mix-blend-multiply
+            blur-[100px]
+            ${colors[i % colors.length]}
+          `}
+          style={{ 
+            top: 0, 
+            left: 0,
+            willChange: 'transform' // Performance optimization
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// --- 4. Main Login Page ---
 const Login = () => {
   const messages = [
     "Record, edit and learn smart",
@@ -143,8 +218,12 @@ const Login = () => {
   return (
     <div className="relative min-h-screen w-full  text-slate-900 selection:bg-purple-100 font-sans overflow-hidden">
       
-      {/* BACKGROUND: Animated Grid */}
+      {/* BACKGROUND LAYER 1: Animated Grid (z-20) */}
       <AnimatedGrid />
+
+      {/* BACKGROUND LAYER 2: Moving Blobs (z-10) */}
+      {/* Placed here so they tint the grid lines below them, but sit behind text */}
+      <FloatingBlobs />
 
       {/* Floating Particles */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
