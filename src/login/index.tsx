@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, Mic, ChevronDown, Star } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
 import CatPenIcon from '@/notes/cat-pen-icon';
 
 // --- 1. The Custom Gradient Sparkle SVG ---
@@ -37,9 +37,9 @@ const AnimatedGrid = () => {
   const squareSize = 80;
   const gap = 4;
   const radius = 12;
-  const strokeColor = "#f4f4f5"; 
-  const activeColor = "#e4e4e7"; 
-  const rectSize = squareSize - gap; 
+  const strokeColor = "#f4f4f5";
+  const activeColor = "#e4e4e7";
+  const rectSize = squareSize - gap;
   const offset = gap / 2;
 
   const flickeringSquares = useMemo(() => {
@@ -114,7 +114,7 @@ const AnimatedGrid = () => {
   );
 };
 
-
+// --- 3. The "Fat Sparkle" Icon ---
 const FatSparkle = ({ className, style }) => (
   <svg
     viewBox="0 0 24 24"
@@ -123,36 +123,47 @@ const FatSparkle = ({ className, style }) => (
     className={className}
     style={style}
   >
-    {/* A rounded 4-point star shape mimicking the image */}
     <path
       d="M12 2C13.5 2 15 7.5 19 9.5C23 11.5 23 12.5 19 14.5C15 16.5 13.5 22 12 22C10.5 22 9 16.5 5 14.5C1 12.5 1 11.5 5 9.5C9 7.5 10.5 2 12 2Z"
       fill="url(#fat_sparkle_gradient)"
     />
     <defs>
       <linearGradient id="fat_sparkle_gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-        {/* Purple to Pink gradient based on your image */}
-        <stop offset="0%" stopColor="#A855F7" /> {/* Purple-500 */}
-        <stop offset="100%" stopColor="#EC4899" /> {/* Pink-500 */}
+        <stop offset="0%" stopColor="#A855F7" />
+        <stop offset="100%" stopColor="#EC4899" />
       </linearGradient>
     </defs>
   </svg>
 );
 
-
-// --- 3. Rising Bubbles Component (Replicating the CodePen) ---
+// --- 4. Interactive Rising Bubbles Component ---
 const RisingBubbles = () => {
-  // Generate random bubble configuration
+  // Use a MotionValue for the mouse X position
+  const mouseX = useMotionValue(0);
+  // Use a spring for smooth trailing effect
+  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      // Calculate position relative to center of screen (-1 to 1 range roughly)
+      const relativeX = (e.clientX - window.innerWidth / 2);
+      // Update motion value
+      mouseX.set(relativeX * 0.5); // 0.5 factor determines how much they move
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, [mouseX]);
+
   const bubbles = useMemo(() => {
     return Array.from({ length: 15 }).map((_, i) => ({
       id: i,
-      // Random size between 20px and 60px
-      size: Math.floor(Math.random() * 1) + 9, 
-      // Random horizontal position (0% - 100%)
+      size: Math.floor(Math.random() * 1) + 9,
       left: Math.floor(Math.random() * 100),
-      // Random duration (slower is smoother)
       duration: Math.floor(Math.random() * 15) + 15,
-      // Random delay
       delay: Math.floor(Math.random() * 5),
+      // Add a random parallax factor so bubbles move at slightly different speeds
+      parallaxFactor: 0.5 + Math.random() * 0.5
     }));
   }, []);
 
@@ -166,88 +177,89 @@ const RisingBubbles = () => {
             left: `${bubble.left}%`,
             width: bubble.size,
             height: bubble.size,
-            bottom: -100, // Start below the screen
-            opacity: 0.6, // Initial visible opacity
+            bottom: -100,
+            opacity: 0.6,
+            // Apply the spring-loaded mouse position with parallax
+            x: springX, 
           }}
+          // We can't put 'x' in 'animate' because it's controlled by style/springX now
+          // We only animate the vertical rise and rotation here
           animate={{
-            y: [0, -window.innerHeight - 200], // Move up beyond screen height
-            rotate: 720, // Rotate as they rise (like CodePen)
-            opacity: [0.6, 0.6, 0], // Fade out at the very top
+            y: [0, -window.innerHeight - 200],
+            rotate: 720,
+            opacity: [0.6, 0.6, 0],
           }}
           transition={{
-            duration: bubble.duration,
-            repeat: Infinity,
-            ease: "linear", // Constant speed
-            delay: bubble.delay,
+            y: {
+              duration: bubble.duration,
+              repeat: Infinity,
+              ease: "linear",
+              delay: bubble.delay,
+            },
+            rotate: {
+              duration: bubble.duration,
+              repeat: Infinity,
+              ease: "linear",
+              delay: bubble.delay,
+            },
+            opacity: {
+              duration: bubble.duration,
+              repeat: Infinity,
+              ease: "linear",
+              delay: bubble.delay,
+            }
           }}
         >
           <FatSparkle className="w-full h-full" />
-          </motion.div>
+        </motion.div>
       ))}
     </div>
   );
 };
 
-// --- 3. Floating Blobs Component (The new Animation) ---
+// --- 5. Floating Blobs Component ---
 const FloatingBlobs = () => {
   const containerRef = useRef(null);
   const blobRefs = useRef([]);
-
-  // Configuration
   const blobCount = 3;
-  // Distinct colors similar to the CodePen
   const colors = ["bg-purple-400", "bg-cyan-400", "bg-pink-400"];
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Initialize blob data
     const blobs = Array.from({ length: blobCount }).map((_, i) => ({
       x: Math.random() * (window.innerWidth - 200),
       y: Math.random() * (window.innerHeight - 200),
-      vx: (Math.random() - 0.5) * 1.5, // Random X velocity
-      vy: (Math.random() - 0.5) * 1.5, // Random Y velocity
+      vx: (Math.random() - 0.5) * 1.5,
+      vy: (Math.random() - 0.5) * 1.5,
       el: blobRefs.current[i],
     }));
 
     let animationFrameId;
 
     const animate = () => {
-      // Logic from CodePen: update coords and bounce
       blobs.forEach((blob) => {
         if (!blob.el) return;
-
         blob.x += blob.vx;
         blob.y += blob.vy;
 
-        // Bounce horizontally
-        if (blob.x <= -100 || blob.x >= window.innerWidth - 200) {
-          blob.vx *= -1;
-        }
+        if (blob.x <= -100 || blob.x >= window.innerWidth - 200) blob.vx *= -1;
+        if (blob.y <= -100 || blob.y >= window.innerHeight - 200) blob.vy *= -1;
 
-        // Bounce vertically
-        if (blob.y <= -100 || blob.y >= window.innerHeight - 200) {
-          blob.vy *= -1;
-        }
-
-        // Apply translation
-        // We use translate3d for GPU acceleration
         blob.el.style.transform = `translate3d(${blob.x}px, ${blob.y}px, 0)`;
       });
-
       animationFrameId = requestAnimationFrame(animate);
     };
 
     animate();
-
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
   return (
     <div 
       ref={containerRef} 
-      className="absolute inset-0  overflow-hidden pointer-events-none blobs"
+      className="absolute inset-0 overflow-hidden pointer-events-none"
     >
       {Array.from({ length: blobCount }).map((_, i) => (
         <div
@@ -262,18 +274,14 @@ const FloatingBlobs = () => {
             blur-[100px]
             ${colors[i % colors.length]}
           `}
-          style={{ 
-            top: 0, 
-            left: 0,
-            willChange: 'transform' // Performance optimization
-          }}
+          style={{ top: 0, left: 0, willChange: 'transform' }}
         />
       ))}
     </div>
   );
 };
 
-// --- 4. Main Login Page ---
+// --- 6. Main Login Page ---
 const Login = () => {
   const messages = [
     "Record, edit and learn smart",
@@ -291,14 +299,13 @@ const Login = () => {
   }, [messages.length]);
 
   return (
-    <div className="relative min-h-screen w-full  text-slate-900 selection:bg-purple-100 font-sans overflow-hidden">
+    <div className="relative min-h-screen w-full text-slate-900 selection:bg-purple-100 font-sans overflow-hidden">
       
-      {/* BACKGROUND LAYER 1: Animated Grid (z-20) */}
+      {/* BACKGROUND LAYER 1: Animated Grid */}
       <AnimatedGrid />
-       <FloatingBlobs />
+      <FloatingBlobs />
 
-      {/* BACKGROUND LAYER 2: Rising Bubbles (z-0) */}
-      {/* Placed here so they float over the grid, but behind the main content */}
+      {/* BACKGROUND LAYER 2: Rising Bubbles (Now Interactive) */}
       <RisingBubbles />
 
       {/* Floating Particles (Static Dust) */}
@@ -312,12 +319,6 @@ const Login = () => {
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
            <CatPenIcon className="h-6 w-6" strokeWidth={2.5} />
         </div>
-
-        {/* <button className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors bg-white/50 backdrop-blur-sm border border-transparent hover:border-zinc-200">
-          <Globe className="h-4 w-4" />
-          <span>English</span>
-          <ChevronDown className="h-3 w-3 opacity-50" />
-        </button> */}
       </header>
 
       {/* Main Content */}
@@ -325,11 +326,6 @@ const Login = () => {
         
         {/* Animated Headline */}
         <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
-          
-          {/* <SparkleIcon className="absolute -right-4 top-0 h-6 w-6 text-purple-400 md:right-12 md:h-8 md:w-8 animate-pulse" />
-          <SparkleIcon className="absolute bottom-0 right-20 h-5 w-5 text-pink-300 md:h-6 md:w-6" />
-          <SparkleIcon className="absolute left-4 top-1/2 h-5 w-5 text-indigo-300 md:left-12 md:h-6 md:w-6" /> */}
-
           <AnimatePresence mode="wait">
             <motion.h1
               key={index}
