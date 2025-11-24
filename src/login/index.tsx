@@ -222,7 +222,7 @@ const FloatingBlobs = () => {
   const containerRef = useRef(null);
   const blobRefs = useRef([]);
   const blobCount = 3;
-  const colors = ["bg-purple-400", "bg-cyan-400", "bg-pink-400"];
+  const colors = ["bg-purple-400", "bg-[#4891C2]", "bg-[#FF7B7B]"];
 
   useEffect(() => {
     const container = containerRef.current;
@@ -316,15 +316,34 @@ const Login = () => {
 
       {/* Header */}
       <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
-           <CatPenIcon className="h-6 w-6" strokeWidth={2.5} />
-        </div>
+        
       </header>
 
       {/* Main Content */}
       <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
         
-        {/* Animated Headline */}
+     
+
+        {/* Social Proof */}
+        <div className="mb-12 flex flex-col items-center gap-2">
+          <div className="flex items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
+            <CatPenIcon className="h-10 w-10" strokeWidth={2.5} />
+          </div>
+            <h3 className="text-4xl font-bold tracking-tight text-slate-700">
+                  Leitner AI
+                </h3>
+          {/* <div className="flex gap-1">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
+            ))}
+          </div> */}
+          {/* <div className="flex flex-col items-center leading-tight">
+            <span className="text-lg font-bold text-slate-900">170,000+</span>
+            <span className="text-sm text-slate-600">People loved</span>
+          </div> */}
+        </div>
+
+   {/* Animated Headline */}
         <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.h1
@@ -333,27 +352,14 @@ const Login = () => {
               animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
               exit={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
               transition={{ duration: 0.5, ease: "easeOut" }}
-              className="text-4xl font-black tracking-tight text-slate-900 md:text-6xl leading-[1.1] max-w-3xl mx-auto"
+              className="text-4xl font-bold tracking-tight text-slate-700 md:text-4xl leading-[1.1] max-w-3xl mx-auto"
             >
               {messages[index]}
               <span className="inline-block ml-3 align-middle">
-                <SparkleHot className="w-8 h-8 md:w-12 md:h-12" />
+                <SparkleHot className="w-8 h-8 md:w-8 md:h-8" />
               </span>
             </motion.h1>
           </AnimatePresence>
-        </div>
-
-        {/* Social Proof */}
-        <div className="mb-12 flex flex-col items-center gap-2">
-          <div className="flex gap-1">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
-            ))}
-          </div>
-          <div className="flex flex-col items-center leading-tight">
-            <span className="text-lg font-bold text-slate-900">170,000+</span>
-            <span className="text-sm text-slate-600">People loved</span>
-          </div>
         </div>
 
         {/* Buttons */}
