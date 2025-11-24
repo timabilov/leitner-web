@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, Mic, ChevronDown, Star } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import CatPenIcon from '@/notes/cat-pen-icon';
 
 // --- 1. The Custom Gradient Sparkle SVG ---
 export const SparkleHot = ({ className }) => (
@@ -113,6 +114,80 @@ const AnimatedGrid = () => {
   );
 };
 
+
+const FatSparkle = ({ className, style }) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    style={style}
+  >
+    {/* A rounded 4-point star shape mimicking the image */}
+    <path
+      d="M12 2C13.5 2 15 7.5 19 9.5C23 11.5 23 12.5 19 14.5C15 16.5 13.5 22 12 22C10.5 22 9 16.5 5 14.5C1 12.5 1 11.5 5 9.5C9 7.5 10.5 2 12 2Z"
+      fill="url(#fat_sparkle_gradient)"
+    />
+    <defs>
+      <linearGradient id="fat_sparkle_gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+        {/* Purple to Pink gradient based on your image */}
+        <stop offset="0%" stopColor="#A855F7" /> {/* Purple-500 */}
+        <stop offset="100%" stopColor="#EC4899" /> {/* Pink-500 */}
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+
+// --- 3. Rising Bubbles Component (Replicating the CodePen) ---
+const RisingBubbles = () => {
+  // Generate random bubble configuration
+  const bubbles = useMemo(() => {
+    return Array.from({ length: 15 }).map((_, i) => ({
+      id: i,
+      // Random size between 20px and 60px
+      size: Math.floor(Math.random() * 1) + 9, 
+      // Random horizontal position (0% - 100%)
+      left: Math.floor(Math.random() * 100),
+      // Random duration (slower is smoother)
+      duration: Math.floor(Math.random() * 15) + 15,
+      // Random delay
+      delay: Math.floor(Math.random() * 5),
+    }));
+  }, []);
+
+  return (
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      {bubbles.map((bubble) => (
+        <motion.div
+          key={bubble.id}
+          className="absolute rounded-full bg-transparent"
+          style={{
+            left: `${bubble.left}%`,
+            width: bubble.size,
+            height: bubble.size,
+            bottom: -100, // Start below the screen
+            opacity: 0.6, // Initial visible opacity
+          }}
+          animate={{
+            y: [0, -window.innerHeight - 200], // Move up beyond screen height
+            rotate: 720, // Rotate as they rise (like CodePen)
+            opacity: [0.6, 0.6, 0], // Fade out at the very top
+          }}
+          transition={{
+            duration: bubble.duration,
+            repeat: Infinity,
+            ease: "linear", // Constant speed
+            delay: bubble.delay,
+          }}
+        >
+          <FatSparkle className="w-full h-full" />
+          </motion.div>
+      ))}
+    </div>
+  );
+};
+
 // --- 3. Floating Blobs Component (The new Animation) ---
 const FloatingBlobs = () => {
   const containerRef = useRef(null);
@@ -172,7 +247,7 @@ const FloatingBlobs = () => {
   return (
     <div 
       ref={containerRef} 
-      className="absolute inset-0 -z-10 overflow-hidden pointer-events-none blobs"
+      className="absolute inset-0  overflow-hidden pointer-events-none blobs"
     >
       {Array.from({ length: blobCount }).map((_, i) => (
         <div
@@ -220,12 +295,13 @@ const Login = () => {
       
       {/* BACKGROUND LAYER 1: Animated Grid (z-20) */}
       <AnimatedGrid />
+       <FloatingBlobs />
 
-      {/* BACKGROUND LAYER 2: Moving Blobs (z-10) */}
-      {/* Placed here so they tint the grid lines below them, but sit behind text */}
-      <FloatingBlobs />
+      {/* BACKGROUND LAYER 2: Rising Bubbles (z-0) */}
+      {/* Placed here so they float over the grid, but behind the main content */}
+      <RisingBubbles />
 
-      {/* Floating Particles */}
+      {/* Floating Particles (Static Dust) */}
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[10%] top-[20%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-40"></div>
         <div className="absolute right-[15%] top-[30%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-30"></div>
@@ -233,15 +309,15 @@ const Login = () => {
 
       {/* Header */}
       <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
-           <Mic className="h-6 w-6" strokeWidth={2.5} />
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
+           <CatPenIcon className="h-6 w-6" strokeWidth={2.5} />
         </div>
 
-        <button className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors bg-white/50 backdrop-blur-sm border border-transparent hover:border-zinc-200">
+        {/* <button className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors bg-white/50 backdrop-blur-sm border border-transparent hover:border-zinc-200">
           <Globe className="h-4 w-4" />
           <span>English</span>
           <ChevronDown className="h-3 w-3 opacity-50" />
-        </button>
+        </button> */}
       </header>
 
       {/* Main Content */}
@@ -250,9 +326,9 @@ const Login = () => {
         {/* Animated Headline */}
         <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
           
-          <SparkleIcon className="absolute -right-4 top-0 h-6 w-6 text-purple-400 md:right-12 md:h-8 md:w-8 animate-pulse" />
+          {/* <SparkleIcon className="absolute -right-4 top-0 h-6 w-6 text-purple-400 md:right-12 md:h-8 md:w-8 animate-pulse" />
           <SparkleIcon className="absolute bottom-0 right-20 h-5 w-5 text-pink-300 md:h-6 md:w-6" />
-          <SparkleIcon className="absolute left-4 top-1/2 h-5 w-5 text-indigo-300 md:left-12 md:h-6 md:w-6" />
+          <SparkleIcon className="absolute left-4 top-1/2 h-5 w-5 text-indigo-300 md:left-12 md:h-6 md:w-6" /> */}
 
           <AnimatePresence mode="wait">
             <motion.h1
