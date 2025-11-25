@@ -12,7 +12,7 @@ import { SidebarInset, SidebarProvider } from "./ui/sidebar";
  * @param {string} props.title - The title for the page header.
  * @param {React.RefObject<HTMLElement>} props.containerRef - A ref for the main scrollable element.
  */
-const Layout = ({ children, title, containerRef, search, searchValue, isSearching }) => {
+const Layout = ({ children, title, containerRef, search, searchValue, isSearching, noGap }) => {
   const [showModal, setShowModal] = useState<boolean>(false)
   const { photo, fullName, email } = useUserStore();
   const shortName =
@@ -45,7 +45,7 @@ const Layout = ({ children, title, containerRef, search, searchValue, isSearchin
         <main 
          ref={containerRef}
           id="main-container"
-          className="flex-1 flex flex-col relative p-4 md:p-6 overflow-y-auto"
+          className={"flex-1 flex flex-col relative overflow-y-auto" + (noGap ? " p-0" :  " p-4 md:p-6 ")}
         >
           {/* All your page content (like NoteDetail) goes here and will scroll inside this main tag. */}
           {children}

@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Globe, Mic, ChevronDown, Star } from 'lucide-react';
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
 import CatPenIcon from '@/notes/cat-pen-icon';
+import { useTranslation } from 'react-i18next';
+import { useUserStore } from '@/store/userStore';
+import { axiosInstance } from '@/services/auth';
+import { API_BASE_URL } from '@/services/config';
+import type { AxiosError } from 'axios';
+import { jwtDecode } from 'jwt-decode';
+import { useMutation } from '@tanstack/react-query';
+import { GoogleLogin } from '@react-oauth/google';
 
 // --- 1. The Custom Gradient Sparkle SVG ---
 export const SparkleHot = ({ className }) => (
@@ -33,7 +41,7 @@ export const SparkleHot = ({ className }) => (
 );
 
 // --- 2. Animated Grid Background Component ---
-const AnimatedGrid = () => {
+export const AnimatedGrid = () => {
   const squareSize = 80;
   const gap = 4;
   const radius = 12;
@@ -137,7 +145,7 @@ const FatSparkle = ({ className, style }) => (
 );
 
 // --- 4. Interactive Rising Bubbles Component ---
-const RisingBubbles = () => {
+export const RisingBubbles = () => {
   // Use a MotionValue for the mouse X position
   const mouseX = useMotionValue(0);
   // Use a spring for smooth trailing effect
@@ -218,7 +226,7 @@ const RisingBubbles = () => {
 };
 
 // --- 5. Floating Blobs Component ---
-const FloatingBlobs = () => {
+export const FloatingBlobs = () => {
   const containerRef = useRef(null);
   const blobRefs = useRef([]);
   const blobCount = 3;
@@ -283,12 +291,106 @@ const FloatingBlobs = () => {
 
 // --- 6. Main Login Page ---
 const Login = () => {
+    const { t } = useTranslation(); // Initialize the hook
+  const setAccessToken = useUserStore(state => state.setAccessToken);
+  const setRefreshToken = useUserStore(state => state.setRefreshToken);
+  const setUserData = useUserStore(state => state.setUserData);
+  const navigate = useNavigate();
+
   const messages = [
     "Record, edit and learn smart",
     "Create quizzes from your notes",
     "Flashcards for better memory"
   ];
 
+
+  const googleVerifyMutation = useMutation({
+    mutationFn: (newUser: any) => {
+      return axiosInstance.post(API_BASE_URL + '/auth/google/v2?verify=true', newUser);
+    },
+    onSuccess: (response, variables) => {
+      const data = response.data;
+      if (data?.new) {
+        setAccessToken(data.access_token);
+        setRefreshToken(data.refresh_token);
+        navigate('/onboarding', {
+          state: {
+            idToken: variables.idToken,
+            email: variables.user.email,
+            name: variables.user.name,
+            photo: variables.user.photo,
+            finishUrl: '/auth/google/v2'
+          }
+        });
+      } else {
+        setAccessToken(data.access_token);
+        setRefreshToken(data.refresh_token);
+        localStorage.setItem('user-store', JSON.stringify({
+          state: {
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+          }
+        }));
+        setUserData(
+          data.id, data?.name, variables?.user?.email, data.company_id,
+          data?.company?.subscription, data.company.name,
+          data?.company?.trial_started_date && new Date(data.company.trial_started_date),
+          data?.company?.trial_days, variables?.user?.photo,
+          data?.company?.full_admin_access || false
+        );
+        navigate('/notes');
+      }
+    },
+    onError: (error: AxiosError) => {
+      console.log('Backend sign-in endpoint error:', error);
+      if (error.message.toLowerCase().includes('network')) {
+        alert(t('Network error, please check your connection!'));
+      } else if (error.response && (error.response.data as any)?.message) {
+        alert((error.response.data as any).message);
+      } else {
+        alert(t('An error occurred during sign-in, please try again later or reach support.'));
+      }
+    },
+  });
+
+  const signIn = async (credentialResponse) => {
+    const idToken = credentialResponse.credential;
+    const decodedToken: any = jwtDecode(idToken);
+
+    const userInfo = {
+      id: decodedToken.sub,
+      name: decodedToken.name,
+      email: decodedToken.email,
+      photo: decodedToken.picture,
+    };
+
+    try {
+      const backendData = {
+        idToken,
+        user: userInfo,
+        platform: 'web',
+      };
+      googleVerifyMutation.mutate(backendData);
+    } catch (error: any) {
+      console.error("Authentication Error:", error);
+      switch (error.code) {
+        case 'auth/popup-closed-by-user':
+          console.log("Sign-in cancelled by user.");
+          break;
+        case 'auth/popup-blocked-by-browser':
+          alert(t("Your browser blocked the sign-in popup. Please allow popups for this site and try again."));
+          break;
+        case 'auth/network-request-failed':
+          alert(t("A network error occurred. Please check your internet connection."));
+          break;
+        default:
+          alert(t("An unexpected error occurred during sign-in. Please try again."));
+          break;
+      }
+    }
+  };
+
+  
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -364,10 +466,11 @@ const Login = () => {
 
         {/* Buttons */}
         <div className="w-full max-w-sm space-y-4">
-          <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2">
+          <button onClick={signIn} className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2">
             <GoogleLogo className="h-5 w-5" />
             Continue with Google
           </button>
+            <GoogleLogin shape="square" onSuccess={signIn} />
 
           <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2">
             <AppleLogo className="h-6 w-6 text-black" />
