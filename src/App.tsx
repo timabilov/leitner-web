@@ -30,18 +30,18 @@ function App() {
         <TooltipProvider>
       <GoogleOAuthProvider clientId="241687352985-umb35edcp1011r61tnvekch5suuu6ldk.apps.googleusercontent.com">
             <Routes>
-               {
+               {/* {
                   userId && (
-                     <>
+                     <> */}
                         <Route path="/notes/:noteId" element={<NoteDetail />}/> 
                         <Route path="/notes" element={<Notes />}/> 
                         <Route path="/price-page" element={<PricingPage />}/> 
-                     </>
+                     {/* </>
                   )  } : (
                      <>
                         <Route path="/" element={<Login />}/>
-                     </>
-                  )
+                     </> */}
+                  {/* ) */}
              
               
             </Routes>

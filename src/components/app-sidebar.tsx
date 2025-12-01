@@ -11,7 +11,7 @@ import {
   SidebarSeparator
 } from "@/components/ui/sidebar"
 import {  Home,  FolderOpen, Smartphone, HatGlasses, Handshake } from "lucide-react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"; // Import the hook
 import { NavUser } from "./nav-user";
 import { Avatar } from "./ui/avatar";
@@ -21,6 +21,8 @@ export function AppSidebar({ fullName, photo,email,  ...props }) {
   const { t } = useTranslation(); // Initialize the hook
  const location = useLocation();
   const { pathname } = location;
+  const navigate = useNavigate();
+
   console.log("pathname", pathname)
   // Menu items with translated titles.
   const items = [
@@ -77,7 +79,7 @@ export function AppSidebar({ fullName, photo,email,  ...props }) {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem  key={item.title} className={"text-zinc-900"} >
+                <SidebarMenuItem  key={item.title} className={"text-zinc-900"} onClick={() => navigate(item.key) }>
                   <SidebarMenuButton isActive={pathname === item.key }  className="hover:bg-background menu-item-label cursor-pointer inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-all data-[active=true]:bg-white disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50  focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-6 py-4 has-[>svg]:px-3 w-full justify-start text-zinc-900 font-normal" tooltip={item.title}>
                     {item.icon && <item.icon />}
                     <span className="text-primary-80">{item.title}</span>
