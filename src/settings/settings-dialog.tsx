@@ -66,6 +66,15 @@ console.log(userTimezone); // Outputs something like: "America/Los_Angeles"
   });
 
 
+   const meInfoQuery = useQuery({
+    queryKey: ['me', companyId],
+    queryFn: async () => {
+      return axiosInstance.get(API_BASE_URL + '/shop/profile/me');
+    },
+    enabled: !!companyId,
+  });
+
+
   const {full_admin_access, llm_model, subscription, today_created_notes_count, default_daily_note_limit, total_created_notes_count, enforced_daily_note_limit, enforced_daily_audio_hours_limit, settings } = profileInfoQuery.data?.data || {};
 
 

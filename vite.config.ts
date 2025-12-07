@@ -6,7 +6,7 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
-    port: 3000, // change here,
+    port: 5173, // change here,
     allowedHosts: ["tough-dingos-guess.loca.lt", "tame-ties-strive.loca.lt", "ten-cases-rule.loca.lt"]
   },
   plugins: [react(), tailwindcss()],

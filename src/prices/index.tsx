@@ -5,6 +5,10 @@ import Layout from "@/components/layout";
 import { cn } from "@/lib/utils";
 import CatPenIcon from "@/notes/cat-pen-icon";
 import { useTranslation } from "react-i18next";
+import confetti from './confetti1.gif';
+import { useUserStore } from "@/store/userStore";
+
+
 
 const items = [
   {
@@ -78,6 +82,7 @@ const tiers = [
 
 export default function PricingSection() {
     const { i18n, t } = useTranslation();
+       const { userId, email } = useUserStore();
   // Type the paddle instance state
   const [paddle, setPaddle] = useState<  null>(null);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
@@ -86,8 +91,8 @@ export default function PricingSection() {
   // Initialize Paddle on Component Mount
   useEffect(() => {
     initializePaddle({
-      environment: process.env.REACT_PADDLE_ENV,
-      token: process.env.REACT_PADDLE_CLIENT_TOKEN,
+      environment: import.meta.env.VITE_PADDLE_ENV,
+      token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN,
       eventCallback: (event) => {
         // Optional: Listen for events
         if (event.name === "checkout.closed") {
@@ -129,9 +134,14 @@ export default function PricingSection() {
     setLoadingPriceId(priceId);
 
     try {
+      console.log("userId", userId, " email", email);
       paddle.Checkout.open({
         items: [{ priceId: priceId, quantity: 1 }],
         discountId: discountId,
+        customData: {
+          internal_user_id: userId,
+          internal_email: email
+        },
         settings: { 
             displayMode: "overlay", 
             theme: "dark",
@@ -333,6 +343,7 @@ export default function PricingSection() {
               </div>
             );
           })}
+          {/* <img className="absolute top-0 right-0 bottom-0 left-0 z-50 w-full"  src={confetti} /> */}
         </div>
       </div>
     </Layout>

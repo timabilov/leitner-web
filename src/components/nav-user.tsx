@@ -30,7 +30,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import SettingsDialog2 from "@/settings/settings-dialog"
+import SettingsDialog2 from "@/settings/settings-dialog2"
 import { useState } from "react"
 import { googleLogout } from "@react-oauth/google"
 import { useNavigate } from "react-router"
