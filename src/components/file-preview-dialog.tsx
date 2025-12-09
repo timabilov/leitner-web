@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
 import { DialogHeader, DialogTitle, Dialog, DialogContent } from "./ui/dialog";
+import { usePostHog } from 'posthog-js/react';
+import { useUserStore } from "@/store/userStore";
+
+
 
 export const FilePreviewDialog = ({ file, onClose, url, name, renderAsBlobUrl }: { file: File | null; onClose: () => void; renderAsBlobUrl?: boolean }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const posthog = usePostHog();
+  const {userId, email} = useUserStore();
+
 
   useEffect(() => {
+    posthog.capture("file_preview_dialog_file", { userId, email });
     if (file && file.type === "application/pdf" && !url) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);

@@ -51,15 +51,19 @@ import { toast } from "sonner";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import { Spinner } from "@/components/ui/spinner";
 import * as Sentry from "@sentry/react";
+import { usePostHog } from 'posthog-js/react';
 
 // --- AudioPreview Sub-Component (for completed recordings) ---
 const AudioPreview = ({ file, onRemove, portalContainer }) => {
+  const posthog = usePostHog()
   const [isPlaying, setIsPlaying] = useState(false);
   const { t } = useTranslation(); // Add translation hook
   const audioRef = useRef(null);
+  const { userId, email} = useUserStore();
 
   const togglePlayPause = (e) => {
     e.stopPropagation();
+    posthog.capture('audio_toggle_while_create', { userId, email })
     if (isPlaying) {
       audioRef.current?.pause();
     } else {
@@ -112,7 +116,10 @@ const AudioPreview = ({ file, onRemove, portalContainer }) => {
         variant="ghost"
         size="icon"
         className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-        onClick={onRemove}
+        onClick={() => {
+          posthog.capture('audio_removed', { userId, email })
+          onRemove()
+        }}
       >
         <X className="h-3 w-3" />
       </Button>
@@ -123,6 +130,7 @@ const AudioPreview = ({ file, onRemove, portalContainer }) => {
 // --- Main AIPromptInput Component ---
 export function AIPromptInput({ portalContainer, setIsPolling }) {
   const { t } = useTranslation(); // Initialize translation hook
+  const posthog = usePostHog()
   const { companyId } = useUserStore();
   const selectedFolder = useUserStore((store) => store.selectedFolder);
   const { userId, email} = useUserStore();
@@ -185,6 +193,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
   };
 
   const startRecording = async () => {
+  posthog.capture('start_recording_clicked', { userId, email })
     try {
       const constraints = {
         audio: {
@@ -250,6 +259,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current?.state === "recording") {
+      posthog.capture('pause_recording_clicked', { userId, email })
       mediaRecorderRef.current.pause();
       setRecordingStatus("paused");
       clearInterval(timerIntervalRef.current);
@@ -260,6 +270,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
   const resumeRecording = () => {
     if (mediaRecorderRef.current?.state === "paused") {
       mediaRecorderRef.current.resume();
+        posthog.capture('resume_recording_clicked', { userId, email })
       setRecordingStatus("recording");
       lastStartTimeRef.current = Date.now();
       timerIntervalRef.current = setInterval(() => {
@@ -274,12 +285,14 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
   const stopRecording = () => {
     if (mediaRecorderRef.current?.state !== "inactive") {
       mediaRecorderRef.current.stop();
+      posthog.capture('stop_recording_clicked', { userId, email })
     }
   };
 
   const deleteRecording = () => {
     isDeletingRef.current = true;
     stopRecording();
+    posthog.capture('delete_recording_clicked', { userId, email })
   };
 
   const handleRecordButtonClick = async () => {
@@ -302,6 +315,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
     e.stopPropagation();
     setFiles(files.filter((file) => file !== fileToRemove));
     URL.revokeObjectURL(fileToRemove.preview);
+    posthog.capture('remove_file_clicked', { userId, email })
   };
 
   useEffect(
@@ -321,6 +335,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
 
   const saveNote = async () => {
    try {
+      posthog.capture('save_note_clicked', { userId, email, note_type: "multi" });
       const zipData = await createZip2(files, prompt);
       setZipData(zipData);
       if (zipData) {
@@ -396,7 +411,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
     },
     onError: (error) => {
       console.log(error.response?.data);
-       Sentry.captureException(error, { tags: { action: 'finalize_upload' }, extra: { userId, email}  });
+      Sentry.captureException(error, { tags: { action: 'finalize_upload' }, extra: { userId, email}  });
       console.log(
         t(
           "Sorry, couldn't start processing your note. Please try again by creating new one."
@@ -419,7 +434,10 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
         <Textarea
           placeholder={t("Ask anything, drag files, or start recording...")}
           value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
+          onChange={(e) => {
+            posthog.capture('ai_prompt_changed', { userId, email, text: e.target.value })
+            setPrompt(e.target.value)
+          }}
           className="min-h-[60px] w-full resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 text-base py-2.5"
           rows={5}
         />
@@ -432,7 +450,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                   <AudioPreview
                     key={file.name + index}
                     file={file}
-                    onRemove={removeFile(file)}
+                    onRemove={() => removeFile(file)}
                     portalContainer={portalContainer}
                   />
                 );
@@ -553,7 +571,10 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                   {!isFetchingMics && audioDevices.length > 0 && (
                     <DropdownMenuRadioGroup
                       value={selectedMicId}
-                      onValueChange={setSelectedMicId}
+                      onValueChange={(mic) => {
+                        posthog.capture('mic_change_clicked', { userId, email });
+                        setSelectedMicId(mic)
+                      }}
                     >
                       {audioDevices.map((mic) => (
                         <DropdownMenuRadioItem

@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from 'react-i18next';
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import * as Sentry from "@sentry/react";
+import {  usePostHog } from 'posthog-js/react';
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -37,6 +38,7 @@ const isNoteInLoadingState = (note: any) => {
 };
 
 const Notes = ({ children }: any) => {
+  const posthog = usePostHog()
   const { companyId, isLoggedIn, fullName, email, userId } = useUserStore();
   const [viewMode, setViewMode] = useState<string>("grid");
   const [isPolling, setIsPolling] = useState<boolean>(false);
@@ -192,14 +194,20 @@ const Notes = ({ children }: any) => {
               <Button
                  variant={viewMode === "grid" ? "secondary" : "ghost"}
                 size="icon"
-                onClick={() => setViewMode("grid")}
+                onClick={() => {
+                  setViewMode("grid")
+                  posthog.capture('notes_view_changed', { userId, email, name: 'grid' })
+                }}
               >
                 <Grid3X3 className="h-4 w-4" />
               </Button>
               <Button
                 variant={viewMode === "list" ? "secondary" : "ghost"}
                 size="icon"
-                onClick={() => setViewMode("list")}
+                onClick={() => {
+                  setViewMode("list")
+                  posthog.capture('notes_view_changed', { userId, email, name: 'list' })
+                }}
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -212,6 +220,7 @@ const Notes = ({ children }: any) => {
                 placeholder={t("Search notes...")}
                 value={searchQuery}
                 onChange={(e) => {
+                  posthog.capture('note_searched', { userId, email, name: e.target.value })
                   setSearchQuery(e.target.value);
                   debouncedSearch(e.target.value);
                 }}

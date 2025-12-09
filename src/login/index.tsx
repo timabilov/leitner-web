@@ -11,6 +11,7 @@ import { GoogleLogin, useGoogleLogin } from '@react-oauth/google'; // Changed to
 import * as Sentry from "@sentry/react"; // 1. Import Sentry
 import { toast } from 'sonner';
 import { jwtDecode } from 'jwt-decode';
+import { usePostHog } from 'posthog-js/react'
 
 // --- 1. SVG Components (Unchanged) ---
 export const SparkleHot = ({ className }: { className?: string }) => (
@@ -197,6 +198,7 @@ export const FloatingBlobs = React.memo(() => {
 
 const LoginBase = () => {
   const { t } = useTranslation(); 
+  const posthog = usePostHog()
   const setAccessToken = useUserStore(state => state.setAccessToken);
   const setRefreshToken = useUserStore(state => state.setRefreshToken);
   const setUserData = useUserStore(state => state.setUserData);
@@ -222,6 +224,12 @@ const LoginBase = () => {
       if (data?.new) {
         setAccessToken(data.access_token);
         setRefreshToken(data.refresh_token);
+        posthog.identify( data.id ,{
+          email: variables.user.email,
+          companyId: data.company_id,
+          subsciption: data?.company?.subscription
+        })
+
         navigate('/onboarding', {
           state: {
             idToken: variables.idToken,
@@ -304,7 +312,7 @@ const LoginBase = () => {
   const signIn = async (credentialResponse) => {
     const idToken = credentialResponse.credential;
     const decodedToken: any = jwtDecode(idToken);
-
+    posthog.capture("signin_clicked", {});
     const userInfo = {
       id: decodedToken.sub,
       name: decodedToken.name,

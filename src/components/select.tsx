@@ -18,15 +18,22 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
 import { useTranslation } from "react-i18next"; // Import the hook
+import { usePostHog } from 'posthog-js/react';
+
+
 
 const Select = ({ data }: any) => {
+  const posthog = usePostHog();
   const { t } = useTranslation(); // Initialize the hook
   const setSelectedFolder = useUserStore((store) => store.setSelectedFolder);
   const selectedFolder = useUserStore((store) => store.selectedFolder);
   const [open, setOpen] = useState(false);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(state) => {
+      posthog.capture("folder_select_clicked")
+      setOpen(state)
+    }}>
       <PopoverTrigger>
         <Button
           variant="outline"
@@ -49,6 +56,7 @@ const Select = ({ data }: any) => {
                 <CommandItem
                   key={item.id}
                   onSelect={() => {
+                    posthog.capture("folder_selected", { name: item })
                     setSelectedFolder(item);
                     setOpen(false);
                   }}

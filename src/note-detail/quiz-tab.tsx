@@ -31,6 +31,7 @@ import GiftIcon from "./gift-icon";
 import {GradientProgress}  from '@/components/gradient-progress'
 import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react"; 
+import { usePostHog } from 'posthog-js/react';
 
 // --- Helper sub-component for the level selection cards ---
 const LevelCard = ({
@@ -111,6 +112,7 @@ const LevelCard = ({
 export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
  const { companyId, userId, email, fullName } = useUserStore();
   const { t } = useTranslation(); // Initialize hook
+  const posthog = usePostHog();
   const [activeQuestions, setActiveQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -186,6 +188,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   const handleLevelSelect = (level) => {
     const questionsForLevel = quizLevels[level]?.questions || [];
     if (questionsForLevel.length > 0) {
+      posthog.capture('quiz_level_changed', { userId, email, level });
       setQuizLevel(level);
       setActiveQuestions(questionsForLevel);
       setCurrentQuestionIndex(0);
@@ -209,6 +212,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   const progressValue = (currentQuestionIndex / totalQuestions) * 100;
 
   const handleCheckAnswer = (option, index) => {
+    posthog.capture('answer_check_clicked', { userId, email, option });
     setSelectedAnswer(option)
     if (option) {
       setShowFeedback(true);
@@ -221,6 +225,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < totalQuestions - 1) {
+      posthog.capture('next_question_clicked', { userId, email });
       setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedAnswer(null);
       setShowFeedback(false);
@@ -230,6 +235,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   };
 
   const handleRestartQuiz = () => {
+    posthog.capture('quiz_restart_clicked', { userId, email });
     queryClient.invalidateQueries({ queryKey: [`notes-${noteId}`] });
     handleLevelSelect(quizLevel);
   }

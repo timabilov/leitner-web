@@ -27,6 +27,8 @@ import {
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next"; // Import the hook
+import { usePostHog } from 'posthog-js/react';
+import { useUserStore } from "@/store/userStore";
 
 type Props = {
   className?: string;
@@ -92,8 +94,11 @@ const Timeline = React.memo(
     { currentTime: number; duration: number; onSeek: (time: number) => void }
   >(({ currentTime, duration, onSeek }, ref) => {
     const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+    const posthog = usePostHog();
+    const { userId, email } = useUserStore();
 
     const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      posthog.capture("timeline_clicked", { email, userId });
       if (duration <= 0) return;
       const rect = e.currentTarget.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
@@ -206,8 +211,8 @@ export const AudioRecorderWithVisualizer = ({
   const [isLooping, setIsLooping] = useState(false);
   const [timer, setTimer] = useState<number>(0);
   const [isSilent, setIsSilent] = useState(false);
-
-  // ... (all refs remain the same)
+  const { email, userId } = useUserStore();
+  const posthog = usePostHog();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioBufferRef = useRef<AudioBuffer | null>(null);
@@ -236,11 +241,15 @@ export const AudioRecorderWithVisualizer = ({
 
   useEffect(() => {
     if (onStatusChange) {
+      posthog.capture("status_changed", { email, userId })
       onStatusChange(recordingStatus);
     }
   }, [recordingStatus, onStatusChange]);
+
+
   useEffect(() => {
     if (onSilenceChange) {
+      posthog.capture("slience_changed", { email, userId })
       onSilenceChange(isSilent);
     }
   }, [isSilent, onSilenceChange]);
@@ -289,6 +298,7 @@ export const AudioRecorderWithVisualizer = ({
   // ... (all other functions remain the same, no text changes needed)
   const startRecording = async () => {
     cleanupAllResources();
+    posthog.capture("recording_started", { email, userId })
     const stream = await getMicrophoneStream();
     if (!stream) return;
     setRecordingStatus("recording");
@@ -332,14 +342,17 @@ export const AudioRecorderWithVisualizer = ({
   const stopRecording = () => {
     if (mediaRecorderRef.current?.state !== "inactive")
       mediaRecorderRef.current?.stop();
+    posthog.capture("recording_stopped", { email, userId })
   };
   const pauseRecording = () => {
+    posthog.capture("recording_paused", { email, userId })
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.pause();
       setRecordingStatus("paused");
     }
   };
   const resumeRecording = () => {
+    posthog.capture("recording_resumed", { email, userId })
     if (mediaRecorderRef.current?.state === "paused") {
       mediaRecorderRef.current.resume();
       setRecordingStatus("recording");
@@ -393,6 +406,7 @@ export const AudioRecorderWithVisualizer = ({
   };
 
   const handleSeek = (time: number) => {
+     posthog.capture("recording_seeked", { email, userId })
     if (duration <= 0) return;
     const clampedTime = Math.max(0, Math.min(time, duration));
     if (playbackStatus === "playing") {
@@ -407,6 +421,7 @@ export const AudioRecorderWithVisualizer = ({
   const handleVolumeChange = (newVolume: number[]) => {
     const vol = newVolume[0];
     setVolume(vol);
+     posthog.capture("volume_changed", { email, userId })
     if (webAudioRefs.current.gainNode && webAudioRefs.current.audioContext) {
       webAudioRefs.current.gainNode.gain.setValueAtTime(
         vol,
@@ -422,6 +437,7 @@ export const AudioRecorderWithVisualizer = ({
     }
   };
   const discardRecording = () => {
+        posthog.capture("recording_discarded", { email, userId })
     if (mediaRecorderRef.current?.state !== "inactive")
       mediaRecorderRef.current?.stop();
     cleanupAllResources();

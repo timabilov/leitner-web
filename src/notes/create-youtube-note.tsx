@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react"; 
+import { usePostHog } from 'posthog-js/react';
 
 const CreateYoutubeNote = () => {
   const { t } = useTranslation(); // Initialize the translation hook
@@ -40,7 +41,7 @@ const CreateYoutubeNote = () => {
       ...data,
     })),
   ];
-
+  const posthog = usePostHog()
   const [urlInputValue, setUrlInputValue] = useState("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const selectedFolder = useUserStore((store) => store.selectedFolder);
@@ -51,6 +52,10 @@ const CreateYoutubeNote = () => {
   const [noteId, setNoteId] = useState<string | undefined>();
 
   const companyId = useUserStore((state) => state.companyId);
+
+  useEffect(() => {
+    posthog.capture('youtube_dialog_toggled', { userId, email, state: isOpen })
+  }, [isOpen]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -123,6 +128,8 @@ const CreateYoutubeNote = () => {
     if (!urlInputValue) alert(t("Please add youtube link first."));
     else {
       if (isValid && urlInputValue) {
+         posthog.capture('youtube_create_clicked', { userId, email, url: urlInputValue })
+
         const languageCode =
           ISO_TO_LANGUAGE[selectedLanguage]?.lng_code || "auto";
         draftNoteMutation.mutate({

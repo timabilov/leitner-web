@@ -19,7 +19,7 @@ import {
 import { Check, Languages, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ISO_TO_LANGUAGE } from "@/services/config";
-
+import { usePosthog } from 'posthog-js/react';
 // Assume ISO_TO_LANGUAGE is imported from your config file
 
 
@@ -35,14 +35,13 @@ const languageOptions = Object.values(ISO_TO_LANGUAGE).reduce((acc, current) => 
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
-
   const [open, setOpen] = useState(false);
-
+  const posthog = usePosthog();
   // Find the currently selected language's full data object
   const selectedLanguage = languageOptions.find(lang => lang.lng_code === i18n.language) || languageOptions.find(lang => lang.lng_code === 'en');
 
   const handleLanguageChange = (lngCode) => {
-    console.log("lngCode", lngCode);
+    posthog.capture("lang_changed", {lngCode})
     i18n.changeLanguage(lngCode);
     setOpen(false); // Close the dropdown after selection
   };

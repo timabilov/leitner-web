@@ -13,6 +13,7 @@ import { POLLING_INTERVAL_MS } from ".";
 import { GradientProgress } from '@/components/gradient-progress';
 import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react"; 
+import { usePostHog }  from 'posthog-js/react';
 
 /**
  * A component to display an interactive, flippable set of flashcards.
@@ -20,7 +21,8 @@ import * as Sentry from "@sentry/react";
  * @param {Array<{question: string, answer: string}>} [props.flashcards] - The array of flashcard data.
  */
 export function FlashcardsTab({ noteId }) {
-  const { companyId } = useUserStore();
+  const { companyId, userId, email } = useUserStore();
+  const posthog = usePostHog();
   const { t } = useTranslation(); // Initialize the translation hook
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -79,6 +81,7 @@ export function FlashcardsTab({ noteId }) {
   const totalCards = flashcards.current.length;
 
   const handleNext = () => {
+    posthog.capture('flashcard_next_clicked', { userId, email, index: currentCardIndex });
     if (currentCardIndex < totalCards - 1) {
       setIsFlipped(false);
       setTimeout(() => {
@@ -88,6 +91,7 @@ export function FlashcardsTab({ noteId }) {
   };
 
   const handlePrevious = () => {
+    posthog.capture('flashcard_prev_clicked', { userId, email, index: currentCardIndex });
     if (currentCardIndex > 0) {
       setIsFlipped(false);
       setTimeout(() => {

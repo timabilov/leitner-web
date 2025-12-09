@@ -15,17 +15,27 @@ import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next"; // Import the hook
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { usePostHog} from 'posthog-js/react';
 
 const CreateFolder = () => {
   const { t } = useTranslation(); // Initialize the hook
+  const posthog = usePostHog();
   const [folderInputValue, setFolderInputValue] = useState("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const companyId = useUserStore((store) => store.companyId);
   const queryClient = useQueryClient();
+  const { userId, email} = useUserStore();
+
+
+  useEffect(() => {
+    posthog.capture("folder_dialog_toggled",  { userId, email, state: isOpen});
+  }, [isOpen])
+
+
 
   const createFolder = useMutation({
     mutationFn: () =>
@@ -95,7 +105,10 @@ const CreateFolder = () => {
 
           <Button
             disabled={!folderInputValue.trim() || createFolder.isPending}
-            onClick={() => createFolder.mutate()}
+            onClick={() => {
+              posthog.capture("create_folder_clicked", { userId, email, name: folderInputValue })
+              createFolder.mutate()
+            }}
           >
             {createFolder.isPending ? t("Saving...") : t("Save")}
           </Button>

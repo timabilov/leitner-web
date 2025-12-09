@@ -2,24 +2,19 @@ import { useUserStore } from "@/store/userStore";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Select from "./select";
-import { BellOff, BellRing, ChevronDown, Loader2Icon, Search } from "lucide-react";
+import { BellOff, BellRing } from "lucide-react";
 import { AnimatedTooltip } from "./ui/motion-tooltip";
 import { useState, useId, useEffect } from "react";
 import { Switch } from "./ui/switch";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/dropdown-menu";
-import { Button } from "./ui/button";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 import { LanguageSwitcher } from "./language-switcher";
 import { useTranslation } from "react-i18next"; // Import the hook
 import CreateFolder from "./create-folder";
+import { usePostHog } from 'posthog-js/react';
 
 const Header = ({
   isAlertEnabled,
   showAlertBadge,
-  search,
-  isSearching
 }: {
   title?: string;
   isAlertEnabled?: boolean;
@@ -27,19 +22,13 @@ const Header = ({
   search: (val?: string) => void;
   isSearching: boolean
 }) => {
+  const posthog = usePostHog();
   const { t } = useTranslation(); // Initialize the hook
-  const { companyId, photo, fullName } = useUserStore();
+  const { companyId } = useUserStore();
   const [checked, setChecked] = useState<boolean>(!!isAlertEnabled);
-  const [searchValue, setSearchValue] = useState<string | undefined>("");
-
   const { setFolders } = useUserStore();
   const id = useId();
-
   const toggleSwitch = () => setChecked((prev) => !prev);
-
-  const shortName = fullName ? `${fullName.split(" ")[0][0]}${
-    fullName.split(" ")[1]?.[0] || ''
-  }`?.toLowerCase() : '';
 
 
   const { data: foldersQuery, isLoading: isLoadingFolders } = useQuery({
@@ -61,25 +50,6 @@ const Header = ({
   return (
     <header className="bg-background/90 z-20 p-2 sticky top-0 flex h-[var(--header-height)] shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-[var(--header-height)]">
       <div className="flex w-full items-center gap-1 justify-end">
-        {/* <div className="relative w-fit flex flex-row justify-start">
-          <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
-          <InputGroup>
-            <InputGroupInput
-              placeholder={t("Search notes...")}
-              value={searchValue}
-              onChange={(e) => {
-                setSearchValue(e.target.value);
-                search(e.target.value);
-              }}
-              className="pl-10 w-2xl z-30"
-            />
-            {isSearching ? (
-              <InputGroupAddon align="inline-end">
-                <Loader2Icon className="animate-spin text-pink-500" />
-              </InputGroupAddon>
-            ) : <div className="w-[28px]" />}
-          </InputGroup>
-        </div> */}
         {showAlertBadge && (
           <AnimatedTooltip
             className=""
@@ -93,7 +63,10 @@ const Header = ({
                   id={`${id}-light`}
                   className="group-data-[state=checked]:text-muted-foreground/70 cursor-pointer text-left text-sm font-medium"
                   aria-controls={id}
-                  onClick={() => setChecked(false)}
+                  onClick={() => {
+                    posthog.capture("alert_badge_clicked")
+                    setChecked(false)
+                  }}
                 >
                   <BellOff className="size-5" aria-hidden="true" />
                 </span>
@@ -125,25 +98,6 @@ const Header = ({
             data={foldersQuery?.data?.folders || []}
             loading={isLoadingFolders}
           />
-          {/* <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button variant="ghost" className="flex items-center gap-2">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={photo} />
-                  <AvatarFallback className=" bg-orange-500 text-white">
-                    {shortName}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="xs:hidden md:inline">{fullName}</span>
-                <ChevronDown className="h-4 w-4 md:inline" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>{t("Profile")}</DropdownMenuItem>
-              <DropdownMenuItem>{t("Settings")}</DropdownMenuItem>
-              <DropdownMenuItem>{t("Sign out")}</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu> */}
           <LanguageSwitcher />
         </div>
       </div>

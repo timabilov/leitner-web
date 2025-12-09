@@ -2,8 +2,11 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Rewind, FastForward, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, Rewind, FastForward } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { usePostHog } from 'posthog-js/react';
+import { useUserStore } from '@/store/userStore';
+
 
 /**
  * A styled audio player for displaying static audio file attachments.
@@ -11,11 +14,13 @@ import { Slider } from '@/components/ui/slider';
  * @param {{name: string, url: string}} props.audio - The audio file to play.
  */
 export function AudioPlayer({ audio }) {
+  const posthog = usePostHog();
   const audioRef = useRef(null);
+  const { userId, email} = useUserStore();
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
 
   // Effect to set up audio event listeners
   useEffect(() => {
@@ -48,6 +53,7 @@ export function AudioPlayer({ audio }) {
   }, []);
 
   const togglePlayPause = () => {
+    posthog.capture("audio_toggled", { userId, email})
     if (isPlaying) {
       audioRef.current?.pause();
     } else {
@@ -56,6 +62,7 @@ export function AudioPlayer({ audio }) {
   };
 
   const handleSeek = (value) => {
+     posthog.capture("audio_seeked", { userId, email})
     if (audioRef.current) {
       audioRef.current.currentTime = value[0];
       setCurrentTime(value[0]);

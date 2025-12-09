@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next'; // Import the hook
+import { usePostHog } from 'posthog-js/react';
+import { useUserStore } from '@/store/userStore';
 
 type Props = {
   className?: string;
@@ -10,7 +12,9 @@ type Props = {
 
 const mimeType = "audio/webm"; // Define a mimeType
 
-const AudioRecorder = ({ className, timerClassName, onRecordingComplete }: Props) => {
+const AudioRecorder = ({ className, onRecordingComplete }: Props) => {
+  const posthog = usePostHog();
+  const { userId, email } = useUserStore();
   const { t } = useTranslation(); // Initialize the hook
   const [permission, setPermission] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -37,6 +41,7 @@ const AudioRecorder = ({ className, timerClassName, onRecordingComplete }: Props
   };
 
   const startRecording = async () => {
+    posthog.capture("recording_started", { userId, email });
     if (!stream) return;
     setRecordingStatus('recording');
     const mediaRecorder = new MediaRecorder(stream, { mimeType });
@@ -53,6 +58,7 @@ const AudioRecorder = ({ className, timerClassName, onRecordingComplete }: Props
   };
 
   const stopRecording = () => {
+    posthog.capture("recording_stopped", { userId, email });
     if (!mediaRecorderRef.current) return;
     setRecordingStatus('inactive');
     mediaRecorderRef.current.stop();

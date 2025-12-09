@@ -3,6 +3,8 @@ import { Button } from "./ui/button";
 import { AudioWaveform, Download, StopCircle, X } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { useTranslation } from "react-i18next"; // Import the hook
+import { usePostHog } from 'posthog-js/react';
+import { useUserStore } from "@/store/userStore";
 
 type Props = {
     file: any,
@@ -11,11 +13,14 @@ type Props = {
 
 const AudioPreview = ({ file, onRemove }: Props) => {
   const { t } = useTranslation(); // Initialize the hook
+  const posthog = usePostHog();
+  const { email, userId } = useUserStore();
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const togglePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent parent click events
+    posthog.capture('audio_toggled', { userId, email, tab: val })
     if (isPlaying) {
       audioRef.current?.pause();
     } else {

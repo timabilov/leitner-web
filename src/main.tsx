@@ -14,9 +14,10 @@ import {
   useLocation,
   useNavigationType,
 } from "react-router-dom";
-
-// 1. Import Sentry
+import { PostHogProvider } from 'posthog-js/react';
+import posthog from 'posthog-js'
 import * as Sentry from "@sentry/react";
+import PostHogPageview from './components/posthog-page-view.tsx';
 
 
 Sentry.init({
@@ -38,15 +39,29 @@ Sentry.init({
   // enabled: ! import.meta.env.MODE.DEV,
 });
 
+// Initialize PostHog
+posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
+  api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com',
+  // BEST PRACTICE: Disable autocapture in development to save event quota
+  autocapture: import.meta.env.PROD, 
+  capture_pageview: false, // We will handle this manually for SPAs (optional, see step 5)
+  // session_recording: {
+  //   maskAllInputs: true, // Privacy best practice
+  // }
+})
+
 
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Sentry.ErrorBoundary fallback={ErrorFallback} onReset={() => window.location.reload()}>
-      <BrowserRouter>
-          <App />
-      </BrowserRouter>
-    </Sentry.ErrorBoundary>
+     <PostHogProvider client={posthog}>
+      <Sentry.ErrorBoundary fallback={ErrorFallback} onReset={() => window.location.reload()}>
+        <BrowserRouter>
+            <App />
+            <PostHogPageview />
+        </BrowserRouter>
+      </Sentry.ErrorBoundary>
+     </PostHogProvider>
   </StrictMode>
 )
 

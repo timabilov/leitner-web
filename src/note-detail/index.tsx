@@ -36,6 +36,7 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react";
+import { usePostHog } from 'posthog-js/react'
 
 const extractYouTubeID = (url:string) => {
   if (!url) return null;
@@ -47,6 +48,7 @@ const extractYouTubeID = (url:string) => {
 
 const NoteDetail = () => {
   const { t } = useTranslation(); // Initialize the hook
+  const posthog = usePostHog()
   const [topics, setTopics] = useState([]);
   const [isYouTubeVisible, setIsYouTubeVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("overview");
@@ -318,6 +320,7 @@ const NoteDetail = () => {
                             src={img.url}
                             alt={img.name}
                             className="h-30 w-full cursor-pointer rounded-lg object-cover border transition-transform duration-300 group-hover:scale-105"
+                            onClick={() =>  posthog.capture('img_clicked', { userId, email, name: img.name })}
                           />
                           <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             {img.name}
@@ -335,7 +338,10 @@ const NoteDetail = () => {
                     <div className="flex flex-row items-center hover:bg-muted mt-2" key={index}>
                       <Dot />
                       <li
-                        onClick={() => setPDF(pdf)}
+                        onClick={() => {
+                          posthog.capture('pdf_clicked', { userId, email, name: pdf.name })
+                          setPDF(pdf)
+                        }}
                         key={pdf.name + index}
                         className="group relative flex items-center gap-2 cursor-pointer hover:underline text-blue-800 px-3 text-sm"
                       >
@@ -356,7 +362,11 @@ const NoteDetail = () => {
             />
           )}
           <div className="@container/main w-full mt-10">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={(val) => {
+              posthog.capture('tab_clicked', { userId, email, tab: val })
+              setActiveTab(val)
+            }}
+              className="w-full">
               <div className="flex flex-row justify-between z-20">
                 <TabsList className="relative w-full p-0 gap-2 bg-muted text-muted-foreground inline-flex h-12 items-center max-w-3xl justify-center m-auto rounded-lg p-[3px]">
                   <TabsTrigger
