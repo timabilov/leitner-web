@@ -27,16 +27,17 @@ import { Switch } from "../components/ui/switch";
 import { Avatar } from "../components/ui/avatar";
 import CatPenIcon from "@/notes/cat-pen-icon";
 import { useTranslation } from "react-i18next"; // Import the hook
+import * as Sentry from "@sentry/react";
 
 const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQuiz }) => {
   const { t } = useTranslation(); // Initialize the hook
+  const { companyId, userId, email, fullName } = useUserStore();
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [view, setView] = useState<"quiz" | "flash" | undefined>();
   const [quizLevel, setQuizLevel] = useState(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
-
-  const companyId = useUserStore((state) => state.companyId);
 
   const generateStudyMaterialNoteMutation = useMutation({
     mutationFn: () => {
@@ -50,6 +51,10 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
       setErrorMessage(null);
     },
     onError: (error: any) => {
+       Sentry.captureException(error, { 
+        tags: { action: 'generate_study_material' },
+        extra: { noteId, userId, email }
+      });
       setErrorMessage(
         error.response?.data?.message || t("Failed to start quiz generation")
       );
@@ -75,6 +80,11 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
     },
     onError: (error: any, newEnabledValue, context) => {
       toast.error(t('Failed to update quiz alerts. Please try again.'));
+       Sentry.captureException(error, { 
+        tags: { action: 'toggle_quiz_alerts' },
+        extra: { noteId, attemptedValue: newEnabledValue }
+      });
+
       if (context?.previousNoteData) {
         queryClient.setQueryData<any>([`notes-${noteId}`], context.previousNoteData);
       }

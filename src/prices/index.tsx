@@ -7,6 +7,8 @@ import CatPenIcon from "@/notes/cat-pen-icon";
 import { useTranslation } from "react-i18next";
 import confetti from './confetti1.gif';
 import { useUserStore } from "@/store/userStore";
+import * as Sentry from "@sentry/react"; 
+import { toast } from "sonner"; 
 
 
 
@@ -26,7 +28,16 @@ const items = [
 ];
 
 
-const tiers = [
+//  Sentry.captureException(error, {.  // TODO add fetchinbg axtive entitlement
+//           extra: {
+//             message: 'Error fetching active entitlement in SettingsScreen',
+//             userId: companyId,
+//           },
+//         });
+
+
+
+const tiersData = [
   {
     id: "pro_01kaxb3b72hj2d925014ewg41d",
     name: "Weekly",
@@ -84,50 +95,69 @@ export default function PricingSection() {
     const { i18n, t } = useTranslation();
        const { userId, email } = useUserStore();
   // Type the paddle instance state
-  const [paddle, setPaddle] = useState<  null>(null);
+  const [paddle, setPaddle] = useState<null>(null);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [selected, setSelected] = useState<string>("Monthly");
 
   // Initialize Paddle on Component Mount
   useEffect(() => {
-    initializePaddle({
-      environment: import.meta.env.VITE_PADDLE_ENV,
-      token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN,
-      eventCallback: (event) => {
-        // Optional: Listen for events
-        if (event.name === "checkout.closed") {
-          setLoadingPriceId(null);
+    const init = async () => {
+      try {
+        const paddleInstance = await initializePaddle({
+          environment: import.meta.env.VITE_PADDLE_ENV,
+          token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN,
+          eventCallback: (event) => {
+            if (event.name === "checkout.closed") {
+              setLoadingPriceId(null);
+            }
+            if (event.name === "checkout.completed") {
+              toast.success("Payment Successful! Welcome aboard.");
+              // Optional: window.location.href = "/success";
+            }
+          }
+        });
+
+        if (paddleInstance) {
+          setPaddle(paddleInstance);
+          fetchPrices(paddleInstance);
         }
-        if (event.name === "checkout.completed") {
-          alert("Payment Successful! Welcome aboard.");   // You could redirect here: window.location.href = "/thank-you";
+      } catch (error) {
+        console.error("Paddle Init Error:", error);
+        Sentry.captureException(error, { tags: { section: "pricing_init" } });
       }
-      }
-    }).then((paddleInstance) => {
-      console.log("paddleInstance", paddleInstance);
-      if (paddleInstance) {
-        setPaddle(paddleInstance);
-        getPrices(paddleInstance)
-      }
-    });
+    };
+
+    init();
   }, []);
 
 
-  const  getPrices = (paddleInstance) =>  {
-    paddleInstance.PricePreview({items})
+ // Fetch Real Prices (Localized currency)
+  const fetchPrices = (paddleInstance) => {
+    const itemsToPreview = tiersData.map(t => ({ quantity: 1, priceId: t.priceId }));
+
+    paddleInstance.PricePreview({ items: itemsToPreview })
       .then((result) => {
-        console.log(result);
+        const newPrices: Record<string, string> = {};
+        
+        result.data.details.lineItems.forEach((item) => {
+          // Store formatted price (e.g., "$11.99" or "€10.99")
+          newPrices[item.price.id] = item.formattedTotals.total;
+        });
+        
       })
       .catch((error) => {
-        console.error(error);
+        console.error("Price Preview Error", error);
+        // Sentry capture silent error (non-blocking)
+        Sentry.captureException(error, { tags: { section: "price_preview" } });
       });
-  }
+  };
 
 
 
   // Handle Checkout Logic
   const openCheckout = (priceId: string, discountId: string) => {
     if (!paddle) {
-      console.error("Paddle not initialized yet");
+      toast.error("Paddle not initialized yet");
       return;
     }
     
@@ -156,6 +186,10 @@ export default function PricingSection() {
     } catch (error) {
       console.error("Checkout error:", error);
       setLoadingPriceId(null);
+       Sentry.captureException(error, { 
+        tags: { section: "checkout_open" },
+        extra: { priceId, userId, email }
+      });
     }
   };
 
@@ -228,7 +262,7 @@ export default function PricingSection() {
 
         {/* --- CARDS SECTION --- */}
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 w-full max-w-7xl px-30 z-20">
-          {tiers.map((tier) => {
+          {tiersData.map((tier) => {
             const isSelected = selected === tier.name;
 
             return (

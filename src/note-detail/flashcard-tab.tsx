@@ -12,6 +12,7 @@ import { useUserStore } from "@/store/userStore";
 import { POLLING_INTERVAL_MS } from ".";
 import { GradientProgress } from '@/components/gradient-progress';
 import { useTranslation } from "react-i18next"; // Import the hook
+import * as Sentry from "@sentry/react"; 
 
 /**
  * A component to display an interactive, flippable set of flashcards.
@@ -41,6 +42,11 @@ export function FlashcardsTab({ noteId }) {
     },
     enabled: true,
     onError: (error: any) => {
+      Sentry.captureException(error, { 
+        tags: { query: 'fetch_flashcards' },
+        extra: { noteId }
+      });
+
       setErrorMessage(
         error.response?.data?.message || t('Failed to fetch flashcards status')
       );
@@ -48,7 +54,15 @@ export function FlashcardsTab({ noteId }) {
   });
 
   if (noteQuestionsQuery.data?.data?.flashcards_json && flashcards.current.length === 0) {
-    flashcards.current = JSON.parse(noteQuestionsQuery.data?.data?.flashcards_json);
+   try {
+      flashcards.current = JSON.parse(noteQuestionsQuery.data?.data?.flashcards_json);
+    } catch (e) {
+      console.error("Failed to parse flashcards JSON", e);
+      Sentry.captureException(e, { 
+        tags: { action: 'parse_flashcards_json' },
+        extra: { noteId, rawJson: noteQuestionsQuery.data?.data?.flashcards_json }
+      });
+    }
   }
 
   // Safety check for empty or missing data

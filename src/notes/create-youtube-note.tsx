@@ -27,9 +27,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "react-i18next"; // Import the hook
+import * as Sentry from "@sentry/react"; 
 
 const CreateYoutubeNote = () => {
   const { t } = useTranslation(); // Initialize the translation hook
+  const { userId, email } = useUserStore();
 
   const availableLanguages = [
     { iso: "auto", flag: "🤖", language: t("Auto") },
@@ -108,6 +110,11 @@ const CreateYoutubeNote = () => {
     onSuccess: (response) => setNoteId(response.data.id),
     onError: (error) => {
       console.log(error?.response?.data);
+       Sentry.captureException(error, { 
+        tags: { action: 'create_youtube_note' },
+        extra: { url: urlInputValue, userId, email, videoId }
+      });
+
       alert(t("Failed to create note, please try again."));
     },
   });
@@ -146,6 +153,11 @@ const CreateYoutubeNote = () => {
       toast.success(t("Note has been created"));
     },
     onError: (error) => {
+        Sentry.captureException(error, { 
+        tags: { action: 'finalize_youtube_note' },
+        extra: { noteId, email, userId }
+      });
+
       console.log("Mark upload as finished error:", error.response?.data);
       console.log(
         t(

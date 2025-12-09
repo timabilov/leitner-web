@@ -8,10 +8,8 @@ import { Route, Routes } from 'react-router'
 import { Toaster } from 'sonner'
 import { TooltipProvider } from './components/ui/tooltip'
 import NoteDetail from './note-detail'
-import Prices from './prices';
 import { useUserStore } from './store/userStore'
 import PricingPage from './prices';
-
 const queryClient = new QueryClient({
    defaultOptions: {
       queries: {

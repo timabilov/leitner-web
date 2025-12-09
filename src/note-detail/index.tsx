@@ -35,6 +35,7 @@ import Zoom from "react-medium-image-zoom";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import { useTranslation } from "react-i18next"; // Import the hook
+import * as Sentry from "@sentry/react";
 
 const extractYouTubeID = (url:string) => {
   if (!url) return null;
@@ -60,16 +61,21 @@ const NoteDetail = () => {
   const [pdf, setPDF] = useState<File | undefined>();
 
   const { noteId } = useParams();
-  const { companyId } = useUserStore();
+  const { companyId, email, userId } = useUserStore();
 
   const noteQuery = useQuery({
     queryKey: [`notes-${noteId}`],
     refetchOnWindowFocus: false,
     queryFn: async () => {
-      const response = await axiosInstance.get(
-        API_BASE_URL + `/company/${companyId}/notes/${noteId}`
-      );
-      return response;
+      try {
+        const response = await axiosInstance.get(
+          API_BASE_URL + `/company/${companyId}/notes/${noteId}`
+        );
+        return response;
+      } catch (error) {
+        Sentry.captureException(error, { tags: { query: 'fetch_note_detail' }, extra: { noteId, userId, email } });
+        throw error;
+      }
     },
     enabled: !!companyId,
     refetchInterval: (query) => {
@@ -94,9 +100,14 @@ const NoteDetail = () => {
   const noteFilesRequest = useQuery({
     queryKey: [`notes`, `${noteId}`, "file"],
     queryFn: async () => {
-      return axiosInstance.get(
-        API_BASE_URL + `/company/${companyId}/notes/${noteId}/documents-url`
-      );
+      try {
+        return await axiosInstance.get(
+          API_BASE_URL + `/company/${companyId}/notes/${noteId}/documents-url`
+        );
+      } catch (error) {
+        Sentry.captureException(error, { tags: { query: 'fetch_note_files' }, extra: { noteId, email, userId } });
+        throw error;
+      }
     },
     enabled: !!noteIdResponse && noteType !== "youtube",
   });
@@ -171,6 +182,8 @@ const NoteDetail = () => {
 
     } catch (error) {
       console.error("Preview processing error:", error);
+      Sentry.captureException(error, { tags: { action: 'process_zip_files' }, extra: { fileUrl: note.file_url, userId, email } });
+
       toast.error(t("Failed to open preview files. Please try refreshing the page."));
     } finally {
       setProcessingFiles(false);

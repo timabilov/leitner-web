@@ -20,7 +20,7 @@ import {
   FileText
 } from "lucide-react";
 import {GradientProgress}  from '@/components/gradient-progress'
-
+import * as Sentry from "@sentry/react"; // ✅ 1. Import Sentry
 // Services & Config
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL, ISO_TO_LANGUAGE } from "@/services/config";
@@ -81,7 +81,7 @@ type Tab = 'account' | 'subscription' | 'preferences';
 
 const SettingsDialog2 = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolean) => void }) => {
   const { t } = useTranslation();
-  const { fullName, email, clearStore, companyId, avatarUrl } = useUserStore();
+  const { fullName, email, clearStore, companyId, avatarUrl, userId } = useUserStore();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -167,6 +167,7 @@ const SettingsDialog2 = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v
       toast.success(t("Subscription canceled."));
       await Promise.all([queryClient.invalidateQueries(['me']), queryClient.invalidateQueries(['profile'])]);
     } catch (error) {
+    Sentry.captureException(error, { tags: { action: 'cancel_subscription' }, extra: {userId, email} });
       toast.error(t("Failed to cancel."));
     } finally {
       setIsCancelling(false);
@@ -180,6 +181,7 @@ const SettingsDialog2 = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v
       toast.success(t("Subscription resumed!"));
       await Promise.all([queryClient.invalidateQueries(['me']), queryClient.invalidateQueries(['profile'])]);
     } catch (error) {
+        Sentry.captureException(error, { tags: { action: 'resume_subscription' }, extra: { email, userId} });
       toast.error(t("Failed to resume."));
     } finally {
       setIsResuming(false);
@@ -198,6 +200,7 @@ const SettingsDialog2 = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v
         }
     } catch (error) {
         // Fallback: Just tell them to check email if API fails
+        Sentry.captureException(error, { tags: { action: 'update_payment' }, extra: {userId, email} });
         toast.info(t("Please check your email for a payment update link from Paddle."));
     } finally {
         setIsUpdatingPayment(false);
@@ -478,4 +481,7 @@ const SettingsDialog2 = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v
   );
 };
 
-export default SettingsDialog2;
+// ✅ 3. Export with Error Boundary and Profiler
+export default Sentry.withProfiler(Sentry.withErrorBoundary(SettingsDialog2, {
+    fallback: <p className="p-4 text-red-500">Settings panel encountered an error.</p>
+}));

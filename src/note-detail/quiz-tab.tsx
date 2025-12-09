@@ -30,6 +30,7 @@ import CatLogo from "./cat-logo";
 import GiftIcon from "./gift-icon";
 import {GradientProgress}  from '@/components/gradient-progress'
 import { useTranslation } from "react-i18next"; // Import the hook
+import * as Sentry from "@sentry/react"; 
 
 // --- Helper sub-component for the level selection cards ---
 const LevelCard = ({
@@ -108,7 +109,7 @@ const LevelCard = ({
 };
 
 export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
-  const { companyId } = useUserStore();
+ const { companyId, userId, email, fullName } = useUserStore();
   const { t } = useTranslation(); // Initialize hook
   const [activeQuestions, setActiveQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -241,7 +242,13 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
       );
     },
     onSuccess: (response) => console.log("Answer submitted", response.data),
-    onError: (error) => console.error("Error submitting answer:", error.response?.data),
+    onError: (error, variables) => {
+      Sentry.captureException(error, { 
+        tags: { action: 'submit_quiz_answer' },
+        extra: { noteId, questionId: variables.questionId, userId, email }
+      });
+      console.error("Error submitting answer:", error.response?.data)
+    }
   });
 
   if (!quizData || quizData.length === 0) {

@@ -50,6 +50,7 @@ import { useUserStore } from "@/store/userStore";
 import { toast } from "sonner";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import { Spinner } from "@/components/ui/spinner";
+import * as Sentry from "@sentry/react";
 
 // --- AudioPreview Sub-Component (for completed recordings) ---
 const AudioPreview = ({ file, onRemove, portalContainer }) => {
@@ -124,7 +125,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
   const { t } = useTranslation(); // Initialize translation hook
   const { companyId } = useUserStore();
   const selectedFolder = useUserStore((store) => store.selectedFolder);
-
+  const { userId, email} = useUserStore();
   const [prompt, setPrompt] = useState("");
   const [files, setFiles] = useState([]);
   const [recordingStatus, setRecordingStatus] = useState("idle");
@@ -162,6 +163,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
       setAudioDevices(mics);
       hasFetchedMics.current = true;
     } catch (err) {
+      Sentry.captureException(err, { tags: { action: 'get_audio_devices' }, extra: {userId, email} });
       if (
         err.name === "NotAllowedError" ||
         err.name === "PermissionDeniedError"
@@ -237,6 +239,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
         );
       }, 100);
     } catch (err) {
+      Sentry.captureException(err, { tags: { action: 'start_recording' }, extra: { email, userId} });
       if (
         err.name === "NotAllowedError" ||
         err.name === "PermissionDeniedError"
@@ -317,18 +320,23 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
   });
 
   const saveNote = async () => {
-    const zipData = await createZip2(files, prompt);
-    setZipData(zipData);
-    if (zipData) {
-      draftNoteMutation.mutate({
-        note_type: "multi",
-        name: t("New Recording"),
-        file_name: zipData.fileName,
-        transcript: t("Not transcribed yet"),
-        language: "en",
-        youtube_url: null,
-        folder_id: selectedFolder?.id,
-      });
+   try {
+      const zipData = await createZip2(files, prompt);
+      setZipData(zipData);
+      if (zipData) {
+        draftNoteMutation.mutate({
+          note_type: "multi",
+          name: t("New Recording"),
+          file_name: zipData.fileName,
+          transcript: t("Not transcribed yet"),
+          language: "en",
+          youtube_url: null,
+          folder_id: selectedFolder?.id,
+        });
+      }
+    } catch (e) {
+      Sentry.captureException(e, { tags: { action: 'zip_creation' }, extra: { userId, email} });
+      toast.error(t("Failed to prepare files for upload"));
     }
   };
 
@@ -345,7 +353,10 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
       );
     },
     onSuccess: (response) => setNoteId(response?.data.id),
-    onError: (error: any) => console.error(error.response?.data),
+    onError: (error: any) => {
+      Sentry.captureException(error, { tags: { action: 'create_multi_note_draft' }, extra: { userId, email} });
+      console.error(error.response?.data);
+    }
   });
 
   const generateUploadLink = useMutation({
@@ -362,7 +373,10 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
         .then(() => markUploadAsFinished.mutate(noteId))
         .catch((error) => console.log(error));
     },
-    onError: (error) => console.log(error.response?.data),
+    onError: (error) => {
+      Sentry.captureException(error, { tags: { action: 'generate_upload_link' }, extra: { userId, email} });
+      console.log(error.response?.data);
+    }
   });
 
   const markUploadAsFinished = useMutation({
@@ -382,6 +396,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
     },
     onError: (error) => {
       console.log(error.response?.data);
+       Sentry.captureException(error, { tags: { action: 'finalize_upload' }, extra: { userId, email}  });
       console.log(
         t(
           "Sorry, couldn't start processing your note. Please try again by creating new one."

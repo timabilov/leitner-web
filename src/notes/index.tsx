@@ -26,6 +26,7 @@ import debounce from 'lodash.debounce';
 import { cn } from "@/lib/utils";
 import { useTranslation } from 'react-i18next';
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import * as Sentry from "@sentry/react";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -36,7 +37,7 @@ const isNoteInLoadingState = (note: any) => {
 };
 
 const Notes = ({ children }: any) => {
-  const { companyId, isLoggedIn, fullName } = useUserStore();
+  const { companyId, isLoggedIn, fullName, email, userId } = useUserStore();
   const [viewMode, setViewMode] = useState<string>("grid");
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,6 +70,11 @@ const Notes = ({ children }: any) => {
     },
     throwOnError: (error) => {
       console.error("Get notes error:", error);
+      Sentry.captureException(error, { 
+        tags: { query: 'fetch_all_notes' },
+        extra: { companyId, email, userId }
+      });
+
       return false;
     },
   });
@@ -86,6 +92,7 @@ const Notes = ({ children }: any) => {
     enabled: true,
     throwOnError: (error) => {
       console.error("Search error:", error);
+      Sentry.captureException(error, { tags: { query: 'search_notes' }, extra: { userId, email} });
       return false;
     },
   });
@@ -103,6 +110,7 @@ const Notes = ({ children }: any) => {
         }, 500);
       });
     } catch (error) {
+      Sentry.captureException(error, { tags: { query: 'search_notes' }, extra: { userId, email} });
       throw new Error('Failed to search notes');
     }
   };
