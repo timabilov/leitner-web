@@ -45,9 +45,9 @@ posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
   // BEST PRACTICE: Disable autocapture in development to save event quota
   autocapture: import.meta.env.PROD, 
   capture_pageview: false, // We will handle this manually for SPAs (optional, see step 5)
-  // session_recording: {
-  //   maskAllInputs: true, // Privacy best practice
-  // }
+  session_recording: {
+    maskAllInputs: true, // Privacy best practice
+  }
 })
 
 

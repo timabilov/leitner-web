@@ -1,15 +1,27 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import * as Sentry from "@sentry/react"; 
+import { usePostHog } from 'posthog-js/react'
 import Layout from "@/components/layout";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import MarkdownView from "@/components/markdown-view";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { BellOff, BellRing, Calendar, ChevronDown, Dot } from "lucide-react";
+import { 
+  BellOff, 
+  BellRing, 
+  Calendar, 
+  ChevronDown, 
+  Dot, 
+  Send, 
+  Bot, 
+  User, 
+  Loader2,
+  Sparkles
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Breadcrumb,
@@ -19,7 +31,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card"; // Added CardFooter
 import AiModal from "./ai-modal";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -30,13 +42,146 @@ import {
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-card";
 import { toast } from "sonner";
 import JSZip from "jszip";
-export const POLLING_INTERVAL_MS = 5000;
 import Zoom from "react-medium-image-zoom";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
-import { useTranslation } from "react-i18next"; // Import the hook
-import * as Sentry from "@sentry/react";
-import { usePostHog } from 'posthog-js/react'
+import { useTranslation } from "react-i18next"; 
+import { Input } from "@/components/ui/input"; // Added Input
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added Avatar
+import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea
+import AIIcon from "./ai-icon";
+
+export const POLLING_INTERVAL_MS = 5000;
+
+// --- Chat Component ---
+const ChatInterface = ({ noteName }: { noteName?: string }) => {
+  const { t } = useTranslation();
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Mock Messages State - Replace with real logic later
+  const [messages, setMessages] = useState([
+    {
+      id: "1",
+      role: "ai",
+      content: t("Hello! I've analyzed your note '{{name}}'. Ask me anything about it!", { name: noteName || "Untitled" }),
+    }
+  ]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isLoading]);
+
+  const handleSendMessage = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!inputValue.trim()) return;
+
+    // Add User Message
+    const userMsg = { id: Date.now().toString(), role: "user", content: inputValue };
+    setMessages((prev) => [...prev, userMsg]);
+    setInputValue("");
+    setIsLoading(true);
+
+    // Simulate AI Response (Remove this when implementing real API)
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev, 
+        { 
+          id: (Date.now() + 1).toString(), 
+          role: "ai", 
+          content: t("I am a placeholder for the AI response. I will be connected to the backend soon!") 
+        }
+      ]);
+      setIsLoading(false);
+    }, 1500);
+  };
+
+  return (
+    <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto">
+      {/* Messages Area */}
+      <ScrollArea className="flex-1 pr-4">
+        <div className="flex flex-col gap-4 py-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={cn(
+                "flex w-full gap-3",
+                message.role === "user" ? "flex-row-reverse" : "flex-row"
+              )}
+            >
+              <Avatar className={cn("h-8 w-8 border", message.role === "ai" ? "bg-black" : "bg-muted")}>
+                {message.role === "ai" ? (
+                  <div className="flex h-full w-full items-center justify-center text-white">
+                    {/* <Sparkles className="h-4 w-4" /> */}
+                    <AIIcon  className="h-4 w-4"/>
+                  </div>
+                ) : (
+                  <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                )}
+              </Avatar>
+              
+              <div
+                className={cn(
+                  "relative max-w-[80%] px-4 py-3 text-sm rounded-2xl",
+                  message.role === "user"
+                    ? "bg-primary text-primary-foreground rounded-tr-sm"
+                    : "bg-muted text-foreground rounded-tl-sm"
+                )}
+              >
+                {message.content}
+              </div>
+            </div>
+          ))}
+          
+          {isLoading && (
+            <div className="flex w-full gap-3">
+               <Avatar className="h-8 w-8 border bg-black text-white flex items-center justify-center">
+                  <Sparkles className="h-4 w-4" />
+               </Avatar>
+               <div className="bg-muted px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                  <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                  <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce"></span>
+               </div>
+            </div>
+          )}
+          <div ref={scrollRef} />
+        </div>
+      </ScrollArea>
+
+      {/* Input Area */}
+      <div className="pt-4 border-t bg-background">
+        <form 
+          onSubmit={handleSendMessage}
+          className="relative flex items-center w-full"
+        >
+          <Input
+            placeholder={t("Ask something about this note...")}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            disabled={isLoading}
+            className="pr-12 py-6 rounded-full shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary"
+          />
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={!inputValue.trim() || isLoading}
+            className="absolute right-1.5 rounded-full h-9 w-9 shrink-0"
+          >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          </Button>
+        </form>
+        <p className="text-[10px] text-muted-foreground text-center mt-2">
+          {t("AI can make mistakes. Check important info.")}
+        </p>
+      </div>
+    </div>
+  );
+};
 
 const extractYouTubeID = (url:string) => {
   if (!url) return null;
@@ -46,24 +191,36 @@ const extractYouTubeID = (url:string) => {
   return match ? match[1] : null;
 };
 
-const NoteDetail = () => {
-  const { t } = useTranslation(); // Initialize the hook
-  const posthog = usePostHog()
+const NoteDetailBase = () => {
+  const { t } = useTranslation(); 
+  const { noteId } = useParams();
+  const { companyId, userId, email, fullName } = useUserStore();
+  const posthog = usePostHog();
+
   const [topics, setTopics] = useState([]);
   const [isYouTubeVisible, setIsYouTubeVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const mainContainerRef = useRef(null);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const previewLoadingAlreadyFired = useRef(false);
-  const [imagePaths, setImagePaths] = useState<string[]>([]);
-  const [audioPaths, setAudioPaths] = useState<string[]>([]);
-  const [pdfPaths, setPdfPaths] = useState<string[]>([]);
+  const [imagePaths, setImagePaths] = useState<any[]>([]);
+  const [audioPaths, setAudioPaths] = useState<any[]>([]);
+  const [pdfPaths, setPdfPaths] = useState<any[]>([]);
   const [textContent, setTextContent] = useState<string>("");
   const [isProcessingFiles, setProcessingFiles] = useState(false);
   const [pdf, setPDF] = useState<File | undefined>();
 
-  const { noteId } = useParams();
-  const { companyId, email, userId } = useUserStore();
+  // 2. Set Sentry User Context
+  useEffect(() => {
+    if (userId) {
+      Sentry.setUser({
+        id: String(userId),
+        email: email,
+        username: fullName,
+        company_id: companyId
+      });
+    }
+  }, [userId, email, fullName, companyId]);
 
   const noteQuery = useQuery({
     queryKey: [`notes-${noteId}`],
@@ -75,7 +232,7 @@ const NoteDetail = () => {
         );
         return response;
       } catch (error) {
-        Sentry.captureException(error, { tags: { query: 'fetch_note_detail' }, extra: { noteId, userId, email } });
+        Sentry.captureException(error, { tags: { query: 'fetch_note_detail' }, extra: { noteId } });
         throw error;
       }
     },
@@ -84,12 +241,9 @@ const NoteDetail = () => {
       const isGenerating =
         query.state?.data?.data?.quiz_status === "in_progress" ||
         query.state?.data?.data?.quiz_status === "ready_to_generate";
-      if (!isPolling) {
-        return false;
-      }
-      if (isGenerating) {
-        return POLLING_INTERVAL_MS;
-      } else {
+      if (!isPolling) return false;
+      if (isGenerating) return POLLING_INTERVAL_MS;
+      else {
         setIsPolling(false);
         return false;
       }
@@ -147,7 +301,7 @@ const NoteDetail = () => {
       const newPdfPaths = [];
       let newTextContent = '';
 
-      const filePromises = [];
+      const filePromises: Promise<void>[] = [];
       zip.forEach((relativePath, zipEntry) => {
         const fileName = zipEntry.name;
         const extension = fileName.toLowerCase().match(/\.[^.]+$/)?.[0] || '';
@@ -185,7 +339,6 @@ const NoteDetail = () => {
     } catch (error) {
       console.error("Preview processing error:", error);
       Sentry.captureException(error, { tags: { action: 'process_zip_files' }, extra: { fileUrl: note.file_url, userId, email } });
-
       toast.error(t("Failed to open preview files. Please try refreshing the page."));
     } finally {
       setProcessingFiles(false);
@@ -381,6 +534,15 @@ const NoteDetail = () => {
                   >
                     {t("Transcript")}
                   </TabsTrigger>
+                  <TabsTrigger
+                    className="cursor-pointer data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground h-[calc(100%-1px)] flex-1 justify-center rounded-md border border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 flex flex-col items-center gap-1 sm:px-3 "
+                    value="chat"
+                  >
+                    <div className="flex flex-row items-center">
+                      <AIIcon  />
+                      {t("AI Chat")}
+                    </div>
+                  </TabsTrigger>
                 </TabsList>
                 {!note?.processing_error_message && (
                   <AiModal
@@ -410,6 +572,14 @@ const NoteDetail = () => {
                     <MarkdownView>{note?.md_summary_ai}</MarkdownView>
                   </CardContent>
                 </TabsContent>
+                
+                {/* --- ADDED CHAT CONTENT --- */}
+                <TabsContent value="chat" className="flex-1 min-h-0 py-8 overflow-y-auto">
+                  <CardContent className="p-0 border-none">
+                    <ChatInterface noteName={note?.name} />
+                  </CardContent>
+                </TabsContent>
+
               </Card>
             </Tabs>
           </div>
@@ -418,5 +588,12 @@ const NoteDetail = () => {
     </Layout>
   );
 };
+
+// 4. Export with Wrappers
+const NoteDetail = Sentry.withProfiler(
+  Sentry.withErrorBoundary(NoteDetailBase, {
+    fallback: <div className="p-10 text-center text-red-500">Error loading note details.</div>
+  })
+);
 
 export default NoteDetail;
