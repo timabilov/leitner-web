@@ -19,7 +19,7 @@ import posthog from 'posthog-js'
 import * as Sentry from "@sentry/react";
 import PostHogPageview from './components/posthog-page-view.tsx';
 
-
+// tsc -b && ===> build command
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
   tracesSampleRate: 1.0,
