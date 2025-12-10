@@ -22,6 +22,7 @@ import { useTranslation } from "react-i18next"; // Import the hook
 import { NavUser } from "./nav-user";
 import { Avatar } from "./ui/avatar";
 import CatPenIcon from "@/notes/cat-pen-icon";
+import { cn } from "@/lib/utils";
 
 export function AppSidebar({ fullName, photo, email, ...props }) {
   const { t } = useTranslation(); // Initialize the hook
@@ -70,14 +71,26 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="bg-zinc-100 text-zinc-900">
+      <SidebarContent className="bg-muted/40 text-zinc-900 dark:text-zinc-100">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem
+              {items.map((item) => {
+                 const isActive = item.url === "/" 
+          ? pathname === "/" 
+          : pathname.startsWith(item.url);
+
+                return (<SidebarMenuItem
                   key={item.title}
-                  className={"text-zinc-900"}
+                  className={cn(
+                        // 1. Layout & Shape
+                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
+                        
+                        // 2. Conditional Styling (Active vs Inactive)
+                        isActive 
+                          ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900" // Active State
+                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-50" // Inactive State
+                      )}
                   onClick={() => navigate(item.key)}
                 >
                   <SidebarMenuButton
@@ -89,7 +102,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                     <span className="text-primary-80">{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
+              )})}
               <SidebarSeparator />
               <SidebarMenuItem className="text-zinc-900">
                 <SidebarMenuButton

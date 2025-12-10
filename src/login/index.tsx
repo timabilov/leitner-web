@@ -425,7 +425,7 @@ const LoginBase = () => {
 
           {/* Apple Button */}
            <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2">
-              <AppleLogo className="h-7 w-7 text-black" />
+              <AppleLogo className="h-7 w-7 text-foreground" />
             Continue with Apple
           </button>
         </div>

@@ -1,9 +1,10 @@
-// import { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react"; 
+
 
 interface SettingsItemProps {
   label: string;
   value?: React.ReactNode;
-  icon?: any; // Stronger typing
+  icon?: LucideIcon; // Stronger typing
   action?: React.ReactNode;
   className?: string;
 }

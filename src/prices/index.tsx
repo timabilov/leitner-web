@@ -275,7 +275,7 @@ export default function PricingSection() {
                   data-slot="card"
                   className={cn(
                     "flex flex-col gap-6 rounded-xl py-8 relative overflow-hidden transition-all duration-300 h-full",
-                    "bg-white border",
+                    "bg-background border",
                     isSelected
                       ? "border-black shadow-2xl scale-[1.02] ring-1 ring-black/10"
                       : "border-neutral-200 hover:border-neutral-300 hover:shadow-lg hover:-translate-y-1"
@@ -353,7 +353,7 @@ export default function PricingSection() {
                         `,
                         isSelected
                           ? "text-white border-transparent shadow-md"
-                          : "bg-white text-slate-900 border-neutral-200 hover:border-neutral-300 hover:bg-slate-50"
+                          : "bg-background text-slate-900 border-neutral-200 hover:border-neutral-300 hover:bg-slate-50"
                       )}
                       style={
                         isSelected
