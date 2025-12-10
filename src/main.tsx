@@ -18,6 +18,7 @@ import { PostHogProvider } from 'posthog-js/react';
 import posthog from 'posthog-js'
 import * as Sentry from "@sentry/react";
 import PostHogPageview from './components/posthog-page-view.tsx';
+import { ThemeProvider } from './components/theme-provider.tsx';
 
 // tsc -b && ===> build command
 Sentry.init({
@@ -57,7 +58,9 @@ createRoot(document.getElementById('root')!).render(
      <PostHogProvider client={posthog}>
       <Sentry.ErrorBoundary fallback={ErrorFallback} onReset={() => window.location.reload()}>
         <BrowserRouter>
-            <App />
+             <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+                <App />
+              </ThemeProvider>
             <PostHogPageview />
         </BrowserRouter>
       </Sentry.ErrorBoundary>

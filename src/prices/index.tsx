@@ -211,7 +211,7 @@ export default function PricingSection() {
       </style>
 
       {/* Main Container */}
-      <div className="relative min-h-screen w-full text-slate-900 selection:bg-purple-100 font-sans flex flex-col items-center bg-white gap-4 pb-24">
+      <div className="relative min-h-screen w-full text-slate-900 selection:bg-purple-100 font-sans flex flex-col items-center bg-background gap-4 pb-24">
         
         {/* --- HEADER SECTION --- */}
         <div className="relative w-full pt-2 px-4 flex flex-col items-center text-center z-10">
