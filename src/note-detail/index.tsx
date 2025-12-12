@@ -53,56 +53,111 @@ import AIIcon from "./ai-icon";
 
 export const POLLING_INTERVAL_MS = 5000;
 
-// --- Chat Component ---
-const ChatInterface = ({ noteName }: { noteName?: string }) => {
+type Message = {
+  id: string;
+  role: "ai" | "user";
+  content: string;
+};
+
+const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string }) => {
   const { t } = useTranslation();
+  const { companyId } = useUserStore();
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
-  // Mock Messages State - Replace with real logic later
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     {
-      id: "1",
+      id: "init-1",
       role: "ai",
       content: t("Hello! I've analyzed your note '{{name}}'. Ask me anything about it!", { name: noteName || "Untitled" }),
     }
   ]);
+  
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom
+  // Auto-scroll logic
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isLoading]);
 
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isLoading) return;
 
-    // Add User Message
-    const userMsg = { id: Date.now().toString(), role: "user", content: inputValue };
+    const userText = inputValue.trim();
+    
+    // 1. Add User Message to UI
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: userText };
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");
     setIsLoading(true);
 
-    // Simulate AI Response (Remove this when implementing real API)
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev, 
+    // 2. Prepare AI Placeholder
+    const aiMsgId = (Date.now() + 1).toString();
+    setMessages((prev) => [...prev, { id: aiMsgId, role: "ai", content: "" }]);
+
+    // 3. Prepare History
+    const historyPayload = messages.map((m) => ({
+      role: m.role === "ai" ? "model" : "user",
+      message: m.content
+    }));
+
+    // Track how much text we have processed so far
+    let lastIndex = 0;
+
+    try {
+      // ✅ 4. Use axiosInstance with onDownloadProgress
+      await axiosInstance.post(
+        `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat`,
         { 
-          id: (Date.now() + 1).toString(), 
-          role: "ai", 
-          content: t("I am a placeholder for the AI response. I will be connected to the backend soon!") 
+          message: userText, 
+          history: historyPayload 
+        },
+        {
+          // This allows us to read the response while it's still loading
+          onDownloadProgress: (progressEvent) => {
+            const xhr = progressEvent.event.target;
+            const fullResponse = xhr.responseText || "";
+            
+            // Calculate the new chunk (Axios gives the full text every time)
+            const newChunk = fullResponse.substring(lastIndex);
+            
+            if (newChunk) {
+              lastIndex = fullResponse.length; // Update index for next chunk
+              
+              // Update State
+              setMessages((prev) => 
+                prev.map((msg) => 
+                  msg.id === aiMsgId 
+                    ? { ...msg, content: msg.content + newChunk } 
+                    : msg
+                )
+              );
+            }
+          }
         }
-      ]);
+      );
+
+    } catch (error) {
+      console.error("Chat error:", error);
+      Sentry.captureException(error);
+      
+      // Remove the empty AI message if it failed, or show error text
+      setMessages((prev) => 
+        prev.map((msg) => 
+            msg.id === aiMsgId 
+            ? { ...msg, content: t("Sorry, I encountered an error. Please try again.") } 
+            : msg
+        )
+      );
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
     <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto">
-      {/* Messages Area */}
       <ScrollArea className="flex-1 pr-4">
         <div className="flex flex-col gap-4 py-4">
           {messages.map((message) => (
@@ -115,10 +170,7 @@ const ChatInterface = ({ noteName }: { noteName?: string }) => {
             >
               <Avatar className={cn("h-8 w-8 border", message.role === "ai" ? "bg-black" : "bg-muted")}>
                 {message.role === "ai" ? (
-                  <div className="flex h-full w-full items-center justify-center text-white">
-                    {/* <Sparkles className="h-4 w-4" /> */}
-                    <AIIcon  className="h-4 w-4"/>
-                  </div>
+                    <Sparkles className="h-4 w-4 text-white m-auto" />
                 ) : (
                   <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
                 )}
@@ -126,39 +178,22 @@ const ChatInterface = ({ noteName }: { noteName?: string }) => {
               
               <div
                 className={cn(
-                  "relative max-w-[80%] px-4 py-3 text-sm rounded-2xl",
+                  "relative max-w-[80%] px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap leading-relaxed",
                   message.role === "user"
                     ? "bg-primary text-primary-foreground rounded-tr-sm"
                     : "bg-muted text-foreground rounded-tl-sm"
                 )}
               >
-                {message.content}
+                {message.content || (message.role === 'ai' && isLoading ? "..." : "")}
               </div>
             </div>
           ))}
-          
-          {isLoading && (
-            <div className="flex w-full gap-3">
-               <Avatar className="h-8 w-8 border bg-black text-white flex items-center justify-center">
-                  <Sparkles className="h-4 w-4" />
-               </Avatar>
-               <div className="bg-muted px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                  <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                  <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-bounce"></span>
-               </div>
-            </div>
-          )}
           <div ref={scrollRef} />
         </div>
       </ScrollArea>
 
-      {/* Input Area */}
       <div className="pt-4 border-t bg-background">
-        <form 
-          onSubmit={handleSendMessage}
-          className="relative flex items-center w-full"
-        >
+        <form onSubmit={handleSendMessage} className="relative flex items-center w-full">
           <Input
             placeholder={t("Ask something about this note...")}
             value={inputValue}
@@ -182,6 +217,8 @@ const ChatInterface = ({ noteName }: { noteName?: string }) => {
     </div>
   );
 };
+
+
 
 const extractYouTubeID = (url:string) => {
   if (!url) return null;
@@ -576,7 +613,7 @@ const NoteDetailBase = () => {
                 {/* --- ADDED CHAT CONTENT --- */}
                 <TabsContent value="chat" className="flex-1 min-h-0 py-8 overflow-y-auto">
                   <CardContent className="p-0 border-none">
-                    <ChatInterface noteName={note?.name} />
+                    <ChatInterface noteName={note?.name}  noteId={noteId}/>
                   </CardContent>
                 </TabsContent>
 

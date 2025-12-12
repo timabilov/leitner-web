@@ -115,7 +115,7 @@ export function NavUser({
                   </div>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator  className="dark:!bg-zinc-800"/>
               <DropdownMenuGroup>
                 <DropdownMenuItem onClick={() => {
                   postHog.capture("price_page_clicked", {
@@ -129,7 +129,7 @@ export function NavUser({
                   Upgrade to Pro
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="dark:!bg-zinc-800" />
               <DropdownMenuGroup>
                 <DropdownMenuItem
                   onSelect={(e) => {
@@ -146,7 +146,7 @@ export function NavUser({
                   <span>Account</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="dark:!bg-zinc-800" />
               <DropdownMenuItem onClick={logout}>
                 <LogOut />
                 Log out

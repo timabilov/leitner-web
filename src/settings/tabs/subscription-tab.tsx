@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import * as Sentry from "@sentry/react";
 import { AlertCircle, Loader2 } from "lucide-react";
 
-// Components
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +23,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Services & Helpers
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
@@ -38,7 +36,6 @@ const SubscriptionTab = () => {
   const [isCancelling, setIsCancelling] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
 
-  // Queries
   const profileInfoQuery = useQuery({
     queryKey: ['profile', companyId],
     queryFn: async () => axiosInstance.get(API_BASE_URL + `/company/${companyId}/overview`),
@@ -50,7 +47,6 @@ const SubscriptionTab = () => {
     queryFn: async () => axiosInstance.get(API_BASE_URL + '/shop/profile/me'),
   });
 
-  // Derived Data
   const { subscription, today_created_notes_count, enforced_daily_note_limit } = profileInfoQuery.data?.data || {};
   const { plan_interval, is_cancelled, is_past_due, expiration_date } = meInfoQuery.data?.data || {};
 
@@ -59,7 +55,6 @@ const SubscriptionTab = () => {
   const notesUsed = today_created_notes_count || 0;
   const usagePercent = Math.min((notesUsed / noteLimit) * 100, 100);
 
-  // Logic for Plan Label
   const getPlanDetails = () => {
     if (subscription === 'trial') return { label: t('Free Trial'), variant: 'default' };
     if (subscription === 'free') return { label: t('Free Plan'), variant: 'secondary' };
@@ -78,7 +73,6 @@ const SubscriptionTab = () => {
     return new Date(dateString).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  // Actions
   const handleCancelSubscription = async () => {
     setIsCancelling(true);
     try {
@@ -89,7 +83,7 @@ const SubscriptionTab = () => {
         queryClient.invalidateQueries({ queryKey: ['profile'] })
       ]);
     } catch (error) {
-      Sentry.captureException(error, { tags: { action: 'cancel_subscription' }, extra: { userId, email } });
+      Sentry.captureException(error);
       toast.error(t("Failed to cancel."));
     } finally {
       setIsCancelling(false);
@@ -106,7 +100,7 @@ const SubscriptionTab = () => {
         queryClient.invalidateQueries({ queryKey: ['profile'] })
       ]);
     } catch (error) {
-      Sentry.captureException(error, { tags: { action: 'resume_subscription' }, extra: { email, userId } });
+      Sentry.captureException(error);
       toast.error(t("Failed to resume."));
     } finally {
       setIsResuming(false);
@@ -116,57 +110,58 @@ const SubscriptionTab = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div>
-        <h3 className="text-2xl font-semibold tracking-tight">{t("Plan & Billing")}</h3>
-        <p className="text-sm text-neutral-500">{t("Manage your subscription and usage")}</p>
+        <h3 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">{t("Plan & Billing")}</h3>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("Manage your subscription and usage")}</p>
       </div>
-      <Separator />
+      <Separator className="bg-zinc-200 dark:bg-zinc-800" />
 
-      {/* Payment Failure Alert */}
       {is_past_due && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="dark:border-red-900 dark:bg-red-900/10">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>{t("Payment Failed")}</AlertTitle>
-          <AlertDescription>{t("We couldn't process your payment. Please update your payment method to avoid interruption.")}</AlertDescription>
+          <AlertDescription>{t("Please update your payment method.")}</AlertDescription>
         </Alert>
       )}
 
-      {/* Usage Card */}
-      <Card className={`border ${is_cancelled ? 'border-orange-200' : 'border-neutral-200'} gap-0 py-0 overflow-hidden`}>
-        <div className={`p-6 border-b flex justify-between items-center ${is_cancelled ? 'bg-orange-50/50' : 'bg-neutral-50/50'}`}>
+      {/* PLAN CARD: Updated colors for Dark Mode */}
+      <Card className={`border ${is_cancelled ? 'border-orange-200 dark:border-orange-900' : 'border-zinc-200 dark:border-zinc-800'} gap-0 py-0 overflow-hidden dark:bg-transparent`}>
+        <div className={`p-6 border-b flex justify-between items-center ${
+            is_cancelled 
+            ? 'bg-orange-50/50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900' 
+            : 'bg-zinc-50/50 dark:bg-zinc-900/50 border-zinc-100 dark:border-zinc-800'
+        }`}>
           <div>
-            <p className="text-xs font-bold uppercase text-neutral-500 mb-1">{t("Current Plan")}</p>
+            <p className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 mb-1">{t("Current Plan")}</p>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold">{plan.label}</h2>
-              {is_cancelled && <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-100">{t("Cancelling")}</Badge>}
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">{plan.label}</h2>
+              {is_cancelled && <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800">{t("Cancelling")}</Badge>}
             </div>
           </div>
           {isPro && (
             <div className="text-right">
-              <span className="text-xs font-medium text-neutral-500 block uppercase mb-1">
+              <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 block uppercase mb-1">
                 {is_cancelled ? t("Expires on") : t("Renews on")}
               </span>
-              <p className="text-sm font-medium">{expiration_date ? formatDate(expiration_date) : "-"}</p>
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{expiration_date ? formatDate(expiration_date) : "-"}</p>
             </div>
           )}
         </div>
         <CardContent className="p-6">
           <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="font-medium">{t("Daily Generations")}</span>
-              <span className="text-neutral-500">{notesUsed} / {enforced_daily_note_limit || '∞'}</span>
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">{t("Daily Generations")}</span>
+              <span className="text-zinc-500 dark:text-zinc-400">{notesUsed} / {enforced_daily_note_limit || '∞'}</span>
             </div>
             <GradientProgress value={usagePercent} className="w-full h-3" />
-            <p className="text-xs text-neutral-400 text-right">{t("Resets at midnight UTC")}</p>
+            <p className="text-xs text-zinc-400 text-right">{t("Resets at midnight UTC")}</p>
           </div>
         </CardContent>
       </Card>
 
-      {/* Actions */}
       <div className="flex flex-col">
-        {/* Case 1: Active Pro User -> Show Cancel Option */}
         {isPro && !is_cancelled && (
           <>
-            <Separator />
+            <Separator className="bg-zinc-200 dark:bg-zinc-800" />
             <SettingsItem
               label={t("Cancel Subscription")}
               action={
@@ -174,7 +169,7 @@ const SubscriptionTab = () => {
                   <AlertDialogTrigger asChild>
                     <Button 
                         variant="outline" 
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 dark:border-red-900/30 dark:bg-red-950/10 dark:text-red-400 dark:hover:bg-red-950/30"
                         disabled={isCancelling}
                     >
                       {isCancelling && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -185,19 +180,12 @@ const SubscriptionTab = () => {
                     <AlertDialogHeader>
                       <AlertDialogTitle>{t("Are you absolutely sure?")}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        {t("You will lose access to Pro features at the end of your current billing period. This action cannot be undone immediately.")}
+                        {t("You will lose access to Pro features.")}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>{t("Keep Plan")}</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={(e) => {
-                           // Prevent default to handle async logic if needed, 
-                           // though Shadcn dialog usually closes on click.
-                           handleCancelSubscription();
-                        }}
-                        className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-                      >
+                      <AlertDialogAction onClick={handleCancelSubscription} className="bg-red-600 hover:bg-red-700">
                         {t("Yes, Cancel")}
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -207,18 +195,16 @@ const SubscriptionTab = () => {
             />
           </>
         )}
-
-        {/* Case 2: Cancelled User -> Show Resume Option */}
         {is_cancelled && (
           <>
-            <Separator />
+             <Separator className="bg-zinc-200 dark:bg-zinc-800" />
             <SettingsItem
               label={t("Undo Cancellation")}
               action={
                 <Button 
                     onClick={handleResumeSubscription} 
                     disabled={isResuming}
-                    className="bg-green-600 hover:bg-green-700 text-white"
+                    className="bg-green-600 hover:bg-green-700 text-white dark:bg-green-700 dark:hover:bg-green-800"
                 >
                   {isResuming ? <Loader2 className="animate-spin w-4 h-4 mr-2"/> : null}
                   {t("Resume Plan")}

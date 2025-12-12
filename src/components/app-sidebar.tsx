@@ -50,6 +50,14 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
     },
   ];
 
+
+    // Helper for static footer links to keep code clean
+  const footerLinks = [
+    { title: t("Privacy Policy"), icon: HatGlasses, action: () => {} },
+    { title: t("Terms of Service"), icon: Handshake, action: () => {} },
+  ];
+
+
   return (
     <Sidebar collapsible="none" className="h-auto border-r" {...props}>
       <SidebarHeader className="border-b">
@@ -71,66 +79,56 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="bg-muted/40 text-zinc-900 dark:text-zinc-100">
+       <SidebarContent className="bg-muted/40">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => {
-                 const isActive = item.url === "/" 
-          ? pathname === "/" 
-          : pathname.startsWith(item.url);
+                const isActive = pathname.startsWith(item.key);
+                console.log(isActive, " for ", item.key)
+                return (
+                   <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton
+                        onClick={() => navigate(item.key)}
+                        tooltip={item.title}
+                        isActive={isActive}
+                        className={cn(
+                          "h-10 w-full justify-start gap-3 px-3 transition-all",
+                          // FIX 2: We use specific colors. 
+                          // Light Mode Active: bg-zinc-900 (Black) text-white
+                          isActive 
+                            ? "data-[active=true]:bg-zinc-200 dark:data-[active=true]:bg-zinc-900 text-white font-medium hover:bg-zinc-800 hover:text-white dark:bg-zinc-50 dark:text-zinc-white" 
+                            : " active:text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                        )}
+                      >
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                );
+              })}
 
-                return (<SidebarMenuItem
-                  key={item.title}
-                  className={cn(
-                        // 1. Layout & Shape
-                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
-                        
-                        // 2. Conditional Styling (Active vs Inactive)
-                        isActive 
-                          ? "bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900" // Active State
-                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-50" // Inactive State
-                      )}
-                  onClick={() => navigate(item.key)}
-                >
+              <SidebarSeparator className="my-2" />
+              
+              {/* Static Footer Links (Privacy/Terms) */}
+              {footerLinks.map((link) => (
+                <SidebarMenuItem key={link.title}>
                   <SidebarMenuButton
-                    isActive={pathname === item.key}
-                    className="hover:bg-background menu-item-label cursor-pointer inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-all data-[active=true]:bg-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50  focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-6 py-4 has-[>svg]:px-3 w-full justify-start text-zinc-900 font-normal"
-                    tooltip={item.title}
+                    className="h-10 w-full justify-start gap-3 px-3 text-zinc-600 hover:bg-zinc-200/50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                    tooltip={link.title}
                   >
-                    {item.icon && <item.icon />}
-                    <span className="text-primary-80">{item.title}</span>
+                    <link.icon />
+                    <span className="font-medium">{link.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )})}
-              <SidebarSeparator />
-              <SidebarMenuItem className="text-zinc-900">
-                <SidebarMenuButton
-                  className="hover:bg-background menu-item-label cursor-pointer inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-6 py-4 has-[>svg]:px-3 w-full justify-start text-zinc-900 font-normal"
-                  tooltip={t("Privacy Policy")}
-                >
-                  <HatGlasses />
-                  <span className="text-primary-80">
-                    {" "}
-                    {t("Privacy Policy")}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem className="text-zinc-900">
-                <SidebarMenuButton
-                  className="hover:bg-background menu-item-label cursor-pointer inline-flex items-center gap-2 whitespace-nowrap rounded-md text-sm transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:text-accent-foreground dark:hover:bg-accent/50 h-9 px-6 py-4 has-[>svg]:px-3 w-full justify-start text-zinc-900 font-normal"
-                  tooltip={t("Privacy Policy")}
-                >
-                  <Handshake />
-                  <span className="text-primary-80">
-                    {t("Terms of Service")}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              ))}
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+
       <SidebarFooter>
       <NavUser
         user={{
