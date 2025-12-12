@@ -1,0 +1,36 @@
+export const PRICING_TIERS = [
+  {
+    key: "weekly",
+    id: "pro_weekly",
+    name: "Weekly",
+    defaultPrice: 8.99,
+    description: "Perfect for short-term projects.",
+    priceId: "pri_01kaxbbdytvqamegsd7e486r59", 
+    features: ['Unlimited notes', 'Unlimited videos', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+  },
+  {
+    key: "monthly",
+    id: "pro_monthly",
+    name: "Monthly",
+    defaultPrice: 11.99,
+    originalPrice: 23.99,
+    discountId: 'dsc_01kbaks5he1g277bedvg06xs1m',
+    discount: "50% OFF",
+    description: "Recommended for ongoing usage.",
+    priceId: "pri_01kaxb9tc7q2kqmh0c3rhda462", 
+    features: ['Unlimited notes', 'Unlimited videos', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+    isPopular: true, // Helper flag for default selection
+  },
+  {
+    key: "annual",
+    id: "pro_annual",
+    name: "Annual",
+    defaultPrice: 57.99,
+    originalPrice: 289.95,
+    discount: "80% OFF",
+    discountId: 'dsc_01kbaksng47cf7gsr4wht0xrdq',
+    description: "Best value. Save significantly.",
+    priceId: "pri_01kaxb7rjs3vkn4dtjrk8x7hmh",
+    features: ['Unlimited notes', 'Unlimited videos', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+  },
+];
