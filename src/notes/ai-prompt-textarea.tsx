@@ -1,11 +1,25 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { useTranslation } from "react-i18next"; // Import the hook
+import { useTranslation } from "react-i18next";
 import { AudioVisualizer } from "@/components/audio-visualiser";
+import TextareaAutosize from "react-textarea-autosize";
+import { motion, AnimatePresence } from "framer-motion";
+import { usePostHog } from 'posthog-js/react';
+import * as Sentry from "@sentry/react";
+import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
+import Zoom from "react-medium-image-zoom";
+import "react-medium-image-zoom/dist/styles.css";
 
-// --- Shadcn UI Imports ---
-import { Textarea } from "@/components/ui/textarea";
+// --- Services & Store ---
+import { axiosInstance, createZip2, uploadFileToCF } from "@/services/auth";
+import { API_BASE_URL } from "@/services/config";
+import { useUserStore } from "@/store/userStore";
+
+// --- UI Components ---
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,720 +36,509 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// --- Lucide Icon Imports ---
+// --- Icons ---
 import {
-  File,
-  Image,
-  X,
-  Paperclip,
-  Mic,
-  StopCircle,
-  UploadCloud,
-  Download,
-  ChevronDown,
-  Loader2,
-  RefreshCw,
-  Pause,
-  Play,
-  Trash2,
-  ArrowUp,
-  AudioLinesIcon,
+  File, Image as ImageIcon, X, Paperclip, Mic, StopCircle, UploadCloud,
+  Download, ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2,
+  ArrowUp, AudioLinesIcon
 } from "lucide-react";
-import Zoom from "react-medium-image-zoom";
-import "react-medium-image-zoom/dist/styles.css";
-import { axiosInstance, createZip2, uploadFileToCF } from "@/services/auth";
-import { API_BASE_URL } from "@/services/config";
-import { useMutation } from "@tanstack/react-query";
-import { useUserStore } from "@/store/userStore";
-import { toast } from "sonner";
-import { FilePreviewDialog } from "@/components/file-preview-dialog";
-import { Spinner } from "@/components/ui/spinner";
-import * as Sentry from "@sentry/react";
-import { usePostHog } from 'posthog-js/react';
 
-// --- AudioPreview Sub-Component (for completed recordings) ---
-const AudioPreview = ({ file, onRemove, portalContainer }) => {
-  const posthog = usePostHog()
-  const [isPlaying, setIsPlaying] = useState(false);
-  const { t } = useTranslation(); // Add translation hook
-  const audioRef = useRef(null);
-  const { userId, email} = useUserStore();
+// ============================================================================
+// HOOK: useAudioRecorder (Extracts logic from UI)
+// ============================================================================
+const useAudioRecorder = (onStopCallback) => {
+  const [status, setStatus] = useState("idle"); // idle, recording, paused
+  const [stream, setStream] = useState(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [devices, setDevices] = useState([]);
+  const [selectedMicId, setSelectedMicId] = useState("default");
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
 
-  const togglePlayPause = (e) => {
-    e.stopPropagation();
-    posthog.capture('audio_toggle_while_create', { userId, email })
-    if (isPlaying) {
-      audioRef.current?.pause();
-    } else {
-      audioRef.current?.play();
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const timerRef = useRef(null);
+  const startTimeRef = useRef(0);
+  const accumulatedTimeRef = useRef(0);
+
+  const getDevices = async (requestPerms = false) => {
+    setIsFetching(true);
+    setIsBlocked(false);
+    try {
+      if (requestPerms) {
+        const tempStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        tempStream.getTracks().forEach(t => t.stop());
+      }
+      const dev = await navigator.mediaDevices.enumerateDevices();
+      setDevices(dev.filter(d => d.kind === "audioinput"));
+    } catch (err) {
+      if (err.name === "NotAllowedError") setIsBlocked(true);
+    } finally {
+      setIsFetching(false);
     }
   };
 
+  const start = async () => {
+    try {
+      const constraints = { audio: { deviceId: selectedMicId !== "default" ? { exact: selectedMicId } : undefined } };
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      setStream(mediaStream);
+      mediaRecorderRef.current = new MediaRecorder(mediaStream, { mimeType: "audio/webm" });
+      chunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        clearInterval(timerRef.current);
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        if (blob.size > 0) onStopCallback(blob);
+        
+        setStatus("idle");
+        setStream(null);
+        setElapsedTime(0);
+        accumulatedTimeRef.current = 0;
+        mediaStream.getTracks().forEach(t => t.stop());
+      };
+
+      mediaRecorderRef.current.start();
+      setStatus("recording");
+      
+      // Timer Logic
+      startTimeRef.current = Date.now();
+      accumulatedTimeRef.current = 0;
+      timerRef.current = setInterval(() => {
+        setElapsedTime(Date.now() - startTimeRef.current);
+      }, 100);
+
+    } catch (err) {
+      if (err.name === "NotAllowedError") setIsBlocked(true);
+      console.error(err);
+    }
+  };
+
+  const pause = () => {
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.pause();
+      setStatus("paused");
+      clearInterval(timerRef.current);
+      accumulatedTimeRef.current += Date.now() - startTimeRef.current;
+    }
+  };
+
+  const resume = () => {
+    if (mediaRecorderRef.current?.state === "paused") {
+      mediaRecorderRef.current.resume();
+      setStatus("recording");
+      startTimeRef.current = Date.now();
+      timerRef.current = setInterval(() => {
+        setElapsedTime(accumulatedTimeRef.current + (Date.now() - startTimeRef.current));
+      }, 100);
+    }
+  };
+
+  const stop = (shouldSave = true) => {
+    if (!shouldSave) chunksRef.current = []; // Clear chunks if cancelling
+    if (mediaRecorderRef.current?.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  return {
+    status, stream, elapsedTime, devices, selectedMicId, isBlocked, isFetching,
+    start, stop, pause, resume, getDevices, setSelectedMicId
+  };
+};
+
+// ============================================================================
+// COMPONENT: AudioPreview
+// ============================================================================
+const AudioPreview = ({ file, onRemove, portalContainer }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+  const { t } = useTranslation();
+
+  const togglePlay = (e) => {
+    e.stopPropagation();
+    isPlaying ? audioRef.current?.pause() : audioRef.current?.play();
+  };
+
   useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
-    audio.addEventListener("play", handlePlay);
-    audio.addEventListener("pause", handlePause);
-    audio.addEventListener("ended", handlePause);
+    const el = audioRef.current;
+    if (!el) return;
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    el.addEventListener("play", onPlay);
+    el.addEventListener("pause", onPause);
+    el.addEventListener("ended", onPause);
     return () => {
-      audio.removeEventListener("play", handlePlay);
-      audio.removeEventListener("pause", handlePause);
-      audio.removeEventListener("ended", handlePause);
+      el.removeEventListener("play", onPlay);
+      el.removeEventListener("pause", onPause);
+      el.removeEventListener("ended", onPause);
     };
   }, []);
 
   return (
-    <div className="group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted">
+    <motion.div 
+      layout 
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"
+    >
       <audio ref={audioRef} src={file.preview} preload="auto" />
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-7 w-7 text-muted-foreground hover:text-foreground"
-        onClick={togglePlayPause}
-      >
-        {isPlaying ? (
-          <Pause className="h-4 w-4" />
-        ) : (
-          <Play className="h-4 w-4" />
-        )}
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={togglePlay}>
+        {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
       </Button>
       <span className="max-w-[120px] truncate font-medium">{file.name}</span>
-      <Tooltip>
-        <TooltipTrigger>
-          <a href={file.preview} download={file.name}>
-            <Download className="h-4 w-4 text-muted-foreground hover:text-foreground ml-1" />
-          </a>
-        </TooltipTrigger>
-        <TooltipContent container={portalContainer}>
-          <p>{t("Download")}</p>
-        </TooltipContent>
-      </Tooltip>
       <Button
-        variant="ghost"
-        size="icon"
-        className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-        onClick={() => {
-          posthog.capture('audio_removed', { userId, email })
-          onRemove()
-        }}
+        variant="ghost" size="icon"
+        className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+        onClick={onRemove}
       >
         <X className="h-3 w-3" />
       </Button>
-    </div>
+    </motion.div>
   );
 };
 
-// --- Main AIPromptInput Component ---
+// ============================================================================
+// MAIN COMPONENT: AIPromptInput
+// ============================================================================
 export function AIPromptInput({ portalContainer, setIsPolling }) {
-  const { t } = useTranslation(); // Initialize translation hook
-  const posthog = usePostHog()
-  const { companyId } = useUserStore();
-  const selectedFolder = useUserStore((store) => store.selectedFolder);
-  const { userId, email} = useUserStore();
+  const { t } = useTranslation();
+  const posthog = usePostHog();
+  const { companyId, userId, email, selectedFolder } = useUserStore();
+  
   const [prompt, setPrompt] = useState("");
   const [files, setFiles] = useState([]);
-  const [recordingStatus, setRecordingStatus] = useState("idle");
-  const [audioStream, setAudioStream] = useState(null);
-  const [isRecorderBlocked, setIsRecorderBlocked] = useState(false);
-  const [audioDevices, setAudioDevices] = useState([]);
-  const [selectedMicId, setSelectedMicId] = useState("default");
-  const [isFetchingMics, setIsFetchingMics] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [previewFile, setPreviewFile] = useState<File | null>(null);
-  const [noteId, setNoteId] = useState<string | null>(null);
-  const [zipData, setZipData] = useState<any>();
+  const [previewFile, setPreviewFile] = useState(null);
+  
+  // Logic for Upload Flow
+  const [noteId, setNoteId] = useState(null);
+  const [zipData, setZipData] = useState(null);
 
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const mediaStreamRef = useRef(null);
-  const hasFetchedMics = useRef(false);
-  const isDeletingRef = useRef(false);
-  const timerIntervalRef = useRef(null);
-  const lastStartTimeRef = useRef(0);
-  const previouslyElapsedTimeRef = useRef(0);
-
-  const getAudioDevices = useCallback(async (requestPermission = false) => {
-    setIsFetchingMics(true);
-    setIsRecorderBlocked(false);
-    try {
-      if (requestPermission) {
-        const tempStream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-        });
-        tempStream.getTracks().forEach((track) => track.stop());
-      }
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const mics = devices.filter((device) => device.kind === "audioinput");
-      setAudioDevices(mics);
-      hasFetchedMics.current = true;
-    } catch (err) {
-      Sentry.captureException(err, { tags: { action: 'get_audio_devices' }, extra: {userId, email} });
-      if (
-        err.name === "NotAllowedError" ||
-        err.name === "PermissionDeniedError"
-      )
-        setIsRecorderBlocked(true);
-    } finally {
-      setIsFetchingMics(false);
-    }
+  // --- 1. Audio Logic Integration ---
+  const handleAudioStop = useCallback((audioBlob) => {
+    audioBlob.name = `recording_${Date.now()}.webm`;
+    audioBlob.lastModified = Date.now();
+    setFiles((prev) => [...prev, Object.assign(audioBlob, { preview: URL.createObjectURL(audioBlob) })]);
   }, []);
+
+  const recorder = useAudioRecorder(handleAudioStop);
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60)
-      .toString()
-      .padStart(2, "0");
+    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
     const seconds = (totalSeconds % 60).toString().padStart(2, "0");
-    const milliseconds = Math.floor((ms % 1000) / 100).toString();
-    return `${minutes}:${seconds}.${milliseconds}`;
+    return `${minutes}:${seconds}`;
   };
 
-  const startRecording = async () => {
-  posthog.capture('start_recording_clicked', { userId, email })
-    try {
-      const constraints = {
-        audio: {
-          deviceId:
-            selectedMicId !== "default" ? { exact: selectedMicId } : undefined,
-        },
-      };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      setAudioStream(stream);
-      mediaStreamRef.current = stream;
-      const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-      mediaRecorderRef.current = recorder;
-      audioChunksRef.current = [];
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) audioChunksRef.current.push(event.data);
-      };
-      recorder.onstart = () => setRecordingStatus("recording");
-      recorder.onstop = () => {
-        clearInterval(timerIntervalRef.current);
-        setElapsedTime(0);
-        previouslyElapsedTimeRef.current = 0;
-        lastStartTimeRef.current = 0;
-
-        if (isDeletingRef.current) {
-          audioChunksRef.current = [];
-          isDeletingRef.current = false;
-        } else if (audioChunksRef.current.length > 0) {
-          const audioBlob = new Blob(audioChunksRef.current, {
-            type: "audio/webm",
-          });
-          audioBlob.name = `recording_${Date.now()}.webm`;
-          audioBlob.lastModified = Date.now();
-          setFiles((prevFiles) => [
-            ...prevFiles,
-            Object.assign(audioBlob, {
-              preview: URL.createObjectURL(audioBlob),
-            }),
-          ]);
-        }
-
-        setRecordingStatus("idle");
-        setAudioStream(null);
-        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
-      };
-      recorder.start();
-      previouslyElapsedTimeRef.current = 0;
-      lastStartTimeRef.current = Date.now();
-      timerIntervalRef.current = setInterval(() => {
-        setElapsedTime(
-          previouslyElapsedTimeRef.current +
-            (Date.now() - lastStartTimeRef.current)
-        );
-      }, 100);
-    } catch (err) {
-      Sentry.captureException(err, { tags: { action: 'start_recording' }, extra: { email, userId} });
-      if (
-        err.name === "NotAllowedError" ||
-        err.name === "PermissionDeniedError"
-      )
-        setIsRecorderBlocked(true);
-    }
-  };
-
-  const pauseRecording = () => {
-    if (mediaRecorderRef.current?.state === "recording") {
-      posthog.capture('pause_recording_clicked', { userId, email })
-      mediaRecorderRef.current.pause();
-      setRecordingStatus("paused");
-      clearInterval(timerIntervalRef.current);
-      previouslyElapsedTimeRef.current = elapsedTime;
-    }
-  };
-
-  const resumeRecording = () => {
-    if (mediaRecorderRef.current?.state === "paused") {
-      mediaRecorderRef.current.resume();
-        posthog.capture('resume_recording_clicked', { userId, email })
-      setRecordingStatus("recording");
-      lastStartTimeRef.current = Date.now();
-      timerIntervalRef.current = setInterval(() => {
-        setElapsedTime(
-          previouslyElapsedTimeRef.current +
-            (Date.now() - lastStartTimeRef.current)
-        );
-      }, 100);
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current?.state !== "inactive") {
-      mediaRecorderRef.current.stop();
-      posthog.capture('stop_recording_clicked', { userId, email })
-    }
-  };
-
-  const deleteRecording = () => {
-    isDeletingRef.current = true;
-    stopRecording();
-    posthog.capture('delete_recording_clicked', { userId, email })
-  };
-
-  const handleRecordButtonClick = async () => {
-    if (recordingStatus === "idle") {
-      if (!hasFetchedMics.current) await getAudioDevices(true);
-      startRecording();
-    }
-  };
-
+  // --- 2. File Handling ---
   const onDrop = useCallback((acceptedFiles) => {
-    setFiles((prevFiles) => [
-      ...prevFiles,
-      ...acceptedFiles.map((file) =>
-        Object.assign(file, { preview: URL.createObjectURL(file) })
-      ),
-    ]);
+    setFiles((prev) => [...prev, ...acceptedFiles.map(f => Object.assign(f, { preview: URL.createObjectURL(f) }))]);
   }, []);
 
-  const removeFile = (fileToRemove) => (e) => {
-    e.stopPropagation();
-    setFiles(files.filter((file) => file !== fileToRemove));
+  const removeFile = (fileToRemove) => {
+    setFiles(files.filter(f => f !== fileToRemove));
     URL.revokeObjectURL(fileToRemove.preview);
-    posthog.capture('remove_file_clicked', { userId, email })
+    posthog.capture('remove_file_clicked', { userId, email });
   };
 
-  useEffect(
-    () => () => {
-      files.forEach((file) => URL.revokeObjectURL(file.preview));
-      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
-    },
-    [files]
-  );
-
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open: openFilePicker } = useDropzone({
     onDrop,
     noClick: true,
     noKeyboard: true,
     accept: { "image/*": [], "application/pdf": [], "audio/*": [] },
   });
 
+  // --- 3. Mutation Logic (API) ---
   const saveNote = async () => {
-   try {
+    if (!prompt.trim() && files.length === 0) return;
+    try {
       posthog.capture('save_note_clicked', { userId, email, note_type: "multi" });
-      const zipData = await createZip2(files, prompt);
-      setZipData(zipData);
-      if (zipData) {
-        draftNoteMutation.mutate({
-          note_type: "multi",
-          name: t("New Recording"),
-          file_name: zipData.fileName,
-          transcript: t("Not transcribed yet"),
-          language: "en",
-          youtube_url: null,
-          folder_id: selectedFolder?.id,
-        });
-      }
+      const zip = await createZip2(files, prompt);
+      setZipData(zip); // Triggers useEffect to start upload chain
+      
+      draftNoteMutation.mutate({
+        note_type: "multi",
+        name: t("New Recording"),
+        file_name: zip?.fileName || "note.zip",
+        transcript: t("Not transcribed yet"),
+        language: "en",
+        folder_id: selectedFolder?.id,
+      });
     } catch (e) {
-      Sentry.captureException(e, { tags: { action: 'zip_creation' }, extra: { userId, email} });
-      toast.error(t("Failed to prepare files for upload"));
+      Sentry.captureException(e);
+      toast.error(t("Failed to prepare files"));
     }
   };
 
-  useEffect(() => {
-    if (zipData && noteId)
-      generateUploadLink.mutate({ noteId, file_name: zipData?.fileName });
-  }, [zipData, noteId]);
-
   const draftNoteMutation = useMutation({
-    mutationFn: (newNote: any) => {
-      return axiosInstance.post(
-        `${API_BASE_URL}/company/${companyId}/notes/create`,
-        newNote
-      );
-    },
-    onSuccess: (response) => setNoteId(response?.data.id),
-    onError: (error: any) => {
-      Sentry.captureException(error, { tags: { action: 'create_multi_note_draft' }, extra: { userId, email} });
-      console.error(error.response?.data);
-    }
+    mutationFn: (newNote) => axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/create`, newNote),
+    onSuccess: (res) => setNoteId(res?.data.id),
+    onError: (err) => console.error(err)
   });
 
+  // Effect chain: Draft Created -> Generate Link -> Upload to CF -> Finalize
+  useEffect(() => {
+    if (zipData && noteId) {
+      generateUploadLink.mutate({ noteId, file_name: zipData.fileName });
+    }
+  }, [zipData, noteId]);
+
   const generateUploadLink = useMutation({
-    mutationFn: ({ file_name, noteId }) => {
-      return axiosInstance.put(
-        API_BASE_URL +
-          `/company/${companyId}/notes/${noteId}/generateFileUploadLink`,
-        { file_name }
-      );
-    },
-    onSuccess: (response) => {
-      const uploadUrl = response.data.upload_url;
-      uploadFileToCF(noteId, uploadUrl, zipData.zipBlob, zipData.fileName)
-        .then(() => markUploadAsFinished.mutate(noteId))
-        .catch((error) => console.log(error));
-    },
-    onError: (error) => {
-      Sentry.captureException(error, { tags: { action: 'generate_upload_link' }, extra: { userId, email} });
-      console.log(error.response?.data);
+    mutationFn: ({ file_name, noteId }) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/generateFileUploadLink`, { file_name }),
+    onSuccess: (res) => {
+      uploadFileToCF(noteId, res.data.upload_url, zipData.zipBlob, zipData.fileName)
+        .then(() => markUploadAsFinished.mutate(noteId));
     }
   });
 
   const markUploadAsFinished = useMutation({
-    mutationFn: (noteId: string) => {
-      return axiosInstance.put(
-        API_BASE_URL + `/company/${companyId}/notes/${noteId}/setAsUploaded`,
-        {}
-      );
-    },
+    mutationFn: (nId) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${nId}/setAsUploaded`, {}),
     onSuccess: () => {
       setIsPolling(true);
       setNoteId(null);
-      setAudioStream(null);
       setPrompt("");
       setFiles([]);
       toast.success(t("Note has been created"));
     },
-    onError: (error) => {
-      console.log(error.response?.data);
-      Sentry.captureException(error, { tags: { action: 'finalize_upload' }, extra: { userId, email}  });
-      console.log(
-        t(
-          "Sorry, couldn't start processing your note. Please try again by creating new one."
-        )
-      );
-    },
+    onError: () => toast.error(t("Error processing note"))
   });
+
+  const isSubmitting = draftNoteMutation.isPending || generateUploadLink.isPending || markUploadAsFinished.isPending;
+
+  // --- 4. Animation Variants ---
+  const containerVariants = {
+    idle: { borderColor: "hsl(var(--input))", boxShadow: "none" },
+    active: { borderColor: "hsl(var(--primary))", boxShadow: "0 0 0 2px hsl(var(--primary) / 0.1)" },
+    recording: { borderColor: "#ef4444", boxShadow: "0 0 0 2px rgba(239, 68, 68, 0.2)" }
+  };
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <div
+      <motion.div
         {...getRootProps()}
-        className={`relative rounded-xl border bg-background p-2 transition-all ${
-          recordingStatus !== "idle"
-            ? "border-primary ring-2 ring-primary/20"
-            : "border-input focus-within:ring-2 focus-within:ring-ring focus-within:border-primary"
-        }`}
+        initial="idle"
+        animate={recorder.status !== "idle" ? "recording" : "idle"}
+        whileFocusWithin={recorder.status === "idle" ? "active" : undefined}
+        variants={containerVariants}
+        transition={{ duration: 0.3 }}
+        className="relative rounded-xl border bg-background p-2 transition-colors overflow-hidden"
       >
         <input {...getInputProps()} />
-        <Textarea
+
+        {/* --- Text Input --- */}
+        <TextareaAutosize
           placeholder={t("Ask anything, drag files, or start recording...")}
           value={prompt}
-          onChange={(e) => {
-            posthog.capture('ai_prompt_changed', { userId, email, text: e.target.value })
-            setPrompt(e.target.value)
+          onChange={(e) => setPrompt(e.target.value)}
+          onKeyDown={(e) => {
+             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveNote();
           }}
-          className="min-h-[60px] w-full resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 text-base py-2.5"
-          rows={5}
+          minRows={2}
+          maxRows={10}
+          className="w-full resize-none border-0 bg-transparent shadow-none focus:ring-0 text-base py-2.5 px-2 outline-none"
         />
 
-        {files.length > 0 && (
-          <div className="flex flex-wrap gap-2 px-3 pb-3 mt-2">
-            {files.map((file, index) => {
-              if (file.type.startsWith("audio/")) {
-                return (
-                  <AudioPreview
-                    key={file.name + index}
-                    file={file}
-                    onRemove={() => removeFile(file)}
-                    portalContainer={portalContainer}
-                  />
-                );
-              }
-              return (
-                <div
-                  onClick={() => {
-                    if (file.type === "application/pdf") setPreviewFile(file);
-                  }}
-                  key={file.name + index}
-                  className={
-                    (file.type === "application/pdf"
-                      ? " cursor-pointer "
-                      : " ") +
-                    "group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"
-                  }
-                >
-                  <div className="text-muted-foreground">
-                    {file.type.startsWith("image/") ? (
-                      <Image className="h-4 w-4" />
-                    ) : (
-                      <File className="h-4 w-4" />
+        {/* --- File List (Animated) --- */}
+        <AnimatePresence>
+          {files.length > 0 && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="flex flex-wrap gap-2 px-2 pb-3 mt-2 overflow-hidden"
+            >
+              {files.map((file, idx) => (
+                file.type.startsWith("audio/") ? (
+                  <AudioPreview key={file.name+idx} file={file} onRemove={() => removeFile(file)} />
+                ) : (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    key={file.name + idx}
+                    className="group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"
+                  >
+                    <div className="text-muted-foreground">
+                      {file.type.startsWith("image/") ? <ImageIcon className="h-4 w-4" /> : <File className="h-4 w-4" />}
+                    </div>
+                    <span className="max-w-[120px] truncate font-medium cursor-pointer" onClick={() => file.type === "application/pdf" && setPreviewFile(file)}>
+                      {file.name}
+                    </span>
+                    {file.type.startsWith("image/") && (
+                      <Zoom>
+                        <img src={file.preview} alt={file.name} className="h-6 w-6 rounded object-cover border ml-1" />
+                      </Zoom>
                     )}
-                  </div>
-                  <span className="max-w-[120px] truncate font-medium">
-                    {file.name}
-                  </span>
-                  {file.type.startsWith("image/") && (
-                    <Zoom>
-                      <img
-                        src={file.preview}
-                        alt={file.name}
-                        className="h-8 w-8 rounded object-cover border ml-1"
-                      />
-                    </Zoom>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute -right-1 -top-1 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-                    onClick={removeFile(file)}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                    <Button variant="ghost" size="icon" className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={() => removeFile(file)}>
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </motion.div>
+                )
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
+        {/* --- Toolbar Area --- */}
         <div className="flex justify-between items-center border-t bg-transparent pt-2 px-2 mt-1 min-h-[44px]">
-          <div className="flex items-center gap-1">
-            <>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground rounded-full"
-                    onClick={open}
-                    type="button"
-                  >
-                    <Paperclip className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent container={portalContainer}>
-                  <p>{t("Attach file")}</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground rounded-full"
-                    onClick={handleRecordButtonClick}
-                    type="button"
-                    disabled={isRecorderBlocked}
-                  >
-                    <Mic className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent container={portalContainer}>
-                  <p>{t("Start recording")}</p>
-                </TooltipContent>
-              </Tooltip>
-              <DropdownMenu>
+          
+          <AnimatePresence mode="wait" initial={false}>
+            {recorder.status === "idle" ? (
+              // === IDLE TOOLBAR ===
+              <motion.div 
+                key="idle-tools"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-1"
+              >
                 <Tooltip>
                   <TooltipTrigger>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={openFilePicker}>
+                      <Paperclip className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>{t("Attach file")}</p></TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={() => {
+                        if (!recorder.devices.length) recorder.getDevices(true);
+                        recorder.start();
+                    }}>
+                      <Mic className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>{t("Start recording")}</p></TooltipContent>
+                </Tooltip>
+
+                {/* Mic Dropdown */}
+                <DropdownMenu>
                     <DropdownMenuTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-foreground rounded-full w-8 h-8"
-                        disabled={recordingStatus !== "idle"}
-                      >
+                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full h-8 w-8">
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent container={portalContainer}>
-                    <p>{t("Select Mic")}</p>
-                  </TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent
-                  container={portalContainer}
-                  align="start"
-                  className="w-[350px]"
-                >
-                  <DropdownMenuLabel>{t("Microphone")}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {isFetchingMics && (
-                    <DropdownMenuItem disabled>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {t("Fetching...")}
-                    </DropdownMenuItem>
-                  )}
-                  {!isFetchingMics && audioDevices.length > 0 && (
-                    <DropdownMenuRadioGroup
-                      value={selectedMicId}
-                      onValueChange={(mic) => {
-                        posthog.capture('mic_change_clicked', { userId, email });
-                        setSelectedMicId(mic)
-                      }}
-                    >
-                      {audioDevices.map((mic) => (
-                        <DropdownMenuRadioItem
-                          key={mic.deviceId}
-                          value={mic.deviceId}
-                          className="truncate"
-                        >
-                          {mic.label ||
-                            t("Microphone {{number}}", {
-                              number: audioDevices.indexOf(mic) + 1,
-                            })}
-                        </DropdownMenuRadioItem>
-                      ))}
-                    </DropdownMenuRadioGroup>
-                  )}
-                  {!isFetchingMics && audioDevices.length === 0 && (
-                    <DropdownMenuItem disabled>
-                      {isRecorderBlocked
-                        ? t("Permission denied")
-                        : t("No mics found")}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onSelect={() => getAudioDevices(true)}>
-                    <RefreshCw className="h-4 w-4 mr-2" /> {t("Refresh List")}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {isRecorderBlocked && (
-                <p className="text-xs text-red-500 ml-2">
-                  {t("Mic access denied.")}
-                </p>
-              )}
-            </>
-
-            {recordingStatus !== "idle" && (
-              <>
+                  <DropdownMenuContent align="start" className="w-[300px]">
+                    <DropdownMenuLabel>{t("Microphone")}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {recorder.isFetching ? (
+                      <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("Fetching...")}</DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuRadioGroup value={recorder.selectedMicId} onValueChange={recorder.setSelectedMicId}>
+                        {recorder.devices.map(d => (
+                          <DropdownMenuRadioItem key={d.deviceId} value={d.deviceId}>{d.label || "Mic"}</DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => recorder.getDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> {t("Refresh")}</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {recorder.isBlocked && <p className="text-xs text-red-500 ml-2">{t("Mic blocked")}</p>}
+              </motion.div>
+            ) : (
+              // === RECORDING TOOLBAR ===
+              <motion.div 
+                key="recording-tools"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="flex items-center gap-3 w-full mr-2"
+              >
                 <Tooltip>
                   <TooltipTrigger>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-muted-foreground hover:text-destructive"
-                      onClick={deleteRecording}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => recorder.stop(false)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="h-5 w-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent container={portalContainer}>
-                    <p>{t("Delete")}</p>
-                  </TooltipContent>
+                  <TooltipContent><p>{t("Discard")}</p></TooltipContent>
                 </Tooltip>
-                {recordingStatus === "recording" && (
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground"
-                        onClick={pauseRecording}
-                      >
-                        <Pause className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent container={portalContainer}>
-                      <p>{t("Pause")}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                {recordingStatus === "paused" && (
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground"
-                        onClick={resumeRecording}
-                      >
-                        <Play className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent container={portalContainer}>
-                      <p>{t("Resume")}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                {recordingStatus !== "idle" && (
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-red-500 hover:text-red-600 rounded-full"
-                        onClick={stopRecording}
-                      >
-                        <StopCircle className="h-6 w-6" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent container={portalContainer}>
-                      <p>{t("Stop & Save")}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                <div className="flex items-center gap-1.5">
-                  <div className="h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
-                  <p className="text-sm font-mono text-muted-foreground w-[60px]">
-                    {formatTime(elapsedTime)}
-                  </p>
+
+                {/* Pulsing Timer */}
+                <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
+                   <motion.div 
+                     animate={{ opacity: recorder.status === "paused" ? 0.5 : [1, 0.4, 1] }}
+                     transition={{ duration: 1.5, repeat: Infinity }}
+                     className="h-2 w-2 bg-red-500 rounded-full" 
+                   />
+                   <span className="text-sm font-mono text-red-600 dark:text-red-400 min-w-[40px] text-center">
+                      {formatTime(recorder.elapsedTime)}
+                   </span>
                 </div>
-              </>
-            )}
-          </div>
 
-          <div className="flex-1 flex items-center justify-center gap-2">
-            {audioStream && (
-              <AudioVisualizer
-                mediaStream={audioStream}
-                isPaused={recordingStatus !== "recording"}
-              />
-            )}
-          </div>
+                {/* Visualizer */}
+                <div className="flex-1 h-8 flex justify-center items-center">
+                   {recorder.stream && <AudioVisualizer mediaStream={recorder.stream} isPaused={recorder.status !== 'recording'} />}
+                </div>
 
-          <div className="flex-shrink-0">
+                {recorder.status === "recording" ? (
+                  <Button variant="ghost" size="icon" onClick={recorder.pause}><Pause className="h-5 w-5 text-muted-foreground" /></Button>
+                ) : (
+                  <Button variant="ghost" size="icon" onClick={recorder.resume}><Play className="h-5 w-5 text-muted-foreground" /></Button>
+                )}
+
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Button variant="ghost" size="icon" onClick={() => recorder.stop(true)} className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                      <StopCircle className="h-6 w-6" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>{t("Stop & Attach")}</p></TooltipContent>
+                </Tooltip>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* === SEND BUTTON === */}
+          <div className="flex-shrink-0 ml-auto">
             <Button
-              onClick={() => saveNote()}
+              onClick={saveNote}
               size="icon"
-              disabled={
-                draftNoteMutation.isPending ||
-                markUploadAsFinished.isPending ||
-                generateUploadLink.isPending ||
-                recordingStatus === "recording"
-              }
-              className="rounded-full h-8 w-8 md:h-9 md:w-9"
+              disabled={isSubmitting || recorder.status === "recording"}
+              className="rounded-full h-9 w-9 transition-all duration-300 shadow-sm"
             >
-              {draftNoteMutation.isPending ||
-              markUploadAsFinished.isPending ||
-              generateUploadLink.isPending ? (
-                <Spinner color="#C04796" />
-              ) : recordingStatus === "recording" ? (
-                <AudioLinesIcon />
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : recorder.status !== "idle" ? (
+                <AudioLinesIcon className="h-4 w-4 animate-pulse" />
               ) : (
                 <ArrowUp className="h-4 w-4" />
               )}
             </Button>
           </div>
         </div>
-        {isDragActive && (
-          <div className="absolute inset-0 rounded-xl bg-background/80 backdrop-blur-sm flex items-center justify-center z-10 border-2 border-primary border-dashed">
-            <div className="flex flex-col items-center gap-2 text-primary font-medium">
-              <div className="p-4 rounded-full bg-primary/10">
-                <UploadCloud className="h-8 w-8" />
-              </div>
-              <p>{t("Drop files to attach")}</p>
-            </div>
-          </div>
-        )}
-      </div>
-      <FilePreviewDialog
-        file={previewFile}
-        onClose={() => setPreviewFile(null)}
-      />
+
+        {/* --- Drag Overlay --- */}
+        <AnimatePresence>
+          {isDragActive && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 rounded-xl bg-background/90 backdrop-blur-sm flex items-center justify-center z-20 border-2 border-primary border-dashed"
+            >
+              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex flex-col items-center gap-2 text-primary font-medium">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <UploadCloud className="h-8 w-8" />
+                </div>
+                <p>{t("Drop files to attach")}</p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+      <FilePreviewDialog file={previewFile} onClose={() => setPreviewFile(null)} />
     </div>
   );
 }

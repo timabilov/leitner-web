@@ -37,12 +37,12 @@ const PricingCard = ({
           "flex flex-col gap-6 rounded-xl py-8 relative overflow-hidden transition-all duration-300 h-full bg-background border border-neutral-200 hover:border-neutral-300 hover:shadow-lg hover:-translate-y-1",
           isSelected
             ? "border-primary shadow-2xl scale-[1.02] ring-1 ring-primary/20"
-            : "border-border hover:border-foreground/20 hover:shadow-lg hover:-translate-y-1"
+            : "border-border hover:border-foreground/20 hover:shadow-lg hover:-translate-y-1 dark:bg-neutral-900"
         )}
       >
         {/* Discount Badge */}
         {tier.discount && (
-          <div className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl font-bold text-xs text-white shadow-sm z-20 bg-primary">
+          <div className="absolute top-0 right-0 px-4 py-1.5 rounded-bl-xl font-bold text-xs text-white shadow-sm z-20 bg-primary dark:bg-neutral-600">
             {tier.discount}
           </div>
         )}
@@ -55,7 +55,7 @@ const PricingCard = ({
               {/* Price Logic: Show Paddle price if available, else default */}
               <div className="relative">
                 <span className="text-4xl font-bold tracking-tight">
-                  {displayPrice || `$${tier.defaultPrice}`}
+                  {`$${tier.originalPrice}`}
                 </span>
                 {
                   isSelected && (
@@ -69,7 +69,7 @@ const PricingCard = ({
                           stroke="currentColor"
                           strokeWidth="15" // Very thick stroke
                           fill="none"
-                          className="animate-draw text-yellow-200/50 dark:text-blue-500/40" // Pink highlighter color
+                          className="animate-draw text-yellow-200/50 " // Pink highlighter color
                           pathLength="1"
                         />
                       </svg>
@@ -77,10 +77,10 @@ const PricingCard = ({
                 }
               </div>
 
-              {tier.originalPrice && (
+              {tier.defaultPrice && (
                 <div className="flex flex-col justify-end ml-1">
-                  <span className="text-md font-medium text-muted-foreground line-through decoration-muted-foreground/60 decoration-1">
-                    ${tier.originalPrice}
+                  <span className="text-md font-medium  line-through text-foreground decoration-1">
+                    ${tier.defaultPrice}
                   </span>
                 </div>
               )}
@@ -97,10 +97,10 @@ const PricingCard = ({
               <div className="space-y-3">
                 {tier.features.map((feature, i) => (
                   <div key={i} className="flex items-start gap-3">
-                    <div className="bg-blue-700 rounded-full h-5 w-5 flex justify-center items-center">
+                    <div className="bg-neutral-600 rounded-full h-5 w-5 flex justify-center items-center">
                       <Check className="h-4 w-4 shrink-0 text-primary text-white" />
                     </div>
-                    <span className="text-sm text-muted-foreground font-medium">
+                    <span className="text-sm font-medium text-foreground ">
                       {feature}
                     </span>
                   </div>
@@ -226,7 +226,7 @@ export default function PricingSection() {
           theme: "system", // ✅ Auto-detects dark mode
           variant: "one-page",
           showAddTaxId: false,
-          showAddDiscounts: false,
+          showAddDiscounts: true,
         },
       });
     } catch (error) {
@@ -249,21 +249,41 @@ export default function PricingSection() {
             50% { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
           }
+
+           @keyframes draw {
+            from { stroke-dashoffset: 1; }
+            to { stroke-dashoffset: 0; }
+          }
+          .animate-draw {
+            stroke-dasharray: 1;
+            stroke-dashoffset: 1;
+            animation: draw 0.8s ease-out forwards;
+          }
+
+          /* --- NEW SLOW CAT BOUNCE --- */
+          /* Moving 10px up and down smoothly */
+          @keyframes slow-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+          .animate-slow-bounce {
+            /* 3s duration = Slow speed */
+            /* ease-in-out = Smooth "floating" feeling */
+            animation: slow-bounce 3s ease-in-out infinite;
+          }
+
         `}
       </style>
 
-      <div className="relative min-h-screen w-full font-sans flex flex-col items-center bg-background gap-4 pb-24 text-foreground">
+      <div className="relative min-h-screen w-full font-sans flex flex-col items-center bg-background gap-4 text-foreground">
         {/* --- HEADER --- */}
-        <div className="relative w-full pt-10 px-4 flex flex-col items-center text-center z-10">
+        <div className="relative w-full  px-4 flex flex-col items-center text-center z-10">
           {/* Background Decoration (Dark Mode Compatible) */}
-          <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[500px] bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
-          </div>
+      
 
-          <div className="animate-bounce duration-[6000ms] flex items-center justify-center rounded-full mb-4">
-            <CatPenIcon className="h-12 w-12" />
-          </div>
-
+            <div className="animate-slow-bounce flex items-center justify-center rounded-full mb-4">
+              <CatPenIcon className="h-12 w-12" />
+            </div>
           {/* <h1 className="max-w-4xl mb-4 text-4xl md:text-5xl font-bold tracking-tight">
             <span className="relative inline-block">
               <span className="relative z-10">{t("Select plan")}</span>
@@ -320,9 +340,26 @@ export default function PricingSection() {
           <h1 className="max-w-4xl mb-4 text-4xl md:text-5xl font-bold tracking-tight">
             <span className="relative inline-block">
               <span className="relative z-10">{t("Select plan")}</span>
+             <svg
+                className="absolute -bottom-2 left-0 -z-10 w-full"
+                height="12"
+                viewBox="0 0 200 9"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M2.00025 6.99997C25.3336 4.00003 172.999 -1.49997 197.999 2.00003"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  className=" animate-draw text-blue/60 dark:text-blue/80" // Adjust color here
+                  pathLength="1"
+                />
+              </svg>
 
            
-              <svg
+              {/* <svg
                 className="absolute -bottom-1 left-0 -z-10 w-full h-3"
                 viewBox="0 0 300 15"
                 fill="none"
@@ -337,7 +374,7 @@ export default function PricingSection() {
                   className="animate-draw text-blue"
                   pathLength="1"
                 />
-              </svg>
+              </svg> */}
             </span>
           </h1>
 
@@ -358,7 +395,7 @@ export default function PricingSection() {
               onSelect={() => setSelectedId(tier.id)}
               onCheckout={() => openCheckout(tier.priceId, tier.discountId)}
               isLoading={loadingPriceId === tier.priceId}
-              displayPrice={prices[tier.priceId] || null}
+              displayPrice={tier.originalPrice}
             />
           ))}
         </div>

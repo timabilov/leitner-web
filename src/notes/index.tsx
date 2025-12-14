@@ -60,7 +60,7 @@ const Notes = ({ children }: any) => {
       if ((!notes || !Array.isArray(notes) || notes.length === 0) || !isPolling) {
         return false;
       }
-      const hasLoadingNotes = !!notes.some(isNoteInLoadingState);
+      const hasLoadingNotes =  false;  //!!notes.some(isNoteInLoadingState); // TODO fix later in be, some notes never change status
       if (hasLoadingNotes){
         return 5000; // Poll every 5 seconds if there are loading notes
       }
@@ -84,8 +84,8 @@ const Notes = ({ children }: any) => {
 
 
     useEffect(() => {
-    if (isPolling) notesQuery.refetch();
-  }, [isPolling, notesQuery]);
+    if (isPolling && notesQuery) notesQuery.refetch();
+  }, [isPolling]);
 
 
   const searchNotesQuery = useQuery({
