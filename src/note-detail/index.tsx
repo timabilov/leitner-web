@@ -344,7 +344,7 @@ const NoteDetailBase = () => {
         const extension = fileName.toLowerCase().match(/\.[^.]+$/)?.[0] || '';
         
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-        const audioExtensions = ['.mp3', '.wav', '.m4a', '.ogg'];
+        const audioExtensions = ['.mp3', '.wav', '.m4a', '.ogg', '.webm'];
         const pdfExtensions = ['.pdf'];
         const textExtensions = ['.txt'];
 

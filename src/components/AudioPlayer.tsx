@@ -1,28 +1,27 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Rewind, FastForward } from 'lucide-react';
+import { Play, Pause, RotateCcw, RotateCw } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 import { usePostHog } from 'posthog-js/react';
 import { useUserStore } from '@/store/userStore';
 
-
-/**
- * A styled audio player for displaying static audio file attachments.
- * @param {object} props
- * @param {{name: string, url: string}} props.audio - The audio file to play.
- */
 export function AudioPlayer({ audio }) {
   const posthog = usePostHog();
+  const { userId, email } = useUserStore();
+  
+  // Refs
   const audioRef = useRef(null);
-  const { userId, email} = useUserStore();
+  const rafRef = useRef(null); // Reference for the Animation Frame ID
 
+  // State
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [isDragging, setIsDragging] = useState(false); // Track if user is currently dragging slider
 
-  // Effect to set up audio event listeners
+  // 1. Setup Audio Event Listeners (Duration & End state)
   useEffect(() => {
     const audioElement = audioRef.current;
     if (!audioElement) return;
@@ -30,88 +29,149 @@ export function AudioPlayer({ audio }) {
     const setAudioData = () => {
       setDuration(audioElement.duration);
       setCurrentTime(audioElement.currentTime);
-    }
+    };
 
-    const setAudioTime = () => setCurrentTime(audioElement.currentTime);
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+      cancelAnimationFrame(rafRef.current);
+    };
 
-    audioElement.addEventListener("loadeddata", setAudioData);
-    audioElement.addEventListener("timeupdate", setAudioTime);
-    audioElement.addEventListener("play", handlePlay);
-    audioElement.addEventListener("pause", handlePause);
-    audioElement.addEventListener("ended", handlePause);
+    audioElement.addEventListener("loadedmetadata", setAudioData);
+    audioElement.addEventListener("ended", handleEnded);
 
-    // Cleanup
     return () => {
-      audioElement.removeEventListener("loadeddata", setAudioData);
-      audioElement.removeEventListener("timeupdate", setAudioTime);
-      audioElement.removeEventListener("play", handlePlay);
-      audioElement.removeEventListener("pause", handlePause);
-      audioElement.removeEventListener("ended", handlePause);
+      audioElement.removeEventListener("loadedmetadata", setAudioData);
+      audioElement.removeEventListener("ended", handleEnded);
+      cancelAnimationFrame(rafRef.current);
     };
   }, []);
 
-  const togglePlayPause = () => {
-    posthog.capture("audio_toggled", { userId, email})
+  // 2. The Smooth Animation Loop
+  const updateProgress = useCallback(() => {
+    if (audioRef.current && !isDragging) {
+      setCurrentTime(audioRef.current.currentTime);
+      rafRef.current = requestAnimationFrame(updateProgress);
+    }
+  }, [isDragging]);
+
+  // 3. Trigger Animation when Playing
+  useEffect(() => {
     if (isPlaying) {
-      audioRef.current?.pause();
+      rafRef.current = requestAnimationFrame(updateProgress);
     } else {
-      audioRef.current?.play();
+      cancelAnimationFrame(rafRef.current);
+    }
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [isPlaying, updateProgress]);
+
+
+  // Handlers
+  const togglePlayPause = () => {
+    posthog.capture("audio_toggled", { userId, email });
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      audio.play();
+      setIsPlaying(true);
     }
   };
 
   const handleSeek = (value) => {
-     posthog.capture("audio_seeked", { userId, email})
+    // When dragging stops or clicks happen
     if (audioRef.current) {
       audioRef.current.currentTime = value[0];
       setCurrentTime(value[0]);
     }
   };
 
+  // Skip buttons
+  const skip = (amount) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime += amount;
+      // Manually update state immediately for snap feel
+      setCurrentTime(audioRef.current.currentTime); 
+    }
+  };
+
   const formatTime = (timeInSeconds) => {
+    if (!timeInSeconds && timeInSeconds !== 0) return "0:00";
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="w-full p-4 space-y-3 border rounded-lg bg-card text-card-foreground">
-      {/* Hidden audio element */}
+    <div className="w-full max-w-2xl border rounded-md bg-muted/30 px-3 py-2 flex items-center gap-4 transition-colors hover:bg-muted/50">
       <audio ref={audioRef} src={audio.url} preload="metadata" />
 
-      <p className="text-xs font-semibold truncate">{audio.name}</p>
+      {/* --- Left Side: Controls --- */}
+      <div className="flex items-center gap-1 shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          onClick={() => skip(-10)}
+          title="-10s"
+        >
+          <RotateCcw className="h-4 w-4" />
+        </Button>
 
-      {/* --- FAKE Waveform for visual flair --- */}
-      {/* This is just a decorative element, not a real visualization */}
-     
+        <Button
+          size="icon"
+          className="h-9 w-9 rounded-full shadow-sm"
+          onClick={togglePlayPause}
+        >
+          {isPlaying ? (
+            <Pause className="h-4 w-4 fill-current" />
+          ) : (
+            <Play className="h-4 w-4 fill-current ml-0.5" />
+          )}
+        </Button>
 
-      {/* --- Progress Bar / Scrubber --- */}
-      <div className="space-y-1">
-        <Slider
-          value={[currentTime]}
-          max={duration || 0}
-          step={1}
-          onValueChange={handleSeek}
-          className="w-full"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{formatTime(currentTime)}</span>
-          <span>{formatTime(duration)}</span>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          onClick={() => skip(10)}
+          title="+10s"
+        >
+          <RotateCw className="h-4 w-4" />
+        </Button>
       </div>
 
-      {/* --- Main Controls --- */}
-      <div className="flex items-center justify-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => (audioRef.current.currentTime -= 10)}>
-          <Rewind className="h-5 w-5" />
-        </Button>
-        <Button size="sm" className="h-10 w-10 rounded-full" onClick={togglePlayPause}>
-          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-        </Button>
-        <Button variant="ghost" size="icon" onClick={() => (audioRef.current.currentTime += 10)}>
-          <FastForward className="h-5 w-5" />
-        </Button>
+      {/* --- Right Side: Info & Scrubber --- */}
+      <div className="flex flex-col justify-center flex-1 gap-1 min-w-0">
+        <div className="flex justify-between items-center text-xs">
+          <span className="font-medium truncate pr-2 text-foreground/90">
+            {audio.name}
+          </span>
+          <span className="font-mono text-muted-foreground shrink-0 tabular-nums">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
+        </div>
+
+        <Slider
+          value={[currentTime]}
+          max={duration || 100}
+          step={0.1} // Lower step allows smoother visual movement
+          onValueChange={(val) => {
+            // While dragging, update visual state but don't commit to audio yet to prevent stutter
+            setIsDragging(true);
+            setCurrentTime(val[0]);
+          }}
+          onValueCommit={(val) => {
+            // When drag is released, actually seek the audio
+            setIsDragging(false);
+            handleSeek(val);
+            posthog.capture("audio_seeked", { userId, email });
+          }}
+          className="w-full cursor-pointer py-1"
+        />
       </div>
     </div>
   );

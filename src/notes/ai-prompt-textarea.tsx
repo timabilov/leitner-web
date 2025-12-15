@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
@@ -12,7 +14,7 @@ import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
 // --- Services & Store ---
-import { axiosInstance, createZip2, uploadFileToCF } from "@/services/auth";
+import { axiosInstance, convertBlobToWav, createZip2, uploadFileToCF } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 
@@ -38,28 +40,30 @@ import {
 
 // --- Icons ---
 import {
-  File, Image as ImageIcon, X, Paperclip, Mic, StopCircle, UploadCloud,
-  Download, ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2,
+  File as FileIcon, // ✅ Renamed to avoid conflict with native File
+  Image as ImageIcon, X, Paperclip, Mic, StopCircle, UploadCloud,
+  ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2,
   ArrowUp, AudioLinesIcon
 } from "lucide-react";
 
 // ============================================================================
-// HOOK: useAudioRecorder (Extracts logic from UI)
+// 1. HOOK: useAudioRecorder
 // ============================================================================
-const useAudioRecorder = (onStopCallback) => {
-  const [status, setStatus] = useState("idle"); // idle, recording, paused
-  const [stream, setStream] = useState(null);
+const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
+  const [status, setStatus] = useState<"idle" | "recording" | "paused">("idle");
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [devices, setDevices] = useState([]);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedMicId, setSelectedMicId] = useState("default");
   const [isBlocked, setIsBlocked] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
 
-  const mediaRecorderRef = useRef(null);
-  const chunksRef = useRef([]);
-  const timerRef = useRef(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef(0);
   const accumulatedTimeRef = useRef(0);
+  const mimeTypeRef = useRef("audio/webm");
 
   const getDevices = async (requestPerms = false) => {
     setIsFetching(true);
@@ -71,7 +75,7 @@ const useAudioRecorder = (onStopCallback) => {
       }
       const dev = await navigator.mediaDevices.enumerateDevices();
       setDevices(dev.filter(d => d.kind === "audioinput"));
-    } catch (err) {
+    } catch (err: any) {
       if (err.name === "NotAllowedError") setIsBlocked(true);
     } finally {
       setIsFetching(false);
@@ -82,19 +86,39 @@ const useAudioRecorder = (onStopCallback) => {
     try {
       const constraints = { audio: { deviceId: selectedMicId !== "default" ? { exact: selectedMicId } : undefined } };
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
-      
       setStream(mediaStream);
-      mediaRecorderRef.current = new MediaRecorder(mediaStream, { mimeType: "audio/webm" });
+
+      // 1. Prioritize MP4 (Safari) for native support
+      let mimeType = "audio/webm"; 
+      if (MediaRecorder.isTypeSupported("audio/mp4")) {
+        mimeType = "audio/mp4";
+      } else if (MediaRecorder.isTypeSupported("audio/webm")) {
+        mimeType = "audio/webm";
+      }
+      
+      mimeTypeRef.current = mimeType;
+
+      mediaRecorderRef.current = new MediaRecorder(mediaStream, { mimeType });
       chunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
+        if (e.data && e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
       };
 
       mediaRecorderRef.current.onstop = () => {
-        clearInterval(timerRef.current);
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        if (blob.size > 0) onStopCallback(blob);
+        clearInterval(timerRef.current!);
+        
+        // Create initial blob with the recorded type
+        const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
+        
+        if (blob.size > 0) {
+          onStopCallback(blob);
+        } else {
+          console.error("Recording failed: Empty blob");
+          toast.error("Audio recording failed.");
+        }
         
         setStatus("idle");
         setStream(null);
@@ -103,17 +127,17 @@ const useAudioRecorder = (onStopCallback) => {
         mediaStream.getTracks().forEach(t => t.stop());
       };
 
-      mediaRecorderRef.current.start();
-      setStatus("recording");
+      // 2. Start with timeslice to ensure data availability on all browsers
+      mediaRecorderRef.current.start(200);
       
-      // Timer Logic
+      setStatus("recording");
       startTimeRef.current = Date.now();
       accumulatedTimeRef.current = 0;
       timerRef.current = setInterval(() => {
         setElapsedTime(Date.now() - startTimeRef.current);
       }, 100);
 
-    } catch (err) {
+    } catch (err: any) {
       if (err.name === "NotAllowedError") setIsBlocked(true);
       console.error(err);
     }
@@ -123,7 +147,7 @@ const useAudioRecorder = (onStopCallback) => {
     if (mediaRecorderRef.current?.state === "recording") {
       mediaRecorderRef.current.pause();
       setStatus("paused");
-      clearInterval(timerRef.current);
+      clearInterval(timerRef.current!);
       accumulatedTimeRef.current += Date.now() - startTimeRef.current;
     }
   };
@@ -140,7 +164,7 @@ const useAudioRecorder = (onStopCallback) => {
   };
 
   const stop = (shouldSave = true) => {
-    if (!shouldSave) chunksRef.current = []; // Clear chunks if cancelling
+    if (!shouldSave) chunksRef.current = [];
     if (mediaRecorderRef.current?.state !== "inactive") {
       mediaRecorderRef.current.stop();
     }
@@ -153,14 +177,13 @@ const useAudioRecorder = (onStopCallback) => {
 };
 
 // ============================================================================
-// COMPONENT: AudioPreview
+// 2. SUB-COMPONENT: AudioPreview
 // ============================================================================
-const AudioPreview = ({ file, onRemove, portalContainer }) => {
+const AudioPreview = ({ file, onRemove }: { file: any, onRemove: () => void }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
-  const { t } = useTranslation();
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const togglePlay = (e) => {
+  const togglePlay = (e: any) => {
     e.stopPropagation();
     isPlaying ? audioRef.current?.pause() : audioRef.current?.play();
   };
@@ -205,31 +228,73 @@ const AudioPreview = ({ file, onRemove, portalContainer }) => {
 };
 
 // ============================================================================
-// MAIN COMPONENT: AIPromptInput
+// 3. MAIN COMPONENT: AIPromptInput
 // ============================================================================
-export function AIPromptInput({ portalContainer, setIsPolling }) {
+export function AIPromptInput({ portalContainer, setIsPolling }: any) {
   const { t } = useTranslation();
   const posthog = usePostHog();
   const { companyId, userId, email, selectedFolder } = useUserStore();
   
   const [prompt, setPrompt] = useState("");
-  const [files, setFiles] = useState([]);
-  const [previewFile, setPreviewFile] = useState(null);
+  const [files, setFiles] = useState<any[]>([]);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
   
   // Logic for Upload Flow
   const [noteId, setNoteId] = useState(null);
-  const [zipData, setZipData] = useState(null);
+  const [zipData, setZipData] = useState<any>(null);
 
-  // --- 1. Audio Logic Integration ---
-  const handleAudioStop = useCallback((audioBlob) => {
-    audioBlob.name = `recording_${Date.now()}.webm`;
-    audioBlob.lastModified = Date.now();
-    setFiles((prev) => [...prev, Object.assign(audioBlob, { preview: URL.createObjectURL(audioBlob) })]);
-  }, []);
+  // --- 1. Audio Logic (Conversion & Saving) ---
+  const handleAudioStop = useCallback(async (audioBlob: Blob) => {
+    let finalBlob = audioBlob;
+    let extension = "webm";
+    let mimeType = audioBlob.type;
+
+    // A. Handle Safari (Native M4A)
+    if (audioBlob.type.includes("mp4")) {
+      extension = "m4a";
+      mimeType = "audio/m4a"; 
+    } 
+    // B. Handle Chrome/Firefox (WebM -> Convert to WAV)
+    else if (audioBlob.type.includes("webm")) {
+      try {
+        console.log("Converting WebM to WAV...");
+        // Wait for conversion
+        finalBlob = await convertBlobToWav(audioBlob); 
+        extension = "wav";
+        mimeType = "audio/wav";
+      } catch (error) {
+        console.error("WAV conversion failed", error);
+        toast.error(t("Audio conversion failed"));
+        return;
+      }
+    }
+
+    const fileName = `recording_${Date.now()}.${extension}`;
+    
+    // Create File with explicit properties
+    const audioFile = new File([finalBlob], fileName, {
+      type: mimeType,
+      lastModified: Date.now(),
+    });
+
+    // Add path for Zip compatibility
+    Object.defineProperty(audioFile, 'path', {
+      value: fileName,
+      writable: true
+    });
+    
+    // Add preview for UI
+    Object.assign(audioFile, { 
+      preview: URL.createObjectURL(finalBlob) 
+    });
+
+    console.log("Audio Saved:", { name: fileName, size: finalBlob.size, type: mimeType });
+    setFiles((prev) => [...prev, audioFile]);
+  }, [t]);
 
   const recorder = useAudioRecorder(handleAudioStop);
 
-  const formatTime = (ms) => {
+  const formatTime = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
     const seconds = (totalSeconds % 60).toString().padStart(2, "0");
@@ -237,11 +302,11 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
   };
 
   // --- 2. File Handling ---
-  const onDrop = useCallback((acceptedFiles) => {
+  const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles((prev) => [...prev, ...acceptedFiles.map(f => Object.assign(f, { preview: URL.createObjectURL(f) }))]);
   }, []);
 
-  const removeFile = (fileToRemove) => {
+  const removeFile = (fileToRemove: any) => {
     setFiles(files.filter(f => f !== fileToRemove));
     URL.revokeObjectURL(fileToRemove.preview);
     posthog.capture('remove_file_clicked', { userId, email });
@@ -254,12 +319,18 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
     accept: { "image/*": [], "application/pdf": [], "audio/*": [] },
   });
 
-  // --- 3. Mutation Logic (API) ---
+  // --- 3. Save Logic ---
   const saveNote = async () => {
     if (!prompt.trim() && files.length === 0) return;
     try {
       posthog.capture('save_note_clicked', { userId, email, note_type: "multi" });
+      
       const zip = await createZip2(files, prompt);
+      
+      if (!zip || !zip.zipBlob) {
+        throw new Error("Zip creation failed");
+      }
+
       setZipData(zip); // Triggers useEffect to start upload chain
       
       draftNoteMutation.mutate({
@@ -271,13 +342,14 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
         folder_id: selectedFolder?.id,
       });
     } catch (e) {
+      console.error(e);
       Sentry.captureException(e);
       toast.error(t("Failed to prepare files"));
     }
   };
 
   const draftNoteMutation = useMutation({
-    mutationFn: (newNote) => axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/create`, newNote),
+    mutationFn: (newNote: any) => axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/create`, newNote),
     onSuccess: (res) => setNoteId(res?.data.id),
     onError: (err) => console.error(err)
   });
@@ -290,7 +362,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
   }, [zipData, noteId]);
 
   const generateUploadLink = useMutation({
-    mutationFn: ({ file_name, noteId }) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/generateFileUploadLink`, { file_name }),
+    mutationFn: ({ file_name, noteId }: any) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/generateFileUploadLink`, { file_name }),
     onSuccess: (res) => {
       uploadFileToCF(noteId, res.data.upload_url, zipData.zipBlob, zipData.fileName)
         .then(() => markUploadAsFinished.mutate(noteId));
@@ -311,7 +383,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
 
   const isSubmitting = draftNoteMutation.isPending || generateUploadLink.isPending || markUploadAsFinished.isPending;
 
-  // --- 4. Animation Variants ---
+  // --- 4. Animations ---
   const containerVariants = {
     idle: { borderColor: "hsl(var(--input))", boxShadow: "none" },
     active: { borderColor: "hsl(var(--primary))", boxShadow: "0 0 0 2px hsl(var(--primary) / 0.1)" },
@@ -331,7 +403,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
       >
         <input {...getInputProps()} />
 
-        {/* --- Text Input --- */}
+        {/* Text Input */}
         <TextareaAutosize
           placeholder={t("Ask anything, drag files, or start recording...")}
           value={prompt}
@@ -344,7 +416,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
           className="w-full resize-none border-0 bg-transparent shadow-none focus:ring-0 text-base py-2.5 px-2 outline-none"
         />
 
-        {/* --- File List (Animated) --- */}
+        {/* File List */}
         <AnimatePresence>
           {files.length > 0 && (
             <motion.div 
@@ -366,7 +438,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                     className="group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"
                   >
                     <div className="text-muted-foreground">
-                      {file.type.startsWith("image/") ? <ImageIcon className="h-4 w-4" /> : <File className="h-4 w-4" />}
+                      {file.type.startsWith("image/") ? <ImageIcon className="h-4 w-4" /> : <FileIcon className="h-4 w-4" />}
                     </div>
                     <span className="max-w-[120px] truncate font-medium cursor-pointer" onClick={() => file.type === "application/pdf" && setPreviewFile(file)}>
                       {file.name}
@@ -386,7 +458,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
           )}
         </AnimatePresence>
 
-        {/* --- Toolbar Area --- */}
+        {/* Toolbar */}
         <div className="flex justify-between items-center border-t bg-transparent pt-2 px-2 mt-1 min-h-[44px]">
           
           <AnimatePresence mode="wait" initial={false}>
@@ -401,7 +473,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                 className="flex items-center gap-1"
               >
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger >
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={openFilePicker}>
                       <Paperclip className="h-5 w-5" />
                     </Button>
@@ -410,7 +482,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                 </Tooltip>
 
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger >
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={() => {
                         if (!recorder.devices.length) recorder.getDevices(true);
                         recorder.start();
@@ -421,9 +493,8 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                   <TooltipContent><p>{t("Start recording")}</p></TooltipContent>
                 </Tooltip>
 
-                {/* Mic Dropdown */}
                 <DropdownMenu>
-                    <DropdownMenuTrigger>
+                    <DropdownMenuTrigger >
                       <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full h-8 w-8">
                         <ChevronDown className="h-4 w-4" />
                       </Button>
@@ -457,7 +528,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                 className="flex items-center gap-3 w-full mr-2"
               >
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger >
                     <Button variant="ghost" size="icon" onClick={() => recorder.stop(false)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="h-5 w-5" />
                     </Button>
@@ -465,7 +536,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                   <TooltipContent><p>{t("Discard")}</p></TooltipContent>
                 </Tooltip>
 
-                {/* Pulsing Timer */}
                 <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
                    <motion.div 
                      animate={{ opacity: recorder.status === "paused" ? 0.5 : [1, 0.4, 1] }}
@@ -477,7 +547,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                    </span>
                 </div>
 
-                {/* Visualizer */}
                 <div className="flex-1 h-8 flex justify-center items-center">
                    {recorder.stream && <AudioVisualizer mediaStream={recorder.stream} isPaused={recorder.status !== 'recording'} />}
                 </div>
@@ -489,7 +558,7 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
                 )}
 
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger >
                     <Button variant="ghost" size="icon" onClick={() => recorder.stop(true)} className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
                       <StopCircle className="h-6 w-6" />
                     </Button>
@@ -500,7 +569,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
             )}
           </AnimatePresence>
 
-          {/* === SEND BUTTON === */}
           <div className="flex-shrink-0 ml-auto">
             <Button
               onClick={saveNote}
@@ -519,7 +587,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }) {
           </div>
         </div>
 
-        {/* --- Drag Overlay --- */}
         <AnimatePresence>
           {isDragActive && (
             <motion.div

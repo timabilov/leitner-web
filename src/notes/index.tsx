@@ -28,6 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import * as Sentry from "@sentry/react";
 import {  usePostHog } from 'posthog-js/react';
+import { LeitnerCatAnimation } from "./leitner-cat-animation";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -135,8 +136,9 @@ const Notes = ({ children }: any) => {
           <div className=" w-full max-w-2xl m-auto mt-8">
              <Alert className="flex items-center justify-between border-none">
               <Avatar className="h-16 w-16 rounded-full bg-gray-950 flex items-center mr-2">
-                <CatPenIcon />
+                {/* <CatPenIcon /> */}
               </Avatar>
+                <LeitnerCatAnimation />
               <div className="flex-1 flex-col justify-between gap-1">
                 <AlertTitle className="flex-1 text-xl">{t("Learning Experience")}!</AlertTitle>
                 <AlertDescription className=" text-xl">
