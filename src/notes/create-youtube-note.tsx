@@ -30,7 +30,7 @@ import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react"; 
 import { usePostHog } from 'posthog-js/react';
 
-const CreateYoutubeNote = () => {
+const CreateYoutubeNote = ({ component }) => {
   const { t } = useTranslation(); // Initialize the translation hook
   const { userId, email } = useUserStore();
 
@@ -178,6 +178,7 @@ const CreateYoutubeNote = () => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {/* <Plus className=" h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" /> */}
+        {component}
       </DialogTrigger>
 
       <DialogContent>

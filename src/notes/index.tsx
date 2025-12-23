@@ -207,7 +207,9 @@ const Notes = ({ children }: any) => {
             </Alert>
           </div>
           <div className="px-4 grid w-full gap-x-6 md:grid-cols-2">
-            <Card className="hover:shadow-lg transition-shadow duration-200 bg-card hover:border-black pb-0 w-xs justify-self-end cursor-pointer">
+            
+               <CreateYoutubeNote className="w-4 h-4" component={(
+                <Card className="hover:shadow-lg transition-shadow duration-200 bg-card hover:border-black pb-0 w-xs justify-self-end cursor-pointer">
               {/* Subtle background decorative blob */}
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/5 blur-3xl group-hover:bg-red-500/10 transition-colors" />
 
@@ -226,6 +228,8 @@ const Notes = ({ children }: any) => {
                   {t("For youtube videos (max 2 hours)")}
                 </CardDescription>
               </CardHeader>
+              </Card>
+               )}/>
 
               {/* <CardContent className="pt-0  border-t">
                 <div className="flex items-center justify-between rounded-2xl bg-background/50 p-4 transition-colors group-hover:bg-background">
@@ -237,7 +241,7 @@ const Notes = ({ children }: any) => {
                   </div>
                 </div>
               </CardContent> */}
-            </Card>
+            {/* </Card> */}
 
             <Card className="hover:shadow-lg transition-shadow duration-200 bg-card hover:border-black pb-0 w-xs justify-self-start cursor-pointer">
               {/* Decorative Organic Glow (Yellow) */}
