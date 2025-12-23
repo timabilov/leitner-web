@@ -3,6 +3,7 @@ import { useUserStore } from "@/store/userStore";
 import { AppSidebar } from "./app-sidebar"; // Your sidebar component
 import Header from "./header";
 import { SidebarInset, SidebarProvider } from "./ui/sidebar";
+import { AnimatedGrid } from "@/login";
 
 
 /**
@@ -48,6 +49,7 @@ const Layout = ({ children, title, containerRef, search, searchValue, isSearchin
           className={"flex-1 flex flex-col relative overflow-y-auto" + (noGap ? " p-0" :  " p-4 md:p-6 ")}
         >
           {/* All your page content (like NoteDetail) goes here and will scroll inside this main tag. */}
+          <AnimatedGrid />
           {children}
         </main>
 

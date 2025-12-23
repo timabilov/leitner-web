@@ -79,7 +79,8 @@ export const uploadFileToCF = async (
   note_id,
   putUrl,
   file, // Changed from filePath to a more descriptive name
-  fileName
+  fileName,
+  onProgress?: (percent: number) => void // <--- ADD THIS
 ) => {
   if (!file) {
     throw new Error('A File or Blob object is required for upload.');
@@ -110,7 +111,12 @@ export const uploadFileToCF = async (
             delete headers['Authorization'];
             return data;
           }],
-  
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total && onProgress) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              onProgress(percentCompleted);
+            }
+          },
         });
 
         // Axios throws an error on non-2xx status codes automatically,

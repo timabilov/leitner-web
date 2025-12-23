@@ -177,7 +177,7 @@ const CreateYoutubeNote = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Plus className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+        {/* <Plus className=" h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" /> */}
       </DialogTrigger>
 
       <DialogContent>

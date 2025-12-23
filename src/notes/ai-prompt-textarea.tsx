@@ -13,41 +13,27 @@ import { useMutation } from "@tanstack/react-query";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
-// --- Services & Store ---
+// --- Services & Utils ---
 import { axiosInstance, convertBlobToWav, createZip2, uploadFileToCF } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 
-// --- UI Components ---
+// --- Components ---
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
-// --- Icons ---
-import {
-  File as FileIcon, // ✅ Renamed to avoid conflict with native File
-  Image as ImageIcon, X, Paperclip, Mic, StopCircle, UploadCloud,
-  ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2,
-  ArrowUp, AudioLinesIcon
+  File as FileIcon, Image as ImageIcon, X, Paperclip, Mic, StopCircle, UploadCloud,
+  ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2, ArrowUp, AudioLinesIcon
 } from "lucide-react";
+import { NoteCreationToast } from "./note-creation-toast";
 
 // ============================================================================
-// 1. HOOK: useAudioRecorder
+// 1. HOOK: useAudioRecorder (Restored Full Logic)
 // ============================================================================
 const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
   const [status, setStatus] = useState<"idle" | "recording" | "paused">("idle");
@@ -88,38 +74,25 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(mediaStream);
 
-      // 1. Prioritize MP4 (Safari) for native support
-      let mimeType = "audio/webm"; 
-      if (MediaRecorder.isTypeSupported("audio/mp4")) {
-        mimeType = "audio/mp4";
-      } else if (MediaRecorder.isTypeSupported("audio/webm")) {
-        mimeType = "audio/webm";
+      let mimeType = "audio/webm";
+      if (typeof MediaRecorder !== "undefined") {
+        if (MediaRecorder.isTypeSupported("audio/mp4")) mimeType = "audio/mp4";
+        else if (MediaRecorder.isTypeSupported("audio/webm")) mimeType = "audio/webm";
       }
-      
       mimeTypeRef.current = mimeType;
 
       mediaRecorderRef.current = new MediaRecorder(mediaStream, { mimeType });
       chunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          chunksRef.current.push(e.data);
-        }
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
       };
 
       mediaRecorderRef.current.onstop = () => {
         clearInterval(timerRef.current!);
-        
-        // Create initial blob with the recorded type
-        const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
-        
-        if (blob.size > 0) {
-          onStopCallback(blob);
-        } else {
-          console.error("Recording failed: Empty blob");
-          toast.error("Audio recording failed.");
-        }
-        
+        const type = mediaRecorderRef.current?.mimeType || mimeTypeRef.current;
+        const blob = new Blob(chunksRef.current, { type });
+        if (blob.size > 0) onStopCallback(blob);
         setStatus("idle");
         setStream(null);
         setElapsedTime(0);
@@ -127,9 +100,7 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
         mediaStream.getTracks().forEach(t => t.stop());
       };
 
-      // 2. Start with timeslice to ensure data availability on all browsers
       mediaRecorderRef.current.start(200);
-      
       setStatus("recording");
       startTimeRef.current = Date.now();
       accumulatedTimeRef.current = 0;
@@ -166,7 +137,7 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
   const stop = (shouldSave = true) => {
     if (!shouldSave) chunksRef.current = [];
     if (mediaRecorderRef.current?.state !== "inactive") {
-      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current?.stop();
     }
   };
 
@@ -188,39 +159,20 @@ const AudioPreview = ({ file, onRemove }: { file: any, onRemove: () => void }) =
     isPlaying ? audioRef.current?.pause() : audioRef.current?.play();
   };
 
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    const onPlay = () => setIsPlaying(true);
-    const onPause = () => setIsPlaying(false);
-    el.addEventListener("play", onPlay);
-    el.addEventListener("pause", onPause);
-    el.addEventListener("ended", onPause);
-    return () => {
-      el.removeEventListener("play", onPlay);
-      el.removeEventListener("pause", onPause);
-      el.removeEventListener("ended", onPause);
-    };
-  }, []);
-
   return (
     <motion.div 
       layout 
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"
+      className="group relative flex items-center gap-2 bg-background/50 backdrop-blur-sm rounded-xl border px-3 py-2 text-sm transition-colors hover:bg-background"
     >
-      <audio ref={audioRef} src={file.preview} preload="auto" />
-      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={togglePlay}>
+      <audio ref={audioRef} src={file.preview} onPlay={() => setIsPlaying(true)} onPause={() => setIsPlaying(false)} onEnded={() => setIsPlaying(false)} />
+      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full" onClick={togglePlay}>
         {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
       </Button>
       <span className="max-w-[120px] truncate font-medium">{file.name}</span>
-      <Button
-        variant="ghost" size="icon"
-        className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
-        onClick={onRemove}
-      >
+      <Button variant="ghost" size="icon" className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={onRemove}>
         <X className="h-3 w-3" />
       </Button>
     </motion.div>
@@ -238,57 +190,26 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
   const [prompt, setPrompt] = useState("");
   const [files, setFiles] = useState<any[]>([]);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
-  
-  // Logic for Upload Flow
-  const [noteId, setNoteId] = useState(null);
-  const [zipData, setZipData] = useState<any>(null);
 
-  // --- 1. Audio Logic (Conversion & Saving) ---
+  const flowContext = useRef<any>({ toastId: null, progressInterval: null, zipData: null, noteId: null });
+
   const handleAudioStop = useCallback(async (audioBlob: Blob) => {
     let finalBlob = audioBlob;
     let extension = "webm";
     let mimeType = audioBlob.type;
 
-    // A. Handle Safari (Native M4A)
     if (audioBlob.type.includes("mp4")) {
-      extension = "m4a";
-      mimeType = "audio/m4a"; 
-    } 
-    // B. Handle Chrome/Firefox (WebM -> Convert to WAV)
-    else if (audioBlob.type.includes("webm")) {
+      extension = "m4a"; mimeType = "audio/m4a"; 
+    } else if (audioBlob.type.includes("webm")) {
       try {
-        console.log("Converting WebM to WAV...");
-        // Wait for conversion
         finalBlob = await convertBlobToWav(audioBlob); 
-        extension = "wav";
-        mimeType = "audio/wav";
-      } catch (error) {
-        console.error("WAV conversion failed", error);
-        toast.error(t("Audio conversion failed"));
-        return;
-      }
+        extension = "wav"; mimeType = "audio/wav";
+      } catch (error) { toast.error(t("Audio conversion failed")); return; }
     }
 
     const fileName = `recording_${Date.now()}.${extension}`;
-    
-    // Create File with explicit properties
-    const audioFile = new File([finalBlob], fileName, {
-      type: mimeType,
-      lastModified: Date.now(),
-    });
-
-    // Add path for Zip compatibility
-    Object.defineProperty(audioFile, 'path', {
-      value: fileName,
-      writable: true
-    });
-    
-    // Add preview for UI
-    Object.assign(audioFile, { 
-      preview: URL.createObjectURL(finalBlob) 
-    });
-
-    console.log("Audio Saved:", { name: fileName, size: finalBlob.size, type: mimeType });
+    const audioFile = new File([finalBlob], fileName, { type: mimeType });
+    Object.assign(audioFile, { preview: URL.createObjectURL(finalBlob) });
     setFiles((prev) => [...prev, audioFile]);
   }, [t]);
 
@@ -301,7 +222,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
     return `${minutes}:${seconds}`;
   };
 
-  // --- 2. File Handling ---
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles((prev) => [...prev, ...acceptedFiles.map(f => Object.assign(f, { preview: URL.createObjectURL(f) }))]);
   }, []);
@@ -309,89 +229,71 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
   const removeFile = (fileToRemove: any) => {
     setFiles(files.filter(f => f !== fileToRemove));
     URL.revokeObjectURL(fileToRemove.preview);
-    posthog.capture('remove_file_clicked', { userId, email });
   };
 
   const { getRootProps, getInputProps, isDragActive, open: openFilePicker } = useDropzone({
-    onDrop,
-    noClick: true,
-    noKeyboard: true,
-    accept: { "image/*": [], "application/pdf": [], "audio/*": [] },
+    onDrop, noClick: true, accept: { "image/*": [], "application/pdf": [], "audio/*": [] },
   });
 
-  // --- 3. Save Logic ---
+  // --- Mutations (Preserved Chain) ---
+  const draftNoteMutation = useMutation({
+    mutationFn: (newNote: any) => axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/create`, newNote),
+    onSuccess: (res) => {
+      flowContext.current.noteId = res?.data.id;
+      generateUploadLinkMutation.mutate({ noteId: res?.data.id, file_name: flowContext.current.zipData.fileName });
+    }
+  });
+
+  const generateUploadLinkMutation = useMutation({
+    mutationFn: ({ file_name, noteId }: any) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/generateFileUploadLink`, { file_name }),
+    onSuccess: async (res) => {
+      await uploadFileToCF(flowContext.current.noteId, res.data.upload_url, flowContext.current.zipData.zipBlob, flowContext.current.zipData.fileName, () => {});
+      markUploadAsFinishedMutation.mutate(flowContext.current.noteId!);
+    }
+  });
+
+  const markUploadAsFinishedMutation = useMutation({
+    mutationFn: (nId: string) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${nId}/setAsUploaded`, {}),
+    onSuccess: () => {
+      toast.success(t("Note created successfully!"));
+      setIsPolling(true); setPrompt(""); setFiles([]);
+    }
+  });
+
   const saveNote = async () => {
     if (!prompt.trim() && files.length === 0) return;
     try {
-      posthog.capture('save_note_clicked', { userId, email, note_type: "multi" });
-      
       const zip = await createZip2(files, prompt);
-      
-      if (!zip || !zip.zipBlob) {
-        throw new Error("Zip creation failed");
-      }
-
-      setZipData(zip); // Triggers useEffect to start upload chain
-      
-      draftNoteMutation.mutate({
-        note_type: "multi",
-        name: t("New Recording"),
-        file_name: zip?.fileName || "note.zip",
-        transcript: t("Not transcribed yet"),
-        language: "en",
-        folder_id: selectedFolder?.id,
-      });
-    } catch (e) {
-      console.error(e);
-      Sentry.captureException(e);
-      toast.error(t("Failed to prepare files"));
-    }
+      flowContext.current.zipData = zip;
+      draftNoteMutation.mutate({ note_type: "multi", name: t("New Recording"), file_name: zip.fileName, transcript: t("Not transcribed yet"), language: "en", folder_id: selectedFolder?.id });
+    } catch (e) { toast.error("Failed to prepare note"); }
   };
 
-  const draftNoteMutation = useMutation({
-    mutationFn: (newNote: any) => axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/create`, newNote),
-    onSuccess: (res) => setNoteId(res?.data.id),
-    onError: (err) => console.error(err)
-  });
+  const isSubmitting = draftNoteMutation.isPending || generateUploadLinkMutation.isPending || markUploadAsFinishedMutation.isPending;
 
-  // Effect chain: Draft Created -> Generate Link -> Upload to CF -> Finalize
-  useEffect(() => {
-    if (zipData && noteId) {
-      generateUploadLink.mutate({ noteId, file_name: zipData.fileName });
-    }
-  }, [zipData, noteId]);
-
-  const generateUploadLink = useMutation({
-    mutationFn: ({ file_name, noteId }: any) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/generateFileUploadLink`, { file_name }),
-    onSuccess: (res) => {
-      uploadFileToCF(noteId, res.data.upload_url, zipData.zipBlob, zipData.fileName)
-        .then(() => markUploadAsFinished.mutate(noteId));
-    }
-  });
-
-  const markUploadAsFinished = useMutation({
-    mutationFn: (nId) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${nId}/setAsUploaded`, {}),
-    onSuccess: () => {
-      setIsPolling(true);
-      setNoteId(null);
-      setPrompt("");
-      setFiles([]);
-      toast.success(t("Note has been created"));
-    },
-    onError: () => toast.error(t("Error processing note"))
-  });
-
-  const isSubmitting = draftNoteMutation.isPending || generateUploadLink.isPending || markUploadAsFinished.isPending;
-
-  // --- 4. Animations ---
+  // --- ORGANIC STYLING VARIANTS ---
   const containerVariants = {
-    idle: { borderColor: "hsl(var(--input))", boxShadow: "none" },
-    active: { borderColor: "hsl(var(--primary))", boxShadow: "0 0 0 2px hsl(var(--primary) / 0.1)" },
-    recording: { borderColor: "#ef4444", boxShadow: "0 0 0 2px rgba(239, 68, 68, 0.2)" }
+    idle: { boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.05)" },
+    active: { borderColor: "transparent", boxShadow: "0 0 0 4px rgba(245, 158, 11, 0.1)" },
+    recording: { borderColor: "#ef4444", boxShadow: "0 0 0 4px rgba(239, 68, 68, 0.1)" }
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full max-w-2xl mx-auto relative group">
+      {/* 1. ANIMATION CSS */}
+      <style>{`
+        @keyframes border-beam {
+          0% { stroke-dashoffset: 1000; }
+          100% { stroke-dashoffset: 0; }
+        }
+        .animate-border-beam {
+          animation: border-beam 2.5s linear infinite;
+        }
+      `}</style>
+
+      {/* Decorative Glow background */}
+      <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl group-focus-within:bg-amber-500/10 transition-all pointer-events-none hover:shadow-lg" />
+      
       <motion.div
         {...getRootProps()}
         initial="idle"
@@ -399,54 +301,36 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
         whileFocusWithin={recorder.status === "idle" ? "active" : undefined}
         variants={containerVariants}
         transition={{ duration: 0.3 }}
-        className="relative rounded-xl border bg-background p-2 transition-colors overflow-hidden"
+        className="relative rounded-[1rem] border bg-gradient-to-b from-card to-muted/40 p-3 transition-all overflow-hidden hover:border-black hover:shadow-lg"
       >
+        {/* 2. THE ANIMATED BORDER (ONE CONSISTENT AMBER LINE) */}
+
         <input {...getInputProps()} />
 
-        {/* Text Input */}
         <TextareaAutosize
           placeholder={t("Ask anything, drag files, or start recording...")}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={(e) => {
-             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveNote();
-          }}
-          minRows={2}
-          maxRows={10}
-          className="w-full resize-none border-0 bg-transparent shadow-none focus:ring-0 text-base py-2.5 px-2 outline-none"
+          onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveNote(); }}
+          minRows={2} maxRows={10}
+          className="relative z-20 w-full resize-none border-0 bg-transparent shadow-none focus:ring-0 text-base py-3 px-3 outline-none placeholder:text-muted-foreground/50"
         />
 
-        {/* File List */}
+        {/* File Previews Area */}
         <AnimatePresence>
           {files.length > 0 && (
-            <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="flex flex-wrap gap-2 px-2 pb-3 mt-2 overflow-hidden"
-            >
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="relative z-20 flex flex-wrap gap-2 px-3 pb-3 mt-1">
               {files.map((file, idx) => (
                 file.type.startsWith("audio/") ? (
                   <AudioPreview key={file.name+idx} file={file} onRemove={() => removeFile(file)} />
                 ) : (
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    key={file.name + idx}
-                    className="group relative flex items-center gap-2 bg-muted/50 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted"
-                  >
+                  <motion.div layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} key={file.name + idx} className="group relative flex items-center gap-2 bg-background/50 rounded-xl border px-3 py-2 text-sm transition-colors hover:bg-background">
                     <div className="text-muted-foreground">
                       {file.type.startsWith("image/") ? <ImageIcon className="h-4 w-4" /> : <FileIcon className="h-4 w-4" />}
                     </div>
-                    <span className="max-w-[120px] truncate font-medium cursor-pointer" onClick={() => file.type === "application/pdf" && setPreviewFile(file)}>
-                      {file.name}
-                    </span>
+                    <span className="max-w-[120px] truncate font-medium cursor-pointer" onClick={() => file.type === "application/pdf" && setPreviewFile(file)}>{file.name}</span>
                     {file.type.startsWith("image/") && (
-                      <Zoom>
-                        <img src={file.preview} alt={file.name} className="h-6 w-6 rounded object-cover border ml-1" />
-                      </Zoom>
+                      <Zoom><img src={file.preview} alt={file.name} className="h-6 w-6 rounded object-cover border ml-1" /></Zoom>
                     )}
                     <Button variant="ghost" size="icon" className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={() => removeFile(file)}>
                       <X className="h-3 w-3" />
@@ -458,110 +342,84 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
           )}
         </AnimatePresence>
 
-        {/* Toolbar */}
-        <div className="flex justify-between items-center border-t bg-transparent pt-2 px-2 mt-1 min-h-[44px]">
-          
+        {/* Nested Organic Action Bar */}
+        <div className="relative z-20 flex justify-between items-center rounded-[1rem] bg-background/50 backdrop-blur-sm border border-border/40 p-1.5 mt-2 min-h-[48px]">
+        {/* <svg className="absolute inset-0 h-full w-full pointer-events-none rounded-[1rem] z-10 overflow-visible" preserveAspectRatio="none">
+          <rect
+            width="100%"
+            height="100%"
+            rx="2rem"
+            fill="none"
+            stroke="black"
+            strokeWidth="1"
+            pathLength="1000"
+            strokeDasharray="150 850" 
+            className="animate-border-beam"
+            style={{ 
+              opacity: recorder.status === "idle" ? 0.4 : 0, 
+              vectorEffect: "non-scaling-stroke",
+              strokeLinecap: "round",
+              transition: 'opacity 0.5s'
+            }}
+          />
+        </svg> */}
+
           <AnimatePresence mode="wait" initial={false}>
             {recorder.status === "idle" ? (
-              // === IDLE TOOLBAR ===
-              <motion.div 
-                key="idle-tools"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-1"
-              >
+              <motion.div key="idle-tools" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex items-center gap-1 ml-1">
+                
                 <Tooltip>
                   <TooltipTrigger >
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={openFilePicker}>
-                      <Paperclip className="h-5 w-5" />
-                    </Button>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-pink-600 rounded-full h-9 w-9" onClick={openFilePicker}><Paperclip className="h-5 w-5" /></Button>
                   </TooltipTrigger>
                   <TooltipContent><p>{t("Attach file")}</p></TooltipContent>
                 </Tooltip>
-
+                
                 <Tooltip>
                   <TooltipTrigger >
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full" onClick={() => {
-                        if (!recorder.devices.length) recorder.getDevices(true);
-                        recorder.start();
-                    }}>
-                      <Mic className="h-5 w-5" />
-                    </Button>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-pink-600 rounded-full h-9 w-9" onClick={() => { if (!recorder.devices.length) recorder.getDevices(true); recorder.start(); }}><Mic className="h-5 w-5" /></Button>
                   </TooltipTrigger>
                   <TooltipContent><p>{t("Start recording")}</p></TooltipContent>
                 </Tooltip>
 
                 <DropdownMenu>
-                    <DropdownMenuTrigger >
-                      <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground rounded-full h-8 w-8">
-                        <ChevronDown className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-[300px]">
+                  <DropdownMenuTrigger >
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-pink-600 rounded-full h-8 w-8"><ChevronDown className="h-4 w-4" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-[300px] rounded-2xl p-2">
                     <DropdownMenuLabel>{t("Microphone")}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {recorder.isFetching ? (
-                      <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("Fetching...")}</DropdownMenuItem>
-                    ) : (
+                    {recorder.isFetching ? <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("Fetching...")}</DropdownMenuItem> : 
                       <DropdownMenuRadioGroup value={recorder.selectedMicId} onValueChange={recorder.setSelectedMicId}>
-                        {recorder.devices.map(d => (
-                          <DropdownMenuRadioItem key={d.deviceId} value={d.deviceId}>{d.label || "Mic"}</DropdownMenuRadioItem>
-                        ))}
+                        {recorder.devices.map(d => <DropdownMenuRadioItem key={d.deviceId} value={d.deviceId} className="rounded-lg">{d.label || "Mic"}</DropdownMenuRadioItem>)}
                       </DropdownMenuRadioGroup>
-                    )}
+                    }
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => recorder.getDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> {t("Refresh")}</DropdownMenuItem>
+                    <DropdownMenuItem className="rounded-lg" onSelect={() => recorder.getDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> {t("Refresh")}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {recorder.isBlocked && <p className="text-xs text-red-500 ml-2">{t("Mic blocked")}</p>}
               </motion.div>
             ) : (
-              // === RECORDING TOOLBAR ===
-              <motion.div 
-                key="recording-tools"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="flex items-center gap-3 w-full mr-2"
-              >
-                <Tooltip>
-                  <TooltipTrigger >
-                    <Button variant="ghost" size="icon" onClick={() => recorder.stop(false)} className="text-muted-foreground hover:text-destructive">
-                      <Trash2 className="h-5 w-5" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>{t("Discard")}</p></TooltipContent>
-                </Tooltip>
-
-                <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 px-3 py-1 rounded-full border border-red-100 dark:border-red-900/30">
-                   <motion.div 
-                     animate={{ opacity: recorder.status === "paused" ? 0.5 : [1, 0.4, 1] }}
-                     transition={{ duration: 1.5, repeat: Infinity }}
-                     className="h-2 w-2 bg-red-500 rounded-full" 
-                   />
-                   <span className="text-sm font-mono text-red-600 dark:text-red-400 min-w-[40px] text-center">
-                      {formatTime(recorder.elapsedTime)}
-                   </span>
+              <motion.div key="recording-tools" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-3 w-full mr-2 ml-2">
+                <Button variant="ghost" size="icon" onClick={() => recorder.stop(false)} className="text-muted-foreground hover:text-destructive rounded-full"><Trash2 className="h-5 w-5" /></Button>
+                
+                <div className="flex items-center gap-2 bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20">
+                   <motion.div animate={{ opacity: recorder.status === "paused" ? 0.5 : [1, 0.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="h-2 w-2 bg-red-500 rounded-full" />
+                   <span className="text-sm font-mono text-red-600 font-bold min-w-[40px] text-center">{formatTime(recorder.elapsedTime)}</span>
                 </div>
-
+                
                 <div className="flex-1 h-8 flex justify-center items-center">
                    {recorder.stream && <AudioVisualizer mediaStream={recorder.stream} isPaused={recorder.status !== 'recording'} />}
                 </div>
 
-                {recorder.status === "recording" ? (
-                  <Button variant="ghost" size="icon" onClick={recorder.pause}><Pause className="h-5 w-5 text-muted-foreground" /></Button>
-                ) : (
-                  <Button variant="ghost" size="icon" onClick={recorder.resume}><Play className="h-5 w-5 text-muted-foreground" /></Button>
-                )}
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={recorder.status === "recording" ? recorder.pause : recorder.resume}>
+                  {recorder.status === "recording" ? <Pause className="h-5 w-5 text-muted-foreground" /> : <Play className="h-5 w-5 text-muted-foreground" />}
+                </Button>
 
                 <Tooltip>
                   <TooltipTrigger >
-                    <Button variant="ghost" size="icon" onClick={() => recorder.stop(true)} className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
-                      <StopCircle className="h-6 w-6" />
-                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => recorder.stop(true)} className="text-red-500 hover:bg-red-50 rounded-full h-8 w-8 flex items-center justify-center"><StopCircle className="h-7 w-7" /></Button>
                   </TooltipTrigger>
                   <TooltipContent><p>{t("Stop & Attach")}</p></TooltipContent>
                 </Tooltip>
@@ -570,35 +428,22 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
           </AnimatePresence>
 
           <div className="flex-shrink-0 ml-auto">
-            <Button
-              onClick={saveNote}
-              size="icon"
-              disabled={isSubmitting || recorder.status === "recording"}
-              className="rounded-full h-9 w-9 transition-all duration-300 shadow-sm"
+            <Button 
+              onClick={saveNote} 
+              size="icon" 
+              disabled={isSubmitting || recorder.status === "recording"} 
+              className="rounded-full h-10 w-10 bg-pink-500 hover:bg-pink-600 text-white shadow-lg shadow-pink-500/20 transition-all active:scale-95"
             >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : recorder.status !== "idle" ? (
-                <AudioLinesIcon className="h-4 w-4 animate-pulse" />
-              ) : (
-                <ArrowUp className="h-4 w-4" />
-              )}
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : <ArrowUp className="h-5 w-5" strokeWidth={2.5} />}
             </Button>
           </div>
         </div>
 
         <AnimatePresence>
           {isDragActive && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 rounded-xl bg-background/90 backdrop-blur-sm flex items-center justify-center z-20 border-2 border-primary border-dashed"
-            >
-              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex flex-col items-center gap-2 text-primary font-medium">
-                <div className="p-4 rounded-full bg-primary/10">
-                  <UploadCloud className="h-8 w-8" />
-                </div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 rounded-[2rem] bg-background/90 backdrop-blur-sm flex items-center justify-center z-30 border-2 border-amber-500 border-dashed">
+              <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="flex flex-col items-center gap-2 text-pink-600 font-bold">
+                <div className="p-4 rounded-full bg-pink-500/10"><UploadCloud className="h-8 w-8" /></div>
                 <p>{t("Drop files to attach")}</p>
               </motion.div>
             </motion.div>

@@ -35,7 +35,7 @@ const PlaceholderSparkleIcon = ({ className }) => (
  * @param {string} [props.subtitle] - The text that "breathes," e.g., "Generating Quiz..."
  * @param {string} [props.description] - Additional descriptive text.
  */
-export function GenericAILoading({ mainTitle, subtitle, description }) {
+export function GenericAILoading({ mainTitle, subtitle, description, animationComponent }) {
   return (
     <div className="flex flex-col flex-1 items-center justify-center text-center p-8 gap-6 h-full">
       {/* --- Main Title --- */}
@@ -58,31 +58,35 @@ export function GenericAILoading({ mainTitle, subtitle, description }) {
       >
         {subtitle}
       </motion.h3>
+    {
+      animationComponent ? animationComponent : (
 
-      {/* --- Spinning Icon --- */}
-            <div className="animate-spin-slow">
-              <motion.div
-                  animate={{
-                    scale: [1, 2, 1], // Scales from 100% to 110% and back
-                  }}
-                  transition={{
-                    // Use different transition settings for each property
-                    scale: {
-                      duration: 2,
-                      ease: "easeInOut",
-                      repeat: Infinity,
-                    },
-                    rotate: {
-                      duration: 5, // 5-second rotation
-                      ease: "linear",
-                      repeat: Infinity,
-                    },
-                  }}
-                >
-                  {/* Replace this with your actual <SparkSingleDarkSVG /> component */}
-                <PlaceholderSparkleIcon className="h-20 w-20 text-primary" />
-                </motion.div>
-            </div>
+              <div className="animate-spin-slow">
+                <motion.div
+                    animate={{
+                      scale: [1, 2, 1], // Scales from 100% to 110% and back
+                    }}
+                    transition={{
+                      // Use different transition settings for each property
+                      scale: {
+                        duration: 2,
+                        ease: "easeInOut",
+                        repeat: Infinity,
+                      },
+                      rotate: {
+                        duration: 5, // 5-second rotation
+                        ease: "linear",
+                        repeat: Infinity,
+                      },
+                    }}
+                  >
+                    {/* Replace this with your actual <SparkSingleDarkSVG /> component */}
+                     <PlaceholderSparkleIcon className="h-20 w-20 text-primary" />
+                  </motion.div>
+              </div>
+
+      )
+    }
 
       {/* --- Description Text --- */}
       {description && (

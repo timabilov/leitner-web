@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIIcon from '@/note-detail/ai-icon';
 import { useTranslation } from 'react-i18next'; // Import the hook
+import { AiOrbitAnimation } from '@/note-detail/ai-orbit-animation';
 
 /**
  * An animated sticky button that expands on hover into an alert block.
@@ -20,13 +21,13 @@ export function StickyAiButton({ onClick }) {
     >
       <motion.div
         className="
-          relative flex items-center h-14
+          relative flex items-center
           bg-foreground text-background
           shadow-lg cursor-pointer
-          overflow-hidden
+          overflow-hidden h-24 w-30
         "
         animate={{
-          width: isHovered ? 'auto' : 56,
+          width: isHovered ? 'auto' : 88,
           borderRadius:  '12px',
         }}
         transition={{ duration: 0.4, ease: 'easeInOut' }}
@@ -48,8 +49,9 @@ export function StickyAiButton({ onClick }) {
           )}
         </AnimatePresence>
         
-        <div className="absolute top-0 right-0 h-14 w-14 flex items-center justify-center">
-          <AIIcon className="h-29 w-29" />
+        <div className="absolute top-0 right-0 h-24 w-20 flex items-center justify-center">
+          {/* <AIIcon className="h-29 w-29" /> */}
+          <AiOrbitAnimation />
         </div>
       </motion.div>
     </div>

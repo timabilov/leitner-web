@@ -24,6 +24,12 @@ import { useNavigate } from "react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next"; // Import the hook
 import { SortableItem } from "./sortable";
+import Lottie from "lottie-react";
+import audioAnimation from './recording.json';
+import folderAnimation from './folder.json';
+import imageAnimation from './image.json';
+import pdfAnimation from './pdf.json';
+import youtubeAnimation from './youtube.json';
 
 const gridItemClasses = {
   grid: "flex-col min-h-[140px]",
@@ -36,17 +42,58 @@ export const getTypeIcon = (type: string, size?: number) => {
     case "multi":
       return (
         <FolderOpenDot className={"text-muted-foreground " + iconsSizeClass} />
+        // <Lottie 
+        //     animationData={folderAnimation} 
+        //     loop={true} 
+        //     autoplay={true}
+        //     //style={{ width: "100%", height: "100%" }}
+        //     className={"text-muted-foreground " + iconsSizeClass}
+        //   />
       );
     case "youtube":
-      return <Youtube className={"text-muted-foreground " + iconsSizeClass} />;
+      return (
+      <Youtube className={"text-muted-foreground " + iconsSizeClass} />
+      //  <Lottie 
+      //       animationData={youtubeAnimation} 
+      //       loop={true} 
+      //       autoplay={true}
+      //       //style={{ width: "100%", height: "100%" }}
+      //       className={"text-muted-foreground " + iconsSizeClass}
+      //     />
+    )
     case "audio":
       return (
         <AudioLines className={"text-muted-foreground " + iconsSizeClass} />
+        // <Lottie 
+        //     animationData={audioAnimation} 
+        //     loop={true} 
+        //     autoplay={true}
+        //     //style={{ width: "100%", height: "100%" }}
+        //     className={"text-muted-foreground " + iconsSizeClass}
+        //   />
       );
     case "image":
-      return <Image className={"text-muted-foreground " + iconsSizeClass} />;
+      return (
+      <Image className={"text-muted-foreground " + iconsSizeClass} />
+      // <Lottie 
+      //       animationData={imageAnimation} 
+      //       loop={true} 
+      //       autoplay={true}
+      //       //style={{ width: "100%", height: "100%" }}
+      //       className={"text-muted-foreground " + iconsSizeClass}
+      //     />
+      )
     case "pdf":
-      return <File className={"text-muted-foreground " + iconsSizeClass} />;
+      return (
+      <File className={"text-muted-foreground " + iconsSizeClass} />
+      //  <Lottie 
+      //       animationData={pdfAnimation} 
+      //       loop={true} 
+      //       autoplay={true}
+      //       //style={{ width: "100%", height: "100%" }}
+      //       className={"text-muted-foreground " + iconsSizeClass}
+      //     />
+      )
     case "test":
       return (
         <School2Icon className={"text-muted-foreground " + iconsSizeClass} />

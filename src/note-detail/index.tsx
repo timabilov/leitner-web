@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import MarkdownView from "@/components/markdown-view";
+import { motion } from "framer-motion";
 import { 
   BellOff, 
   BellRing, 
@@ -20,7 +21,10 @@ import {
   Bot, 
   User, 
   Loader2,
-  Sparkles
+  Sparkles,
+  MessageCircleMore,
+  NotepadText,
+  ScrollText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -50,6 +54,23 @@ import { Input } from "@/components/ui/input"; // Added Input
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added Avatar
 import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea
 import AIIcon from "./ai-icon";
+import { AiOrbitAnimation } from "./ai-orbit-animation";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { SlidingNumber } from '@/components/animate-ui/primitives/texts/sliding-number';
+import typingAnimation from './typing2.json';
+import { File } from 'lucide-react';
+import { StudyMaterials } from "./study-materials";
+import Lottie from "lottie-react";
+import Typewriter from "./type-writter";
+import CatLogo from "./cat-logo";
+
+
+
+const SPRING_TRANSITION = {
+  type: "spring",
+  bounce: 0.2,
+  duration: 0.6,
+};
 
 export const POLLING_INTERVAL_MS = 5000;
 
@@ -64,6 +85,10 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
   const { companyId } = useUserStore();
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Track the ID of the message currently being generated
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "init-1",
@@ -74,12 +99,14 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll logic
+  // 1. Auto-scroll logic (Improved)
+  // We use a MutationObserver or a simple useEffect on messages length + loading state
+  // But for typewriter, we want to scroll often. 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, streamingMessageId]); 
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -87,27 +114,26 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
 
     const userText = inputValue.trim();
     
-    // 1. Add User Message to UI
+    // Add User Message
     const userMsg: Message = { id: Date.now().toString(), role: "user", content: userText };
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");
     setIsLoading(true);
 
-    // 2. Prepare AI Placeholder
+    // Add AI Placeholder
     const aiMsgId = (Date.now() + 1).toString();
+    setStreamingMessageId(aiMsgId); // Mark this ID as streaming
     setMessages((prev) => [...prev, { id: aiMsgId, role: "ai", content: "" }]);
 
-    // 3. Prepare History
+    // Prepare History
     const historyPayload = messages.map((m) => ({
       role: m.role === "ai" ? "model" : "user",
       message: m.content
     }));
 
-    // Track how much text we have processed so far
     let lastIndex = 0;
 
     try {
-      // ✅ 4. Use axiosInstance with onDownloadProgress
       await axiosInstance.post(
         `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat`,
         { 
@@ -115,18 +141,14 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
           history: historyPayload 
         },
         {
-          // This allows us to read the response while it's still loading
           onDownloadProgress: (progressEvent) => {
             const xhr = progressEvent.event.target;
             const fullResponse = xhr.responseText || "";
-            
-            // Calculate the new chunk (Axios gives the full text every time)
             const newChunk = fullResponse.substring(lastIndex);
             
             if (newChunk) {
-              lastIndex = fullResponse.length; // Update index for next chunk
+              lastIndex = fullResponse.length; 
               
-              // Update State
               setMessages((prev) => 
                 prev.map((msg) => 
                   msg.id === aiMsgId 
@@ -138,12 +160,10 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
           }
         }
       );
-
     } catch (error) {
       console.error("Chat error:", error);
       Sentry.captureException(error);
       
-      // Remove the empty AI message if it failed, or show error text
       setMessages((prev) => 
         prev.map((msg) => 
             msg.id === aiMsgId 
@@ -153,6 +173,7 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
       );
     } finally {
       setIsLoading(false);
+      setStreamingMessageId(null); // Stop streaming effect
     }
   };
 
@@ -160,35 +181,54 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
     <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto">
       <ScrollArea className="flex-1 pr-4">
         <div className="flex flex-col gap-4 py-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex w-full gap-3",
-                message.role === "user" ? "flex-row-reverse" : "flex-row"
-              )}
-            >
-              <Avatar className={cn("h-8 w-8 border", message.role === "ai" ? "bg-black" : "bg-muted")}>
-                {message.role === "ai" ? (
-                    <Sparkles className="h-4 w-4 text-white m-auto" />
-                ) : (
-                  <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
-                )}
-              </Avatar>
-              
+          {messages.map((message) => {
+            const isAi = message.role === "ai";
+            // Check if this specific message is the one currently streaming
+            const isStreaming = message.id === streamingMessageId;
+
+            return (
               <div
+                key={message.id}
                 className={cn(
-                  "relative max-w-[80%] px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap leading-relaxed",
-                  message.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-tr-sm"
-                    : "bg-muted text-foreground rounded-tl-sm"
+                  "flex w-full gap-3",
+                  !isAi ? "flex-row-reverse" : "flex-row"
                 )}
               >
-                {message.content || (message.role === 'ai' && isLoading ? "..." : "")}
+                <Avatar className={cn("h-10 w-10 border", isAi ? "bg-black" : "bg-muted")}>
+                  {isAi ? (
+                      <CatLogo className="h-4 w-4 text-white m-auto" />
+                  ) : (
+                    <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+                  )}
+                </Avatar>
+                
+                <div
+                  className={cn(
+                    "relative max-w-[80%] px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap leading-relaxed",
+                    !isAi
+                      ? "bg-primary text-primary-foreground rounded-tr-sm"
+                      : "bg-muted text-foreground rounded-tl-sm"
+                  )}
+                >
+                  {/* --- RENDER LOGIC --- */}
+                  {/* If it's AI, use the Typewriter. If user, show plain text. */}
+                  {isAi ? (
+                    <Typewriter 
+                        content={message.content} 
+                        isStreaming={isStreaming} 
+                    />
+                  ) : (
+                    message.content
+                  )}
+                  
+                  {/* Fallback for initial loading before first chunk arrives */}
+                  {isAi && isStreaming && message.content.length === 0 && "..."}
+                </div>
               </div>
-            </div>
-          ))}
-          <div ref={scrollRef} />
+            );
+          })}
+          {/* Scroll Anchor */}
+          <div ref={scrollRef} className="h-1" />
         </div>
       </ScrollArea>
 
@@ -205,7 +245,7 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
             type="submit" 
             size="icon" 
             disabled={!inputValue.trim() || isLoading}
-            className="absolute right-1.5 rounded-full h-9 w-9 shrink-0"
+            className="absolute right-1.5 rounded-full h-9 w-9 shrink-0 cursor-pointer"
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
@@ -382,7 +422,7 @@ const NoteDetailBase = () => {
     }
   };
 
-  const startPollingForQuiz = () => setIsPolling(true);
+  // const startPollingForQuiz = () => setIsPolling(true);
 
   useEffect(() => {
     if (isPolling) noteQuery.refetch();
@@ -404,7 +444,7 @@ const NoteDetailBase = () => {
     <Layout title={note?.name} containerRef={mainContainerRef}>
       <div className="flex flex-col h-full">
         <div className="overflow-auto">
-          <div className="flex flex-row items-center justify-between w-full mb-2">
+          <div className="flex flex-row items-center justify-between w-full mb-4">
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
@@ -500,7 +540,7 @@ const NoteDetailBase = () => {
               {!isProcessingFiles && (
                 <div className="max-w-full">
                   {textContent && (
-                    <pre className="mt-2 whitespace-pre-wrap">{textContent}</pre>
+                    <pre className="whitespace-pre-wrap mb-4">{textContent}</pre>
                   )}
                   <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-8">
                     {imagePaths.map((img, index) => (
@@ -520,7 +560,7 @@ const NoteDetailBase = () => {
                     ))}
                   </div>
                   {audioPaths.map((audio, index) => (
-                    <div key={audio.name + index} className="w-full mt-6 mb-6">
+                    <div key={audio.name + index} className="w-full mt-4 mb-4">
                       <AudioPlayer key={audio.name} audio={audio} />
                     </div>
                   ))}
@@ -552,53 +592,92 @@ const NoteDetailBase = () => {
             />
           )}
           <div className="@container/main w-full mt-10">
-            <Tabs value={activeTab} onValueChange={(val) => {
-              posthog.capture('tab_clicked', { userId, email, tab: val })
-              setActiveTab(val)
-            }}
-              className="w-full">
+           <Tabs
+              value={activeTab}
+              onValueChange={(val) => {
+                posthog.capture("tab_clicked", { userId, email, tab: val });
+                setActiveTab(val);
+              }}
+              className="w-full"
+            >
               <div className="flex flex-row justify-between z-20">
-                <TabsList className="relative w-full p-0 gap-2 bg-muted text-muted-foreground inline-flex h-12 items-center max-w-3xl justify-center m-auto rounded-lg p-[3px]">
-                  <TabsTrigger
-                    className="flex flex-col items-center gap-1 px-2.5 sm:px-3 cursor-pointer"
-                    value="overview"
-                  >
-                    {t("Overview")}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    className="cursor-pointer data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground h-[calc(100%-1px)] flex-1 justify-center rounded-md border border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 flex flex-col items-center gap-1 sm:px-3"
-                    value="transcript"
-                  >
-                    {t("Transcript")}
-                  </TabsTrigger>
-                  <TabsTrigger
-                    className="cursor-pointer data-[state=active]:bg-background dark:data-[state=active]:text-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 text-foreground dark:text-muted-foreground h-[calc(100%-1px)] flex-1 justify-center rounded-md border border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 flex flex-col items-center gap-1 sm:px-3 "
-                    value="chat"
-                  >
-                    <div className="flex flex-row items-center">
-                      <AIIcon  />
-                      {t("AI Chat")}
-                    </div>
-                  </TabsTrigger>
+                <TabsList className="relative w-full p-1 gap-2 bg-muted text-muted-foreground inline-flex h-12 items-center max-w-3xl justify-center m-auto rounded-xl">
+                  
+                  {/* --- REUSABLE TAB TRIGGER LOGIC --- */}
+                  {[
+                    { id: "overview", label: t("Overview"), icon: <NotepadText /> },
+                    { id: "transcript", label: t("Transcript"), icon: <ScrollText /> },
+                    { id: "chat", label: t("AI Chat"), icon: <AnimateIcon loop>
+                    <MessageCircleMore />
+                  </AnimateIcon> },
+                   { id: "ai", label: t("AI Tools"), icon: noteQuery.data?.data?.quiz_status === "in_progress"  ?  <Lottie 
+                    animationData={typingAnimation} 
+                    loop={true} 
+                    autoplay={true}
+                    style={{ width: '20px' }}
+                />  :<AnimateIcon loop>
+                    <Sparkles />
+                  </AnimateIcon> }
+                  ].map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    
+                    return (
+                      <TabsTrigger
+                        key={tab.id}
+                        value={tab.id}
+                        // Remove standard active/bg styles. We handle them manually.
+                        className={cn(
+                          "relative flex-1 flex flex-col items-center justify-center gap-2 px-4 py-2 cursor-pointer text-sm font-medium transition-colors rounded-lg",
+                          "text-muted-foreground hover:text-foreground", // Inactive state
+                          "data-[state=active]:text-foreground", // Active text color
+                          "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+                          // IMPORTANT: Reset default background styles to avoid conflict
+                          "data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                        )}
+                        style={{ WebkitTapHighlightColor: "transparent" }}
+                      >
+                        {/* The Floating Background Pill */}
+                        {isActive && (
+                          <motion.div
+                            layoutId="active-pill"
+                            className="absolute inset-0 bg-background dark:bg-input/50 shadow-sm rounded-lg border border-black/5 dark:border-white/5"
+                            initial={false}
+                            transition={SPRING_TRANSITION}
+                            style={{ borderRadius: 8 }} // Ensure radius matches parent
+                          />
+                        )}
+
+                        {/* The Content (Text/Icon) - Must be Z-10 to sit on top */}
+                        <span className="relative z-10 flex items-center gap-2 mix-blend-multiply dark:mix-blend-screen">
+                          {tab.icon && <span>{tab.icon}</span>}
+                          {tab.label}
+                        </span>
+                      </TabsTrigger>
+                    );
+                  })}
+
                 </TabsList>
+
+                {/* ... Your AI Modal Logic ... */}
                 {!note?.processing_error_message && (
                   <AiModal
                     noteId={noteId}
                     noteQuery={noteQuery}
                     isPolling={isPolling}
                     setIsPolling={setIsPolling}
-                    startPollingForQuiz={startPollingForQuiz}
+                    // startPollingForQuiz={startPollingForQuiz}
                   />
                 )}
               </div>
+
+              {/* ... The Rest of your Content ... */}
               <Card className="relative rounded-md border-t-inherit shadow-md z-10 -mt-[30px]">
                 <TabsContent value="transcript" className="flex-1 mt-4 overflow-hidden">
                   <CardContent className="p-6 text-sm text-muted-foreground">
-                    <MarkdownView setTopics={handleSetTopics}>
-                      {note?.transcript}
-                    </MarkdownView>
+                    <MarkdownView setTopics={handleSetTopics}>{note?.transcript}</MarkdownView>
                   </CardContent>
                 </TabsContent>
+                
                 <TabsContent value="overview" className="flex-1 min-h-0 py-8 overflow-y-auto">
                   <CardContent className="p-6 text-sm text-muted-foreground border-none">
                     {note?.processing_error_message && (
@@ -609,11 +688,20 @@ const NoteDetailBase = () => {
                     <MarkdownView>{note?.md_summary_ai}</MarkdownView>
                   </CardContent>
                 </TabsContent>
-                
-                {/* --- ADDED CHAT CONTENT --- */}
+
                 <TabsContent value="chat" className="flex-1 min-h-0 py-8 overflow-y-auto">
                   <CardContent className="p-0 border-none">
-                    <ChatInterface noteName={note?.name}  noteId={noteId}/>
+                    <ChatInterface noteName={note?.name} noteId={noteId} />
+                  </CardContent>
+                </TabsContent>
+
+                 <TabsContent value="ai" className="flex-1 mt-4 overflow-hidden">
+                  <CardContent className="p-6 text-sm text-muted-foreground">
+                    <StudyMaterials 
+                      noteId={noteId}
+                      noteQuery={noteQuery} // Pass the entire query object
+                      setIsPolling={setIsPolling} // Pass the polling setter
+                    />
                   </CardContent>
                 </TabsContent>
 
