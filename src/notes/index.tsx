@@ -12,6 +12,7 @@ import {
   LoaderIcon,
   Plus,
   Search,
+  SearchCode,
   SearchX,
   Youtube,
 } from "lucide-react";
@@ -45,6 +46,7 @@ import Lottie from "lottie-react";
 import searchAnimation from "./search.json";
 import youtubeAnimation from "./youtube.json";
 import folderAnimation from "./folder.json";
+import { AnimatePresence, motion } from "framer-motion";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -70,7 +72,7 @@ const Notes = ({ children }: any) => {
         API_BASE_URL + `/company/${companyId}/notes/all`
       );
     },
-    enabled: !!companyId || isPolling,
+    enabled: !!userId || isPolling,
     refetchInterval: (query) => {
       const notes = query.state?.data?.data.notes;
       if (!notes || !Array.isArray(notes) || notes.length === 0 || !isPolling) {
@@ -209,7 +211,7 @@ const Notes = ({ children }: any) => {
           <div className="px-4 grid w-full gap-x-6 md:grid-cols-2">
             
                <CreateYoutubeNote className="w-4 h-4" component={(
-                <Card className="hover:shadow-lg transition-shadow duration-200 bg-card hover:border-black pb-0 w-xs justify-self-end cursor-pointer">
+                <Card className="bg-white z-40  hover:shadow-lg transition-shadow duration-200 hover:border-black pb-0 w-xs justify-self-end cursor-pointer">
               {/* Subtle background decorative blob */}
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/5 blur-3xl group-hover:bg-red-500/10 transition-colors" />
 
@@ -243,7 +245,7 @@ const Notes = ({ children }: any) => {
               </CardContent> */}
             {/* </Card> */}
 
-            <Card className="hover:shadow-lg transition-shadow duration-200 bg-card hover:border-black pb-0 w-xs justify-self-start cursor-pointer">
+            <Card className="bg-white z-40 hover:shadow-lg transition-shadow duration-200 hover:border-black pb-0 w-xs justify-self-start cursor-pointer">
               {/* Decorative Organic Glow (Yellow) */}
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/5 blur-3xl group-hover:bg-amber-500/10 transition-colors" />
 
@@ -320,40 +322,51 @@ const Notes = ({ children }: any) => {
               </Button>
             </ButtonGroup>
           </div>
-          <div className="p-4 relative w-full flex flex-row justify-start">
-            <InputGroup>
-              {/* <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" /> */}
-              <Lottie
-                animationData={searchAnimation}
-                loop={true}
-                autoplay={true}
-                //style={{ width: '20px' }}
-                className=" absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform"
-              />
+          {/* ADAPTED SEARCH BLOCK */}
+          <div className="px-4 relative w-full flex flex-row justify-start mb-6 group">
+            {/* Organic Glow to match AIPromptInput */}
+            <div className="absolute -left-4 -top-4 h-24  rounded-full bg-pink-500/5 blur-3xl group-hover:bg-pink-500/10 transition-all pointer-events-none" />
+            
+            <div className="relative w-full max-w-full overflow-hidden rounded-xl border bg-white transition-all duration-300 hover:border-black hover:shadow-lg focus-within:border-black focus-within:shadow-lg">
+              <div className="flex items-center px-3 py-1">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/40 mr-2">
+                  {/* <Lottie
+                    animationData={searchAnimation}
+                    loop={true}
+                    autoplay={true}
+                    className="h-5 w-5"
+                  /> */}
+                  <Search className="w-4 h-4" />
+                </div>
 
-              <InputGroupInput
-                placeholder={t("Search notes...")}
-                value={searchQuery}
-                onChange={(e) => {
-                  posthog.capture("note_searched", {
-                    userId,
-                    email,
-                    name: e.target.value,
-                  });
-                  setSearchQuery(e.target.value);
-                  debouncedSearch(e.target.value);
-                }}
-                className="pl-10 w-2xl z-30"
-              />
-              {searchNotesQuery.isPending ? (
-                <InputGroupAddon align="inline-end">
-                  <Loader2Icon className="animate-spin text-pink-500" />
-                </InputGroupAddon>
-              ) : (
-                <div className="w-[28px]" />
-              )}
-            </InputGroup>
+                <input
+                  placeholder={t("Search notes...")}
+                  value={searchQuery}
+                  onChange={(e) => {
+                    posthog.capture("note_searched", { userId, email, name: e.target.value });
+                    setSearchQuery(e.target.value);
+                    debouncedSearch(e.target.value);
+                  }}
+                  className="flex-1 w-full bg-transparent border-none focus:ring-0 text-base py-1 outline-none placeholder:text-muted-foreground/50 font-medium"
+                />
+
+                <AnimatePresence>
+                  {searchNotesQuery.isPending && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.8 }} 
+                      animate={{ opacity: 1, scale: 1 }} 
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="pr-2"
+                    >
+                      <Loader2Icon className="animate-spin text-pink-500 h-5 w-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           </div>
+
+      
           <div
             className={
               viewMode === "grid"
@@ -362,33 +375,32 @@ const Notes = ({ children }: any) => {
             }
           >
             {searchQuery && searchNotesQuery.isPending ? (
-              <div className="max-w-4xl flex  flex-row justify-center m-auto mt-8 mb-8">
-                <LoaderIcon
-                  role="status"
-                  aria-label="Loading"
-                  className={cn("size-8 animate-spin ")}
-                />
+              <div className="col-span-full flex flex-col items-center justify-center py-20">
+                <div className="relative">
+                   {/* <LoaderIcon className="size-12 animate-spin text-slate-200" /> */}
+                   {/* <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-2 w-2 bg-pink-500 rounded-full animate-pulse" />
+                   </div> */}
+                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+                </div>
+                <p className="mt-4 text-slate-400 font-medium animate-pulse">{t("Searching your library...")}</p>
               </div>
-            ) : searchQuery &&
-              searchNotesQuery.isFetched &&
-              searchNotesQuery.data?.length === 0 ? (
-              <div className="flex flex-col items-center mt-8 mb-8">
-                <SearchX className="text-muted-foreground" size={70} />
-                <h2 className="scroll-m-20  pb-2 text-3xl font-semibold text-muted-foreground mt-4">
+            ) : searchQuery && searchNotesQuery.isFetched && searchNotesQuery.data?.length === 0 ? (
+              <div className="col-span-full flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
+                <SearchX className="text-slate-300" size={60} strokeWidth={1.5} />
+                <h2 className="text-xl font-bold text-slate-400 mt-4 tracking-tight">
                   {t("No results found")}
                 </h2>
+                <p className="text-slate-400 text-sm mt-1">{t("Try adjusting your keywords or filters")}</p>
               </div>
             ) : (
               <SortableGrid
-                data={
-                  searchQuery
-                    ? searchNotesQuery.data || []
-                    : notesQuery?.data?.data?.notes
-                }
+                data={searchQuery ? searchNotesQuery.data || [] : notesQuery?.data?.data?.notes}
                 view={viewMode}
-                setView={setViewMode}
+                // setView={setViewMode}
               />
             )}
+
           </div>
         </div>
       </div>

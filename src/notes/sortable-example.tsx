@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils"; // Assuming you have this utility from shadcn/ui
-import NoteCard from "./note-card";
+import { NoteCard } from "./note-card";
+// import NoteCard2 from "./note-card";
 
 
 export default function SortableGrid({ data, view }) {
@@ -23,7 +24,11 @@ export default function SortableGrid({ data, view }) {
         For example:
         <Sortable value={items} onValueChange={handleValueChange} getItemValue={getItemValue}>
       */}
+      {/* {items.map((item) => <NoteCard0  item={item}  view={view}/> )} */}
       {items.map((item) => <NoteCard  item={item}  view={view}/> )}
+      {/* {items.map((item) => <NoteCard2  item={item}  view={view}/> )}
+      {items.map((item) => <NoteCard3  item={item}  view={view}/> )}
+      {items.map((item) => <NoteCard4  item={item}  view={view}/> )} */}
       {/* 
         </Sortable> 
       */}

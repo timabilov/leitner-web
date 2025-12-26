@@ -43,7 +43,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-card";
+import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
 import { toast } from "sonner";
 import JSZip from "jszip";
 import Zoom from "react-medium-image-zoom";

@@ -32,8 +32,10 @@ import {
 } from "lucide-react";
 import { NoteCreationToast } from "./note-creation-toast";
 
+// Import your custom toast component
+
 // ============================================================================
-// 1. HOOK: useAudioRecorder (Restored Full Logic)
+// 1. HOOK: useAudioRecorder
 // ============================================================================
 const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
   const [status, setStatus] = useState<"idle" | "recording" | "paused">("idle");
@@ -191,8 +193,77 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
   const [files, setFiles] = useState<any[]>([]);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
-  const flowContext = useRef<any>({ toastId: null, progressInterval: null, zipData: null, noteId: null });
+  // --- FLOW CONTEXT (For Progress Tracking) ---
+  const flowContext = useRef<{
+    toastId: string | number | null;
+    progressInterval: NodeJS.Timeout | null;
+    zipData: any | null;
+    noteId: string | null;
+  }>({
+    toastId: null,
+    progressInterval: null,
+    zipData: null,
+    noteId: null
+  });
 
+  // --- PROGRESS HELPERS ---
+  
+  // Helper to render/update your custom toast
+  const updateToast = (step: string, progress: number, status: "loading" | "success" | "error" = "loading") => {
+    // If we have an ID, we dismiss specifically or let Sonner handle replacement
+    // Sonner's toast.custom returns an ID we can use to update
+    if (flowContext.current.toastId) {
+      toast.custom(
+        () => <NoteCreationToast step={step} progress={progress} status={status} />, 
+        { 
+          id: flowContext.current.toastId, 
+          duration: status === 'success' ? 4000 : Infinity // Auto dismiss on success only
+        }
+      );
+    } else {
+       const id = toast.custom(
+        () => <NoteCreationToast step={step} progress={progress} status={status} />, 
+        { duration: Infinity }
+      );
+      flowContext.current.toastId = id;
+    }
+  };
+
+  const startSimulatedProgress = (stepName: string, startFrom = 0) => {
+    if (flowContext.current.progressInterval) clearInterval(flowContext.current.progressInterval);
+    let current = startFrom;
+    
+    // Initial update
+    updateToast(stepName, current, "loading");
+    
+    flowContext.current.progressInterval = setInterval(() => {
+      // Increment randomly to look natural, cap at 90% until next step actually finishes
+      current = Math.min(current + (Math.random() * 5), 90);
+      updateToast(stepName, current, "loading");
+    }, 400);
+  };
+
+  const stopProgress = () => { 
+    if (flowContext.current.progressInterval) clearInterval(flowContext.current.progressInterval); 
+  };
+
+  const handleError = (error: any, stepName: string) => {
+    stopProgress();
+    console.error(error);
+    
+    const isPlanLimit = error?.status === 403;
+    const msg = isPlanLimit ? "Please upgrade your subscription plan" : "Failed to prepare note";
+
+    updateToast(msg, 0, "error");
+    
+    // Cleanup after error display
+    setTimeout(() => {
+        toast.dismiss(flowContext.current.toastId!);
+        flowContext.current.toastId = null;
+    }, 4000);
+  };
+
+  // --- AUDIO LOGIC ---
   const handleAudioStop = useCallback(async (audioBlob: Blob) => {
     let finalBlob = audioBlob;
     let extension = "webm";
@@ -235,43 +306,113 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
     onDrop, noClick: true, accept: { "image/*": [], "application/pdf": [], "audio/*": [] },
   });
 
-  // --- Mutations (Preserved Chain) ---
+  // --- MUTATIONS ---
   const draftNoteMutation = useMutation({
     mutationFn: (newNote: any) => axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/create`, newNote),
     onSuccess: (res) => {
+      stopProgress();
       flowContext.current.noteId = res?.data.id;
+      // Start next step visual
       generateUploadLinkMutation.mutate({ noteId: res?.data.id, file_name: flowContext.current.zipData.fileName });
-    }
+    },
+    onError: (e: any) => handleError(e, "Draft creation")
   });
 
   const generateUploadLinkMutation = useMutation({
-    mutationFn: ({ file_name, noteId }: any) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/generateFileUploadLink`, { file_name }),
+    mutationFn: ({ file_name, noteId }: any) => {
+        startSimulatedProgress(t("Preparing upload..."), 5);
+        return axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/generateFileUploadLink`, { file_name })
+    },
     onSuccess: async (res) => {
-      await uploadFileToCF(flowContext.current.noteId, res.data.upload_url, flowContext.current.zipData.zipBlob, flowContext.current.zipData.fileName, () => {});
-      markUploadAsFinishedMutation.mutate(flowContext.current.noteId!);
-    }
+      stopProgress(); // Stop simulation, start real upload tracking
+      
+      const { noteId, zipData } = flowContext.current;
+      
+      try {
+          updateToast(t("Uploading files..."), 0, "loading");
+          
+          await uploadFileToCF(
+              noteId, 
+              res.data.upload_url, 
+              zipData.zipBlob, 
+              zipData.fileName, 
+              (percentage) => {
+                 // Update toast with REAL progress
+                 updateToast(t("Uploading files..."), percentage, "loading");
+              }
+          );
+          
+          markUploadAsFinishedMutation.mutate(noteId!);
+      } catch (e) {
+          handleError(e, "Upload failed");
+      }
+    },
+    onError: (e: any) => handleError(e, "Upload link generation")
   });
 
   const markUploadAsFinishedMutation = useMutation({
-    mutationFn: (nId: string) => axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${nId}/setAsUploaded`, {}),
+    mutationFn: (nId: string) => {
+        startSimulatedProgress(t("Finalizing..."), 90);
+        return axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${nId}/setAsUploaded`, {})
+    },
     onSuccess: () => {
-      toast.success(t("Note created successfully!"));
-      setIsPolling(true); setPrompt(""); setFiles([]);
-    }
+      stopProgress();
+      // Show Success State with Lottie
+      updateToast(t("Note created successfully!"), 100, "success");
+      
+      setIsPolling(true);
+      
+      // Delay clearing inputs slightly so user sees success state
+      setTimeout(() => {
+          setPrompt(""); 
+          setFiles([]);
+          flowContext.current = { toastId: null, progressInterval: null, zipData: null, noteId: null };
+      }, 1000);
+    },
+    onError: (e: any) => handleError(e, "Finalization")
   });
 
+  // --- TRIGGER ---
   const saveNote = async () => {
     if (!prompt.trim() && files.length === 0) return;
+    
+    // 1. Initialize Toast
+    const id = toast.custom(
+        () => <NoteCreationToast step={t("Preparing content...")} progress={0} status="loading" />, 
+        { duration: Infinity }
+    );
+    flowContext.current.toastId = id;
+
     try {
+      startSimulatedProgress(t("Compressing files..."), 0);
+      
       const zip = await createZip2(files, prompt);
+      
+      stopProgress();
+      
+      if (!zip) throw new Error("Compression failed");
+      
       flowContext.current.zipData = zip;
-      draftNoteMutation.mutate({ note_type: "multi", name: t("New Recording"), file_name: zip.fileName, transcript: t("Not transcribed yet"), language: "en", folder_id: selectedFolder?.id });
-    } catch (e) { toast.error("Failed to prepare note"); }
+      
+      startSimulatedProgress(t("Creating note draft..."), 10);
+      
+      draftNoteMutation.mutate({ 
+          note_type: "multi", 
+          name: t("New Recording"), 
+          file_name: zip.fileName, 
+          transcript: t("Not transcribed yet"), 
+          language: "en", 
+          folder_id: selectedFolder?.id 
+      });
+      
+    } catch (e) { 
+        handleError(e, "Preparation"); 
+    }
   };
 
   const isSubmitting = draftNoteMutation.isPending || generateUploadLinkMutation.isPending || markUploadAsFinishedMutation.isPending;
 
-  // --- ORGANIC STYLING VARIANTS ---
+  // --- STYLING VARIANTS ---
   const containerVariants = {
     idle: { boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.05)" },
     active: { borderColor: "transparent", boxShadow: "0 0 0 4px rgba(245, 158, 11, 0.1)" },
@@ -280,7 +421,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
 
   return (
     <div className="w-full max-w-2xl mx-auto relative group">
-      {/* 1. ANIMATION CSS */}
       <style>{`
         @keyframes border-beam {
           0% { stroke-dashoffset: 1000; }
@@ -303,8 +443,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
         transition={{ duration: 0.3 }}
         className="relative rounded-[1rem] border bg-gradient-to-b from-card to-muted/40 p-3 transition-all overflow-hidden hover:border-black hover:shadow-lg"
       >
-        {/* 2. THE ANIMATED BORDER (ONE CONSISTENT AMBER LINE) */}
-
         <input {...getInputProps()} />
 
         <TextareaAutosize
@@ -344,26 +482,6 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
 
         {/* Nested Organic Action Bar */}
         <div className="relative z-20 flex justify-between items-center rounded-[1rem] bg-background/50 backdrop-blur-sm border border-border/40 p-1.5 mt-2 min-h-[48px]">
-        {/* <svg className="absolute inset-0 h-full w-full pointer-events-none rounded-[1rem] z-10 overflow-visible" preserveAspectRatio="none">
-          <rect
-            width="100%"
-            height="100%"
-            rx="2rem"
-            fill="none"
-            stroke="black"
-            strokeWidth="1"
-            pathLength="1000"
-            strokeDasharray="150 850" 
-            className="animate-border-beam"
-            style={{ 
-              opacity: recorder.status === "idle" ? 0.4 : 0, 
-              vectorEffect: "non-scaling-stroke",
-              strokeLinecap: "round",
-              transition: 'opacity 0.5s'
-            }}
-          />
-        </svg> */}
-
           <AnimatePresence mode="wait" initial={false}>
             {recorder.status === "idle" ? (
               <motion.div key="idle-tools" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex items-center gap-1 ml-1">

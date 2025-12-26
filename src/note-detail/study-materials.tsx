@@ -11,6 +11,7 @@ import {
   Sparkles
 } from "lucide-react";
 import typingAnimation from './typing.json';
+import { TypeAnimation } from 'react-type-animation';
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -190,7 +191,22 @@ export const StudyMaterials = ({
         <div className="flex flex-col items-center justify-center min-h-[400px]">
           <GenericAILoading
             mainTitle={noteQuery.data?.data?.name || t("Note name")}
-            subtitle={t("Generating study materials")}
+            subtitle={(
+              <TypeAnimation
+                sequence={[
+                  'Generating study materials', // Types this
+                  2000,                         // Waits 2s
+                  'Generating quizzes and flashcards',     // Deletes previous, types this
+                  2000                      // Waits 2s
+
+                ]}
+                wrapper="span"
+                speed={50}
+                repeat={Infinity}
+                className="text-muted-foreground" // Styling to match your organic theme
+                cursor={true}
+              />
+            )}
             description={t("Creating quizzes and flashcards tailored to this note.")}
             animationComponent={(
                 <Lottie 

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { TypeAnimation } from 'react-type-animation';
 
 const PlaceholderSparkleIcon = ({ className }) => (
   <svg

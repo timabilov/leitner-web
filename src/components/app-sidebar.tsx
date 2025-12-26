@@ -10,133 +10,138 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import {
-  Home,
-  FolderOpen,
-  Smartphone,
-  HatGlasses,
-  Handshake,
-} from "lucide-react";
+import { Home, FolderOpen, Smartphone, ShieldCheck, FileText } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next"; // Import the hook
+import { useTranslation } from "react-i18next";
 import { NavUser } from "./nav-user";
-import { Avatar } from "./ui/avatar";
 import CatPenIcon from "@/notes/cat-pen-icon";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export function AppSidebar({ fullName, photo, email, ...props }) {
-  const { t } = useTranslation(); // Initialize the hook
-  const location = useLocation();
-  const { pathname } = location;
+  const { t } = useTranslation();
+  const { pathname } = useLocation();
   const navigate = useNavigate();
+
   const items = [
-    {
-      title: t("Notes"),
-      url: "/",
-      icon: Home,
-      key: "/notes",
-    },
-    {
-      title: t("Folders"),
-      url: "#",
-      icon: FolderOpen,
-      key: "/folders",
-    },
-    {
-      title: t("App"),
-      url: "#",
-      icon: Smartphone,
-      key: "/app",
-    },
+    { title: t("Notes"), icon: Home, key: "/notes" },
+    { title: t("Folders"), icon: FolderOpen, key: "/folders" },
+    { title: t("App"), icon: Smartphone, key: "/app" },
   ];
 
-
-    // Helper for static footer links to keep code clean
   const footerLinks = [
-    { title: t("Privacy Policy"), icon: HatGlasses, action: () => {} },
-    { title: t("Terms of Service"), icon: Handshake, action: () => {} },
+    { title: t("Privacy"), icon: ShieldCheck, key: "/privacy" },
+    { title: t("Terms"), icon: FileText, key: "/terms" },
   ];
-
 
   return (
-    <Sidebar collapsible="none" className="h-auto border-r" {...props}>
-      <SidebarHeader className="border-b">
-        <SidebarMenu className="p-0.5">
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]"
-            >
-              <Link to="/login">
-                <Avatar className="h-8 w-8 rounded-full bg-gray-950 flex items-center mr-2">
-                  <CatPenIcon />
-                </Avatar>
-                <h3 className="scroll-m-20 text-3xl font-semibold tracking-tight menu-logo">
-                  {t("Leitner AI")}
-                </h3>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+    <Sidebar 
+      collapsible="none" 
+      className="border-r border-zinc-200/50 bg-white dark:bg-zinc-950 dark:border-zinc-800/50" 
+      {...props}
+    >
+      {/* 1. HEADER: Precise Branding */}
+      <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 gap-3">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 shadow-sm">
+          <CatPenIcon className="size-4.5" />
+        </div>
+        <span className="text-[14px] font-bold tracking-tighter text-zinc-900 dark:text-zinc-50">
+          Leitner AI
+        </span>
       </SidebarHeader>
-       <SidebarContent className="bg-muted/40">
+
+      <SidebarContent className="px-2 pt-4 gap-0">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1 relative">
+              <div className="px-3 mb-3">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">
+                  {t("Library")}
+                </span>
+              </div>
+              
               {items.map((item) => {
-                const isActive = pathname.startsWith(item.key);
-                console.log(isActive, " for ", item.key)
+                const isActive = pathname === item.key || (item.key !== "/" && pathname.startsWith(item.key));
+                
                 return (
-                   <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        onClick={() => navigate(item.key)}
-                        tooltip={item.title}
-                        isActive={isActive}
-                        className={cn(
-                          "h-10 w-full justify-start gap-3 px-3 transition-all",
-                          // FIX 2: We use specific colors. 
-                          // Light Mode Active: bg-zinc-900 (Black) text-white
-                          isActive 
-                            ? "data-[active=true]:bg-zinc-200 dark:data-[active=true]:bg-zinc-900 text-white font-medium hover:bg-zinc-800 hover:text-white dark:bg-zinc-50 dark:text-zinc-white" 
-                            : " active:text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
-                        )}
-                      >
-                        {item.icon && <item.icon />}
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      onClick={() => navigate(item.key)}
+                      className={cn(
+                        "h-9 px-3 transition-colors duration-200 rounded-md relative group",
+                        isActive ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                      )}
+                    >
+                      {/* --- ORGANIC BACKGROUND SLIDER --- */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeNav"
+                          className="absolute inset-0 bg-zinc-100 dark:bg-zinc-900 z-0 rounded-md"
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+
+                      {/* --- VERTICAL GRADIENT INDICATOR --- */}
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeIndicator"
+                          className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full z-10"
+                          style={{ backgroundImage: 'linear-gradient(to bottom, #FE5E5F, #C04796)' }}
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+
+                      {/* --- CONTENT --- */}
+                      <div className="relative z-10 flex items-center gap-3">
+                        <item.icon className={cn(
+                          "size-4 stroke-[1.8px] transition-colors",
+                          isActive ? "text-zinc-900 dark:text-zinc-50" : "opacity-70 group-hover:opacity-100"
+                        )} />
+                        <span className={cn(
+                          "text-sm font-medium tracking-tight",
+                          isActive ? "opacity-100" : "opacity-80"
+                        )}>
+                          {item.title}
+                        </span>
+                      </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 );
               })}
 
-              <SidebarSeparator className="my-2" />
+              <SidebarSeparator className="my-6 mx-3 bg-zinc-100 dark:bg-zinc-800" />
               
-              {/* Static Footer Links (Privacy/Terms) */}
+              <div className="px-3 mb-3">
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">
+                  {t("System")}
+                </span>
+              </div>
+
               {footerLinks.map((link) => (
                 <SidebarMenuItem key={link.title}>
                   <SidebarMenuButton
-                    className="h-10 w-full justify-start gap-3 px-3 text-zinc-600 hover:bg-zinc-200/50 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
-                    tooltip={link.title}
+                    onClick={() => navigate(link.key)}
+                    className="h-9 px-3 text-zinc-400 hover:bg-zinc-50 hover:text-zinc-900 dark:text-zinc-500 dark:hover:bg-zinc-900 transition-colors rounded-md"
                   >
-                    <link.icon />
-                    <span className="font-medium">{link.title}</span>
+                    <link.icon className="size-4 opacity-50" />
+                    <span className="text-sm font-medium tracking-tight">{link.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-
-      <SidebarFooter>
-      <NavUser
-        user={{
-          name: fullName,
-          email: email,
-          avatar: photo,
-        }}
-      />
+      {/* 3. FOOTER: NavUser */}
+      <SidebarFooter className="border-t border-zinc-200/50 dark:border-zinc-800/50 p-2">
+        <NavUser
+          user={{
+            name: fullName,
+            email: email,
+            avatar: photo,
+          }}
+        />
       </SidebarFooter>
     </Sidebar>
   );

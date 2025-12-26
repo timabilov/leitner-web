@@ -5,7 +5,7 @@ import { Loader2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Lottie from "lottie-react";
 import successAnimation from './done.json';
-
+import sadCat from './sad-cat.jpeg';
 
 interface NoteCreationToastProps {
   step: string;
@@ -53,7 +53,8 @@ export function NoteCreationToast({ step, progress, status }: NoteCreationToastP
             )}
 
             {status === "error" && (
-              <XCircle className="h-5 w-5" />
+              <img src={sadCat} />
+              // <XCircle className="h-5 w-5" />
             )}
           </div>
 

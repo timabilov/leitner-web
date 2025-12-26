@@ -12,6 +12,11 @@ import * as Sentry from "@sentry/react"; // 1. Import Sentry
 import { toast } from 'sonner';
 import { jwtDecode } from 'jwt-decode';
 import { usePostHog } from 'posthog-js/react'
+import OnboardingModal from '@/onboarding';
+
+
+
+// const dummy = {"idToken":"eyJhbGciOiJSUzI1NiIsImtpZCI6IjZhOTA2ZWMxMTlkN2JhNDZhNmE0M2VmMWVhODQyZTM0YThlZTA4YjQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyNDE2ODczNTI5ODUtdW1iMzVlZGNwMTAxMXI2MXRudmVrY2g1c3V1dTZsZGsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyNDE2ODczNTI5ODUtdW1iMzVlZGNwMTAxMXI2MXRudmVrY2g1c3V1dTZsZGsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTQ1NjU1NDQ5MzM1MTY0MTMwNDUiLCJlbWFpbCI6InRhZ2hpemFkZWhrYW1yYW45MkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmJmIjoxNzY2NDkxNTczLCJuYW1lIjoiS2FtcmFuIFRhZ2hpemFkZWgiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSXdERzhUQlA5elFQMVlLM0h0bGNzdzhMZHJ4TlJacG1NblBHUk5ILVBoM1JzRUJiRT1zOTYtYyIsImdpdmVuX25hbWUiOiJLYW1yYW4iLCJmYW1pbHlfbmFtZSI6IlRhZ2hpemFkZWgiLCJpYXQiOjE3NjY0OTE4NzMsImV4cCI6MTc2NjQ5NTQ3MywianRpIjoiOWYxNjVmMDk5ZDRmYjljODJhM2IwNjhhODcxMjg2YzNmMGQ1ZmYzOSJ9.LshYlaNJ1zb_sycbgT4IlfQCVIXceOiG7_sgRtzuZi_tXxDIyy3JIT1pL6Kqh_JeKOnqTiuEU_P-fFdb1Ozc6sLa6IZxOqg98jO4a_sQXejUGmhTRTuNhbpm5B-r4FMpHE2LaRmLD_KQEWMOUU2XDUr52gCegvCSykWB2WIpAn_7Wz7hQxTinaBcdVpvMcpX8dzcoWiqfXyoWsHXuFiWHMNPAyjnxOAIQPsI0GOJ0QwqkynRM7FEo7RwOIZsgqPqQcfZQQOqAsFVMkoh9wLb_s2AwELCtQHRzsGn0AODAWzgmwbersWv-baXZldjD5DE3WQuNjIqBDGyaUppbgWDYQ","user":{"id":"114565544933516413045","name":"Kamran Taghizadeh","email":"taghizadehkamran92@gmail.com","photo":"https://lh3.googleusercontent.com/a/ACg8ocIwDG8TBP9zQP1YK3Htlcsw8LdrxNRZpmMnPGRNH-Ph3RsEBbE=s96-c"},"platform":"web"}
 
 // --- 1. SVG Components (Unchanged) ---
 export const SparkleHot = ({ className }: { className?: string }) => (
@@ -194,258 +199,6 @@ export const FloatingBlobs = React.memo(() => {
   );
 });
 
-// --- 2. Main Login Component ---
-
-const LoginBase = () => {
-  const { t } = useTranslation(); 
-  const posthog = usePostHog()
-  const setAccessToken = useUserStore(state => state.setAccessToken);
-  const setRefreshToken = useUserStore(state => state.setRefreshToken);
-  const setUserData = useUserStore(state => state.setUserData);
-  const navigate = useNavigate();
-  
-  // Local state for UI
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
-  const messages = [
-    "Record, edit and learn smart",
-    "Create quizzes from your notes",
-    "Flashcards for better memory"
-  ];
-
-  // --- Backend Mutation ---
-  const googleVerifyMutation = useMutation({
-    mutationFn: (newUser: any) => {
-      // Sending access_token (mapped to idToken property) to backend
-      return axiosInstance.post(API_BASE_URL + '/auth/google/v2?verify=true', newUser);
-    },
-    onSuccess: (response, variables) => {
-      const data = response.data;
-      if (false) {
-        setAccessToken(data.access_token);
-        setRefreshToken(data.refresh_token);
-        posthog.identify( data.id ,{
-          email: variables.user.email,
-          companyId: data.company_id,
-          subsciption: data?.company?.subscription
-        })
-
-        navigate('/notes', {
-          state: {
-            idToken: variables.idToken,
-            email: variables.user.email,
-            name: variables.user.name,
-            photo: variables.user.photo,
-            finishUrl: '/auth/google/v2'
-          }
-        });
-      } else {
-        setAccessToken(data.access_token);
-        setRefreshToken(data.refresh_token);
-        localStorage.setItem('user-store', JSON.stringify({
-          state: { accessToken: data.access_token, refreshToken: data.refresh_token }
-        }));
-        setUserData(
-          data.id, data?.name, variables?.user?.email, data.company_id,
-          data?.company?.subscription, data.company.name,
-          data?.company?.trial_started_date && new Date(data.company.trial_started_date),
-          data?.company?.trial_days, variables?.user?.photo,
-          data?.company?.full_admin_access || false
-        );
-        navigate('/notes');
-      }
-      setIsGoogleLoading(false);
-    },
-    onError: (error: any) => {
-      console.error('Backend sign-in endpoint error:', error);
-      // Sentry: Capture backend error
-      Sentry.captureException(error, { tags: { action: 'google_login_verify' } });
-      const errorMessage = error.response?.data?.message || t('An error occurred during sign-in, please try again later or reach support.');
-      toast.error(errorMessage);
-      setIsGoogleLoading(false);
-    },
-  });
-
-  // --- Google Login Hook ---
-  const login = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setIsGoogleLoading(true);
-      try {
-        // 1. Fetch user info from Google using the Access Token
-        const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-        
-        if (!userInfoRes.ok) throw new Error("Failed to fetch user info from Google");
-        const googleUser = await userInfoRes.json();
-
-        // 2. Prepare payload for Backend
-        const backendData = {
-          // IMPORTANT: We use 'idToken' as the key to match existing backend DTO, 
-          // but we are sending the access_token. Ensure backend verifies via Google API.
-          idToken: tokenResponse.access_token,
-          user: {
-            id: googleUser.sub,
-            name: googleUser.name,
-            email: googleUser.email,
-            photo: googleUser.picture,
-          },
-          platform: 'web',
-        };
-
-        // 3. Call mutation
-        googleVerifyMutation.mutate(backendData);
-
-      } catch (error) {
-        console.error("Google Logic Error", error);
-        Sentry.captureException(error);
-        toast.error("Failed to retrieve Google profile.");
-        setIsGoogleLoading(false);
-      }
-    },
-    onError: () => {
-      toast.error("Google Login Failed");
-      setIsGoogleLoading(false);
-    }
-  });
-
-  const signIn = async (credentialResponse) => {
-    const idToken = credentialResponse.credential;
-    const decodedToken: any = jwtDecode(idToken);
-    posthog.capture("signin_clicked", {});
-    const userInfo = {
-      id: decodedToken.sub,
-      name: decodedToken.name,
-      email: decodedToken.email,
-      photo: decodedToken.picture,
-    };
-
-    try {
-      const backendData = {
-        idToken,
-        user: userInfo,
-        platform: 'web',
-      };
-      googleVerifyMutation.mutate(backendData);
-    } catch (error: any) {
-      console.error("Authentication Error:", error);
-      switch (error.code) {
-        case 'auth/popup-closed-by-user':
-          console.log("Sign-in cancelled by user.");
-          break;
-        case 'auth/popup-blocked-by-browser':
-          alert(t("Your browser blocked the sign-in popup. Please allow popups for this site and try again."));
-          break;
-        case 'auth/network-request-failed':
-          alert(t("A network error occurred. Please check your internet connection."));
-          break;
-        default:
-          alert(t("An unexpected error occurred during sign-in. Please try again."));
-          break;
-      }
-    }
-  };
-
-
-
-  // --- Headline Animation ---
-  const [index, setIndex] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prevIndex) => (prevIndex + 1) % messages.length);
-    }, 3500);
-    return () => clearInterval(timer);
-  }, [messages.length]);
-
-  return (
-    <div className="relative min-h-screen w-full text-slate-900 selection:bg-purple-100 font-sans overflow-hidden">
-      
-      {/* BACKGROUND LAYERS */}
-      <AnimatedGrid />
-      <FloatingBlobs />
-      <RisingBubbles />
-
-      {/* Floating Particles (Static Dust) */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[10%] top-[20%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-40"></div>
-        <div className="absolute right-[15%] top-[30%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-30"></div>
-      </div>
-
-      {/* Header */}
-      <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10">
-      </header>
-
-      {/* Main Content */}
-      <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
-        
-        {/* Social Proof */}
-        <div className="mb-12 flex flex-col items-center gap-2">
-          <div className="flex items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
-            <CatPenIcon className="h-10 w-10" strokeWidth={2.5} />
-          </div>
-            <h3 className="text-4xl font-bold tracking-tight text-slate-700">
-                  Leitner AI
-            </h3>
-        </div>
-
-        {/* Animated Headline */}
-        <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
-          <AnimatePresence mode="wait">
-            <motion.h1
-              key={index}
-              initial={{ y: 20, opacity: 0, filter: 'blur(10px)' }}
-              animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-              exit={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="text-4xl font-bold tracking-tight text-slate-700 md:text-4xl leading-[1.1] max-w-3xl mx-auto"
-            >
-              {messages[index]}
-              <span className="inline-block ml-3 align-middle">
-                <SparkleHot className="w-8 h-8 md:w-8 md:h-8" />
-              </span>
-            </motion.h1>
-          </AnimatePresence>
-        </div>
-
-        {/* Buttons */}
-        <div className="w-full max-w-sm space-y-4 flex flex-col items-center">
-          
-            <button onClick={signIn} className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2">
-             {isGoogleLoading ? (
-               <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-            ) : (
-               <GoogleColoredIcon className="h-7 w-7" />
-            )}
-            Continue with Google
-          </button>
-            <GoogleLogin shape="square" onSuccess={signIn} />
-
-
-         
-
-          {/* Apple Button */}
-           <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 focus:ring-offset-2">
-              <AppleLogo className="h-7 w-7 text-foreground" />
-            Continue with Apple
-          </button>
-        </div>
-
-        {/* Footer */}
-        <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
-          By signing in, you agree to our{" "}
-          <Link to="/terms" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-800">
-            Term of Use
-          </Link>{" "}
-          and{" "}
-          <Link to="/privacy" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-800">
-            Privacy Policy
-          </Link>
-        </p>
-
-      </main>
-    </div>
-  );
-};
 
 // --- Helper SVGs ---
 
@@ -468,11 +221,231 @@ function AppleLogo({ className }: { className?: string }) {
   );
 }
 
+
+// --- 2. Main Login Component ---
+
+const LoginBase = () => {
+  const { t } = useTranslation(); 
+  const posthog = usePostHog();
+  const navigate = useNavigate();
+  
+  const setAccessToken = useUserStore(state => state.setAccessToken);
+  const setRefreshToken = useUserStore(state => state.setRefreshToken);
+  const setUserData = useUserStore(state => state.setUserData);
+
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  
+  const [sessionData, setSessionData] = useState<any>(null);
+
+  const googleVerifyMutation = useMutation({
+    mutationFn: (newUser: any) => {
+      return axiosInstance.post(API_BASE_URL + '/auth/google/v2?verify=true', newUser);
+    },
+    onSuccess: async (response, variables) => {
+      const data = response.data;
+      
+      // Essential: Set tokens immediately so the /finish call is authorized
+      setAccessToken(data.access_token);
+      setRefreshToken(data.refresh_token);
+      localStorage.setItem('user-store', JSON.stringify({
+        state: { accessToken: data.access_token, refreshToken: data.refresh_token }
+      }));
+
+      if (data?.new) {
+        setSessionData({
+          id: data.id,
+          idToken: variables.idToken,
+          email: variables.user.email,
+          name: data.name || variables.user.name,
+          photo: variables.user.photo || data.avatar,
+          companyId: data.company_id,
+          subscription: data?.company?.subscription,
+          companyName: data?.company?.name,
+          trialDate: data?.company?.trial_started_date,
+          trialDays: data?.company?.trial_days,
+          fullAdmin: data?.company?.full_admin_access || false
+        });
+        setShowOnboarding(true);
+        posthog.identify(data.id, { email: variables.user.email, new_user: true });
+      } else {
+        // Existing user flow
+        setUserData(data.id, data?.name, variables?.user?.email, data.company_id, data?.company?.subscription, data.company.name, data?.company?.trial_started_date && new Date(data.company.trial_started_date), data?.company?.trial_days, variables?.user?.photo, data?.company?.full_admin_access || false);
+        navigate('/notes', { replace: true });
+      }
+      setIsGoogleLoading(false);
+    },
+    onError: (error: any) => {
+      Sentry.captureException(error);
+      toast.error(t('An error occurred during sign-in.'));
+      setIsGoogleLoading(false);
+    },
+  });
+
+  const handleFinishOnboarding = async () => {
+    if (!sessionData) return;
+    
+    setIsFinishing(true);
+    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    try {
+      // 1. Call the finish endpoint
+      const response = await axiosInstance.post(API_BASE_URL + "/auth/apple/finish", {
+        platform: 'web',
+        idToken: sessionData.idToken,
+        email: sessionData.email,
+        name: sessionData.name,
+        photo: sessionData.photo,
+        utm_source: 'web_onboarding',
+        time_zone: userTimeZone
+      });
+
+      // 2. Show success visual in modal
+      setIsSuccess(true);
+      setIsFinishing(false);
+
+      // 3. Update the global store (Wait for visual satisfaction)
+      
+        // console.log()
+        setUserData(
+          response?.data?.id, 
+          sessionData.name, 
+          sessionData.email, 
+          response?.data?.company_id,
+          sessionData.subscription, 
+          sessionData.companyName,
+          sessionData.trialDate && new Date(sessionData.trialDate),
+          sessionData.trialDays, 
+          sessionData.photo, 
+          sessionData.fullAdmin
+        );
+        setTimeout(() => {
+        // 4. Force the redirect
+        navigate('/notes', { replace: true });
+      }, 1800); // Give user time to see the "Success" state
+
+    } catch (error) {
+      console.error("Error finishing onboarding:", error);
+      setIsFinishing(false);
+      toast.error(t("Failed to finalize profile. Please try again."));
+    }
+  };
+
+
+  const signIn = async (credentialResponse: any) => {
+    const idToken = credentialResponse.credential;
+    const decodedToken: any = jwtDecode(idToken);
+    setIsGoogleLoading(true);
+    googleVerifyMutation.mutate({
+      idToken,
+      user: { id: decodedToken.sub, name: decodedToken.name, email: decodedToken.email, photo: decodedToken.picture },
+      platform: 'web',
+    });
+  };
+
+
+  const [index, setIndex] = useState(0);
+  
+   // 1. Define messages here so the useEffect can find it
+  const messages = useMemo(() => [
+    "Record, edit and learn smart",
+    "Create quizzes from your notes",
+    "Flashcards for better memory"
+  ], []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prevIndex) => (prevIndex + 1) % messages.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [messages.length]);
+
+  return (
+    <div className="relative min-h-screen w-full text-slate-900 selection:bg-purple-100 font-sans overflow-hidden">
+      
+      <AnimatedGrid />
+       <OnboardingModal 
+        isOpen={showOnboarding} 
+        t={t} 
+        isFinishing={isFinishing}
+        isSuccess={isSuccess}
+        onFinish={handleFinishOnboarding} 
+      />
+
+      <FloatingBlobs />
+      <RisingBubbles />
+
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute left-[10%] top-[20%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-40"></div>
+        <div className="absolute right-[15%] top-[30%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-30"></div>
+      </div>
+
+      <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10"></header>
+
+      <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
+        <div className="mb-12 flex flex-col items-center gap-2">
+          <div className="flex items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
+            <CatPenIcon className="h-10 w-10" strokeWidth={2.5} />
+          </div>
+          <h3 className="text-4xl font-bold tracking-tight text-slate-700">Leitner AI</h3>
+        </div>
+
+        <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.h1
+              key={index}
+              initial={{ y: 20, opacity: 0, filter: 'blur(10px)' }}
+              animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
+              exit={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="text-4xl font-bold tracking-tight text-slate-700 md:text-4xl leading-[1.1] max-w-3xl mx-auto"
+            >
+              {t(messages[index])}
+              <span className="inline-block ml-3 align-middle">
+                <SparkleHot className="w-8 h-8 md:w-8 md:h-8" />
+              </span>
+            </motion.h1>
+          </AnimatePresence>
+        </div>
+
+        <div className="w-full max-w-sm space-y-4 flex flex-col items-center">
+          <button disabled={isGoogleLoading} onClick={() => {}} className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
+            {isGoogleLoading ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900"></div>
+            ) : (
+              <GoogleColoredIcon className="h-7 w-7" />
+            )}
+            <div className="absolute inset-0 opacity-0 overflow-hidden">
+               <GoogleLogin shape="square" onSuccess={signIn} />
+            </div>
+            Continue with Google
+          </button>
+
+          <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
+            <AppleLogo className="h-7 w-7 text-foreground" />
+            Continue with Apple
+          </button>
+        </div>
+
+        <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
+          By signing in, you agree to our{" "}
+          <Link to="/terms" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-800">Term of Use</Link>
+          {" "}and{" "}
+          <Link to="/privacy" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-800">Privacy Policy</Link>
+        </p>
+      </main>
+    </div>
+  );
+};
+
 // 3. Export with Sentry Wrappers
 const Login = Sentry.withProfiler(
   Sentry.withErrorBoundary(LoginBase, {
     fallback: <div className="flex h-screen w-full items-center justify-center">Error loading login. Please refresh.</div>
   })
 );
+
 
 export default Login;

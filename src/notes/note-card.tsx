@@ -1,289 +1,126 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import {
-  FolderOpenDot,
-  Youtube,
-  BellOff,
-  BellRing,
-  AudioLines,
-  Image,
-  TriangleAlert,
-  File,
-  School2Icon,
-  Text,
-} from "lucide-react";
-import { ISO_TO_LANGUAGE } from "@/services/config";
-import { GradientProgress } from "@/components/gradient-progress";
 import { useUserStore } from "@/store/userStore";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import { useNavigate } from "react-router";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useTranslation } from "react-i18next"; // Import the hook
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { GradientProgress } from "@/components/gradient-progress";
 import { SortableItem } from "./sortable";
-import Lottie from "lottie-react";
-import audioAnimation from './recording.json';
-import folderAnimation from './folder.json';
-import imageAnimation from './image.json';
-import pdfAnimation from './pdf.json';
-import youtubeAnimation from './youtube.json';
+import { 
+  BellRing, BellOff, TriangleAlert, 
+  Folder, Clock 
+} from "lucide-react";
+import { getTypeIcon, getNoteLanguageIso } from "./note-utils";
+import ProcessingNoteCard from './processing-note-card';
 
-const gridItemClasses = {
-  grid: "flex-col min-h-[140px]",
-  list: "flex-row items-center",
-};
-
-export const getTypeIcon = (type: string, size?: number) => {
-  const iconsSizeClass = size ? `h-${size} w-${size}` : "h-5 w-5";
-  switch (type) {
-    case "multi":
-      return (
-        <FolderOpenDot className={"text-muted-foreground " + iconsSizeClass} />
-        // <Lottie 
-        //     animationData={folderAnimation} 
-        //     loop={true} 
-        //     autoplay={true}
-        //     //style={{ width: "100%", height: "100%" }}
-        //     className={"text-muted-foreground " + iconsSizeClass}
-        //   />
-      );
-    case "youtube":
-      return (
-      <Youtube className={"text-muted-foreground " + iconsSizeClass} />
-      //  <Lottie 
-      //       animationData={youtubeAnimation} 
-      //       loop={true} 
-      //       autoplay={true}
-      //       //style={{ width: "100%", height: "100%" }}
-      //       className={"text-muted-foreground " + iconsSizeClass}
-      //     />
-    )
-    case "audio":
-      return (
-        <AudioLines className={"text-muted-foreground " + iconsSizeClass} />
-        // <Lottie 
-        //     animationData={audioAnimation} 
-        //     loop={true} 
-        //     autoplay={true}
-        //     //style={{ width: "100%", height: "100%" }}
-        //     className={"text-muted-foreground " + iconsSizeClass}
-        //   />
-      );
-    case "image":
-      return (
-      <Image className={"text-muted-foreground " + iconsSizeClass} />
-      // <Lottie 
-      //       animationData={imageAnimation} 
-      //       loop={true} 
-      //       autoplay={true}
-      //       //style={{ width: "100%", height: "100%" }}
-      //       className={"text-muted-foreground " + iconsSizeClass}
-      //     />
-      )
-    case "pdf":
-      return (
-      <File className={"text-muted-foreground " + iconsSizeClass} />
-      //  <Lottie 
-      //       animationData={pdfAnimation} 
-      //       loop={true} 
-      //       autoplay={true}
-      //       //style={{ width: "100%", height: "100%" }}
-      //       className={"text-muted-foreground " + iconsSizeClass}
-      //     />
-      )
-    case "test":
-      return (
-        <School2Icon className={"text-muted-foreground " + iconsSizeClass} />
-      );
-    case "text":
-      return <Text className={"text-muted-foreground " + iconsSizeClass} />;
-    default:
-      return (
-        <FolderOpenDot className={"text-muted-foreground " + iconsSizeClass} />
-      );
-  }
-};
-
-export const getNoteLanguageIso = (lang) => {
-  const languageInfo = Object.values(ISO_TO_LANGUAGE).find(
-    (info) => info.lng_code === lang
-  );
-  return languageInfo ? languageInfo.flag : "🏳️";
-};
-
-const NoteCard = ({ item, view }) => {
+export const NoteCard = ({ item, view }) => {
   const { folders } = useUserStore();
   const navigate = useNavigate();
-  const { t } = useTranslation(); // Initialize the translation function
+  const { t } = useTranslation();
+
+  const isProcessing = item?.status !== "failed" && item?.status !== "transcribed" && item?.status !== "draft";
+  const hasError = !!item?.processing_error_message;
   const progress = item?.note_progress || 0;
-  let isItemProcessing =
-    item?.status !== "failed" &&
-    item?.status !== "transcribed" &&
-    item?.status !== "draft";
-  let isDraft = item.status === "draft";
+  const folderName = item.folder_id ? folders?.find(f => f.id === item.folder_id)?.name : t("All notes");
+
+  // Semantic Shadcn tokens: bg-card, border-border, text-card-foreground
+  const cardBase = "group relative bg-card border border-border transition-all duration-200 hover:border-foreground/30 overflow-hidden cursor-pointer rounded-xl";
+
+  if (isProcessing) {
+    return <ProcessingNoteCard view={view} />;
+  }
 
   return (
     <SortableItem key={item.id} value={item.id}>
-      <div
-        className={cn(
-          "group bg-background border-border hover:bg-accent/50 relative cursor-pointer rounded-lg border p-3 transition-colors flex",
-          gridItemClasses[view]
-        )}
+      <motion.div
+        layout
         onClick={() => navigate(`/notes/${item.id}`)}
+        className={cn(
+          cardBase,
+          view === "grid" ? "flex flex-col p-5 h-full" : "flex items-center p-3 gap-4"
+        )}
       >
-        {/* --- LIST VIEW RENDER --- */}
-        {view === "list" &&
-          (isItemProcessing ? (
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="bg-muted flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg mr-4">
-                {getTypeIcon(item.note_type)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-row items-center">
-                  {item?.processing_error_message && (
-                    <TriangleAlert className="text-red-500 w-4 h-4 mr-1" />
-                  )}
-                  <h4 className="truncate text-sm font-medium">
-                    {item.name || t("Untitled Note")}
-                  </h4>
-                  <span className="text-muted-foreground ml-2 text-xs/2">
-                    {t("Folder")}: (
-                    {item.folder_id
-                      ? folders?.find((folder) => folder.id === item.folder_id)
-                          ?.name
-                      : t("All notes")}
-                    )
-                  </span>
-                </div>
-                <div className="flex flex-row items-center mt-1">
-                  <p className="text-muted-foreground text-xs">
-                    {new Date(item.created_at)?.toLocaleDateString("en-US")}
-                  </p>
-                  {progress > 0.0 && progress < 1.0 && !isItemProcessing && (
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <GradientProgress
-                          className="w-30 ml-2"
-                          value={Math.round(progress * 100)}
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom">
-                        <span>{t("Quiz progress")}</span>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center ml-4 flex-shrink-0">
-                <span className="text-lg">
-                  {getNoteLanguageIso(item.language)}
-                </span>
-                <Badge
-                  className={cn(
-                    "ml-4 h-8 w-8 p-0 flex items-center justify-center",
-                    item?.quiz_alerts_enabled &&
-                      "border-pink-300 bg-pink-100 dark:border-pink-300/10 dark:bg-pink-400/10"
-                  )}
-                >
-                  {item?.quiz_alerts_enabled ? (
-                    <BellRing className="h-4 w-4 stroke-pink-700 dark:stroke-pink-500" />
-                  ) : (
-                    <BellOff className="h-4 w-4" />
-                  )}
-                </Badge>
-              </div>
-            </>
-          ))}
+        {/* --- HEADER: ICON & FOLDER TEXT --- */}
+        <div className="flex items-center justify-between w-full mb-4">
+          {/* Icon Box using bg-muted */}
+          <div className={cn(
+            "flex items-center justify-center rounded-md border border-border/50 bg-muted/50 text-muted-foreground transition-colors group-hover:bg-background group-hover:text-foreground",
+            view === "grid" ? "w-9 h-9" : "w-8 h-8"
+          )}>
+            {getTypeIcon(item.note_type, 16)}
+          </div>
 
-        {/* --- GRID VIEW RENDER --- */}
-        {view === "grid" &&
-          (isItemProcessing ? (
-            <div className="flex flex-col  space-x-4 justify-between min-h-[100px]">
-              <div>
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px] mt-4" />
-              </div>
-              <div className="space-y-2 flex flex-row justify-between items-end">
-                <Skeleton className="h-4 w-[200px]" />
-                <Skeleton className="h-12 w-12 rounded-full" />
-              </div>
+          {/* Folder info using text-muted-foreground */}
+          <div className="flex items-center gap-1.5 text-muted-foreground/80">
+            <Folder size={12} strokeWidth={2.5} />
+            <span className="text-[10px] font-bold uppercase tracking-widest transition-colors group-hover:text-muted-foreground">
+              {folderName}
+            </span>
+          </div>
+        </div>
+
+        {/* --- CONTENT SECTION --- */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-2 mb-1">
+            {hasError && <TriangleAlert className="text-destructive w-4 h-4 shrink-0 mt-0.5" />}
+            <h4 className="text-sm font-bold   truncate group-hover:text-foreground transition-colors">
+              {item.name || t("Untitled Note")}
+            </h4>
+          </div>
+
+          {/* PROGRESS BAR */}
+          {progress > 0 && progress < 1 && !isProcessing && (
+            <div className="mt-3 w-3/4">
+               <GradientProgress value={Math.round(progress * 100)} className="h-1" />
             </div>
-          ) : (
-            <>
-              <div className="flex flex-row justify-between items-start">
-                <div className="truncate">
-                  <div className="flex flex-row items-center">
-                    {item?.processing_error_message && (
-                      <TriangleAlert className="text-red-500 w-4 h-4 mr-1" />
-                    )}
-                    <h4 className="truncate text-sm font-medium pr-2">
-                      {item.name || t("Untitled Note")}
-                    </h4>
-                  </div>
-                  <span className="text-muted-foreground text-xs/2">
-                    {item.folder_id
-                      ? folders?.find((folder) => folder.id === item.folder_id)
-                          ?.name
-                      : t("All notes")}
-                  </span>
-                </div>
-                <Badge
-                  className={cn(
-                    "h-8 w-8 p-0 flex flex-shrink-0 items-center justify-center",
-                    item?.quiz_alerts_enabled &&
-                      "border-pink-300 bg-pink-100 dark:border-pink-300/10 dark:bg-pink-400/10"
-                  )}
-                >
-                  {item?.quiz_alerts_enabled ? (
-                    <BellRing className="h-4 w-4 stroke-pink-700 dark:stroke-pink-500" />
-                  ) : (
-                    <BellOff className="h-4 w-4" />
-                  )}
-                </Badge>
+          )}
+        </div>
+
+        {/* --- METADATA SECTION --- */}
+        <div className={cn(
+          "flex items-center",
+          view === "grid" ? "mt-auto pt-4 border-t border-border/40 justify-between" : "ml-auto gap-6"
+        )}>
+          <div className="flex items-center gap-3">
+            {/* Language Flag with grayscale effect */}
+            <span className="text-base select-none grayscale-[0.4] group-hover:grayscale-0 transition-all opacity-90">
+              {getNoteLanguageIso(item.language)}
+            </span>
+            
+            {/* Date using muted-foreground */}
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock size={11} strokeWidth={2.5} />
+              <span className="text-[11px] font-medium tracking-tight whitespace-nowrap">
+                {new Date(item.created_at)?.toLocaleString("en-US", { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+          </div>
+
+          {/* ALERT TOGGLE (Shadcn Primary/Muted pattern) */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className={cn(
+                "flex items-center justify-center w-8 h-8 rounded-md transition-colors border",
+                item?.quiz_alerts_enabled 
+                  ? "bg-primary border-primary text-primary-foreground" 
+                  : "bg-muted border-transparent text-muted-foreground group-hover:border-border group-hover:text-foreground"
+              )}>
+                {item?.quiz_alerts_enabled ? <BellRing size={14} strokeWidth={2.5} /> : <BellOff size={14} />}
               </div>
-              <div className="flex-1" />
-              <div className="mt-2 flex items-center justify-between">
-                <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
-                  {getTypeIcon(item?.note_type)}
-                </div>
-                {progress > 0.0 && progress < 1.0 && !isItemProcessing && (
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <GradientProgress
-                        className="w-30 ml-2"
-                        value={Math.round(progress * 100)}
-                      />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <span>{t("Quiz progress")}</span>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">
-                    {getNoteLanguageIso(item?.language)}
-                  </span>
-                  <span className="text-muted-foreground text-xs">
-                    {new Date(item?.created_at)?.toLocaleDateString("en-US")}
-                  </span>
-                </div>
-              </div>
-            </>
-          ))}
-      </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="rounded-md bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-1 border-none">
+              <p>{item?.quiz_alerts_enabled ? t("Alerts Active") : t("Alerts Off")}</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </motion.div>
     </SortableItem>
   );
 };
-
-export default NoteCard;
