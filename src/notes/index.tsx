@@ -47,6 +47,7 @@ import searchAnimation from "./search.json";
 import youtubeAnimation from "./youtube.json";
 import folderAnimation from "./folder.json";
 import { AnimatePresence, motion } from "framer-motion";
+import { useDropzone } from "react-dropzone";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -62,6 +63,7 @@ const Notes = ({ children }: any) => {
   const [viewMode, setViewMode] = useState<string>("grid");
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [files, setFiles] = useState<any[]>([]);
   const { t } = useTranslation(); // Translation hook
 
   const notesQuery = useQuery({
@@ -147,6 +149,26 @@ const Notes = ({ children }: any) => {
   //   return redirect("/login");
   // }
 
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setFiles((prev) => [
+      ...prev,
+      ...acceptedFiles.map((f) =>
+        Object.assign(f, { preview: URL.createObjectURL(f) })
+      ),
+    ]);
+  }, []);
+
+  const {
+    getRootProps,
+    getInputProps,
+    isDragActive,
+    open: openFilePicker,
+  } = useDropzone({
+    onDrop,
+    noClick: true,
+    accept: { "image/*": [], "application/pdf": [], "audio/*": [] },
+  });
+
   return (
     <Layout
       search={debouncedSearch}
@@ -194,8 +216,8 @@ const Notes = ({ children }: any) => {
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className=" w-full max-w-2xl m-auto mt-8">
-            <Alert className="flex items-center justify-between border-none">
-              <Avatar className="h-18 w-18 rounded-full  flex items-center mr-2 animate-slow-bounce" >
+            <Alert className="flex items-center justify-between border-none bg-transparent">
+              <Avatar className="h-18 w-18 rounded-full  flex items-center mr-2 animate-slow-bounce">
                 <CatPenIcon />
               </Avatar>
               <div className="flex-1 flex-col justify-between gap-1">
@@ -209,31 +231,33 @@ const Notes = ({ children }: any) => {
             </Alert>
           </div>
           <div className="px-4 grid w-full gap-x-6 md:grid-cols-2">
-            
-               <CreateYoutubeNote className="w-4 h-4" component={(
+            <CreateYoutubeNote
+              className="w-4 h-4"
+              component={
                 <Card className="bg-white z-40  hover:shadow-lg transition-shadow duration-200 hover:border-black pb-0 w-xs justify-self-end cursor-pointer">
-              {/* Subtle background decorative blob */}
-              <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/5 blur-3xl group-hover:bg-red-500/10 transition-colors" />
+                  {/* Subtle background decorative blob */}
+                  <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/5 blur-3xl group-hover:bg-red-500/10 transition-colors" />
 
-              <CardHeader className="pb-4">
-                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary/50 p-2 shadow-inner group-hover:scale-110 transition-transform duration-500">
-                  <Lottie
-                    animationData={youtubeAnimation}
-                    loop={true}
-                    className="w-6 h-6"
-                  />
-                </div>
-                <CardTitle className="text-md tracking-tight text-zinc-600">
-                  {t("YouTube")}
-                </CardTitle>
-                <CardDescription className="leading-normal">
-                  {t("For youtube videos (max 2 hours)")}
-                </CardDescription>
-              </CardHeader>
-              </Card>
-               )}/>
+                  <CardHeader className="pb-4">
+                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary/50 p-2 shadow-inner group-hover:scale-110 transition-transform duration-500">
+                      <Lottie
+                        animationData={youtubeAnimation}
+                        loop={true}
+                        className="w-6 h-6"
+                      />
+                    </div>
+                    <CardTitle className="text-md tracking-tight text-zinc-600">
+                      {t("YouTube")}
+                    </CardTitle>
+                    <CardDescription className="leading-normal">
+                      {t("For youtube videos (max 2 hours)")}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              }
+            />
 
-              {/* <CardContent className="pt-0  border-t">
+            {/* <CardContent className="pt-0  border-t">
                 <div className="flex items-center justify-between rounded-2xl bg-background/50 p-4 transition-colors group-hover:bg-background">
                   <span className="text-sm font-semibold text-foreground/80">
                     {t("Create Note")}
@@ -245,7 +269,10 @@ const Notes = ({ children }: any) => {
               </CardContent> */}
             {/* </Card> */}
 
-            <Card className="bg-white z-40 hover:shadow-lg transition-shadow duration-200 hover:border-black pb-0 w-xs justify-self-start cursor-pointer">
+            <Card
+              onClick={openFilePicker}
+              className="bg-white z-40 hover:shadow-lg transition-shadow duration-200 hover:border-black pb-0 w-xs justify-self-start cursor-pointer"
+            >
               {/* Decorative Organic Glow (Yellow) */}
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/5 blur-3xl group-hover:bg-amber-500/10 transition-colors" />
 
@@ -281,7 +308,15 @@ const Notes = ({ children }: any) => {
             </Card>
           </div>
           <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
-            <AIPromptInput setIsPolling={setIsPolling} />
+            <AIPromptInput
+              setIsPolling={setIsPolling}
+              files={files}
+              setFiles={setFiles}
+              openFilePicker={openFilePicker}
+              getInputProps={getInputProps}
+              getRootProps={getRootProps}
+              isDragActive={isDragActive}
+            />
           </div>
           <div className="sm:flex justify-between p-4 mt-4">
             <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
@@ -326,7 +361,7 @@ const Notes = ({ children }: any) => {
           <div className="px-4 relative w-full flex flex-row justify-start mb-6 group">
             {/* Organic Glow to match AIPromptInput */}
             <div className="absolute -left-4 -top-4 h-24  rounded-full bg-pink-500/5 blur-3xl group-hover:bg-pink-500/10 transition-all pointer-events-none" />
-            
+
             <div className="relative w-full max-w-full overflow-hidden rounded-xl border bg-white transition-all duration-300 hover:border-black hover:shadow-lg focus-within:border-black focus-within:shadow-lg">
               <div className="flex items-center px-3 py-1">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/40 mr-2">
@@ -343,7 +378,11 @@ const Notes = ({ children }: any) => {
                   placeholder={t("Search notes...")}
                   value={searchQuery}
                   onChange={(e) => {
-                    posthog.capture("note_searched", { userId, email, name: e.target.value });
+                    posthog.capture("note_searched", {
+                      userId,
+                      email,
+                      name: e.target.value,
+                    });
                     setSearchQuery(e.target.value);
                     debouncedSearch(e.target.value);
                   }}
@@ -352,9 +391,9 @@ const Notes = ({ children }: any) => {
 
                 <AnimatePresence>
                   {searchNotesQuery.isPending && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.8 }} 
-                      animate={{ opacity: 1, scale: 1 }} 
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.8 }}
                       className="pr-2"
                     >
@@ -366,7 +405,6 @@ const Notes = ({ children }: any) => {
             </div>
           </div>
 
-      
           <div
             className={
               viewMode === "grid"
@@ -377,30 +415,45 @@ const Notes = ({ children }: any) => {
             {searchQuery && searchNotesQuery.isPending ? (
               <div className="col-span-full flex flex-col items-center justify-center py-20">
                 <div className="relative">
-                   {/* <LoaderIcon className="size-12 animate-spin text-slate-200" /> */}
-                   {/* <div className="absolute inset-0 flex items-center justify-center">
+                  {/* <LoaderIcon className="size-12 animate-spin text-slate-200" /> */}
+                  {/* <div className="absolute inset-0 flex items-center justify-center">
                       <div className="h-2 w-2 bg-pink-500 rounded-full animate-pulse" />
                    </div> */}
-                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
                 </div>
-                <p className="mt-4 text-slate-400 font-medium animate-pulse">{t("Searching your library...")}</p>
+                <p className="mt-4 text-slate-400 font-medium animate-pulse">
+                  {t("Searching your library...")}
+                </p>
               </div>
-            ) : searchQuery && searchNotesQuery.isFetched && searchNotesQuery.data?.length === 0 ? (
+            ) : searchQuery &&
+              searchNotesQuery.isFetched &&
+              searchNotesQuery.data?.length === 0 ? (
               <div className="col-span-full flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-[2rem] border border-dashed border-slate-200">
-                <SearchX className="text-slate-300" size={60} strokeWidth={1.5} />
+                <SearchX
+                  className="text-slate-300"
+                  size={60}
+                  strokeWidth={1.5}
+                />
                 <h2 className="text-xl font-bold text-slate-400 mt-4 tracking-tight">
                   {t("No results found")}
                 </h2>
-                <p className="text-slate-400 text-sm mt-1">{t("Try adjusting your keywords or filters")}</p>
+                <p className="text-slate-400 text-sm mt-1">
+                  {t("Try adjusting your keywords or filters")}
+                </p>
               </div>
             ) : (
               <SortableGrid
-                data={searchQuery ? searchNotesQuery.data || [] : notesQuery?.data?.data?.notes}
+                data={
+                  searchQuery
+                    ? searchNotesQuery.data || []
+                    : notesQuery?.data?.data?.notes
+                }
                 view={viewMode}
                 // setView={setViewMode}
               />
             )}
 
+            <input {...getInputProps()} />
           </div>
         </div>
       </div>

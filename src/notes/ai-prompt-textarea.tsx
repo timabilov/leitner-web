@@ -31,6 +31,7 @@ import {
   ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2, ArrowUp, AudioLinesIcon
 } from "lucide-react";
 import { NoteCreationToast } from "./note-creation-toast";
+import AIArrow from "./AiArrow";
 
 // Import your custom toast component
 
@@ -184,13 +185,12 @@ const AudioPreview = ({ file, onRemove }: { file: any, onRemove: () => void }) =
 // ============================================================================
 // 3. MAIN COMPONENT: AIPromptInput
 // ============================================================================
-export function AIPromptInput({ portalContainer, setIsPolling }: any) {
+export function AIPromptInput({  setIsPolling, openFilePicker, files, setFiles, getInputProps, getRootProps, isDragActive }: any) {
   const { t } = useTranslation();
   const posthog = usePostHog();
   const { companyId, userId, email, selectedFolder } = useUserStore();
   
   const [prompt, setPrompt] = useState("");
-  const [files, setFiles] = useState<any[]>([]);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   // --- FLOW CONTEXT (For Progress Tracking) ---
@@ -293,18 +293,13 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
     return `${minutes}:${seconds}`;
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    setFiles((prev) => [...prev, ...acceptedFiles.map(f => Object.assign(f, { preview: URL.createObjectURL(f) }))]);
-  }, []);
 
   const removeFile = (fileToRemove: any) => {
     setFiles(files.filter(f => f !== fileToRemove));
     URL.revokeObjectURL(fileToRemove.preview);
   };
 
-  const { getRootProps, getInputProps, isDragActive, open: openFilePicker } = useDropzone({
-    onDrop, noClick: true, accept: { "image/*": [], "application/pdf": [], "audio/*": [] },
-  });
+
 
   // --- MUTATIONS ---
   const draftNoteMutation = useMutation({
@@ -550,9 +545,9 @@ export function AIPromptInput({ portalContainer, setIsPolling }: any) {
               onClick={saveNote} 
               size="icon" 
               disabled={isSubmitting || recorder.status === "recording"} 
-              className="rounded-full h-10 w-10 bg-pink-500 hover:bg-pink-600 text-white shadow-lg shadow-pink-500/20 transition-all active:scale-95"
+              className="rounded-full h-10 w-10 bg-black hover:bg-black-600 text-white shadow-lg shadow-black/20 transition-all active:scale-95"
             >
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : <ArrowUp className="h-5 w-5" strokeWidth={2.5} />}
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : <AIArrow className="h-5 w-5" strokeWidth={5} />}
             </Button>
           </div>
         </div>

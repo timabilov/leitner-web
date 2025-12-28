@@ -10,7 +10,7 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Home, FolderOpen, Smartphone, ShieldCheck, FileText } from "lucide-react";
+import { Home, FolderOpen, Smartphone, ShieldCheck, FileText, Handshake, HatGlasses } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { NavUser } from "./nav-user";
@@ -30,8 +30,8 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
   ];
 
   const footerLinks = [
-    { title: t("Privacy"), icon: ShieldCheck, key: "/privacy" },
-    { title: t("Terms"), icon: FileText, key: "/terms" },
+    { title: t("Privacy"), icon: HatGlasses, key: "/privacy" },
+    { title: t("Terms"), icon: Handshake, key: "/terms" },
   ];
 
   return (
@@ -45,7 +45,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 shadow-sm">
           <CatPenIcon className="size-4.5" />
         </div>
-        <span className="text-[14px] font-bold tracking-tighter text-zinc-900 dark:text-zinc-50">
+        <span className="text-[20px] font-bold tracking-tighter text-zinc-900 dark:text-zinc-50">
           Leitner AI
         </span>
       </SidebarHeader>
@@ -86,7 +86,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                         <motion.div
                           layoutId="activeIndicator"
                           className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full z-10"
-                          style={{ backgroundImage: 'linear-gradient(to bottom, #FE5E5F, #C04796)' }}
+                          style={{ backgroundColor: 'black' }}
                           transition={{ type: "spring", stiffness: 380, damping: 30 }}
                         />
                       )}

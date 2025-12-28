@@ -3,8 +3,6 @@ import { useUserStore } from '../store/userStore';
 
 export const ProtectedRoute = () => {
   const { userId, accessToken } = useUserStore();
-
-  console.log(userId, accessToken)
   // If we have an access token but no userId yet, 
   // it might be mid-update. We can show a simple loader.
   if (!userId && accessToken) {

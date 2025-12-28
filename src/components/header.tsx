@@ -104,7 +104,7 @@ const Header = ({
           <CreateFolder />
           
           {/* Select Component wrapped for precise width */}
-          <div className="w-44 sm:w-56">
+          <div className="w-auto">
             <Select
               data={foldersQuery?.data?.folders || []}
               loading={isLoadingFolders}
