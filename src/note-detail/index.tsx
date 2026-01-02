@@ -140,7 +140,9 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
           message: userText, 
           history: historyPayload 
         },
+        
         {
+          timeout: 120000, // 2 minutes
           onDownloadProgress: (progressEvent) => {
             const xhr = progressEvent.event.target;
             const fullResponse = xhr.responseText || "";
