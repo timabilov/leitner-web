@@ -16,7 +16,7 @@ export const slugify = (text) => {
 };
 
 
-const MarkdownView = ({ children, setTopics }) => {
+const MarkdownView = ({ children }) => {
   const preprocessMarkdown = (text) => {
   if (!text) return '';
   // This regex finds any newline that is NOT followed by another newline
@@ -75,8 +75,6 @@ const customRenderers = {
   // We will simply add a custom class name to every strong tag.
   // This allows us to target it specifically in our CSS.
   const textValue = node.children[0]?.value || '';
-  if (setTopics)
-      setTopics(textValue)
     // 2. Create a URL-friendly ID from the text.
     const elementId = slugify(textValue);
     return <strong id={elementId}  className="markdown-strong text-xl font-bold text-balance" {...props} />;

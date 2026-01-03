@@ -17,6 +17,7 @@ import { NavUser } from "./nav-user";
 import CatPenIcon from "@/notes/cat-pen-icon";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import CatLogo from "@/note-detail/cat-logo";
 
 export function AppSidebar({ fullName, photo, email, ...props }) {
   const { t } = useTranslation();
@@ -41,9 +42,9 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
       className="border-r border-zinc-200/50 bg-white dark:bg-zinc-950 dark:border-zinc-800/50" 
       {...props}
     >
-      <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 gap-3">
+      <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 py-7 gap-3">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 shadow-sm">
-          <CatIcon size={18} />
+          <CatLogo size={18} />
         </div>
         {/* Hidden on icon-only mode */}
         <span className="text-[14px] font-bold tracking-tighter text-zinc-900 dark:text-zinc-50 group-data-[collapsible=icon]:hidden">

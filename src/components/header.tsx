@@ -26,10 +26,6 @@ const Header = ({ isAlertEnabled, showAlertBadge, foldersQuery, isLoadingFolders
         {/* LEFT: Sidebar Toggle & Studio Title */}
         <div className="flex items-center gap-2">
           <SidebarTrigger className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100" />
-          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
-          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em] hidden lg:block">
-            {t("Leitner AI")}
-          </span>
         </div>
 
         {/* RIGHT: Actions */}

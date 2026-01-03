@@ -31,7 +31,8 @@ import {
   MessageSquare, ScrollText, NotepadText, Sparkles, 
   ChevronDown, LayoutGrid, MoreVertical, Clock, CheckCircle2,
   Loader2,
-  Send
+  Send,
+  User
 } from "lucide-react";
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
 import AIIcon from "./ai-icon";
@@ -40,6 +41,7 @@ import CatLogo from "./cat-logo";
 import Typewriter from "./type-writter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import type { Message } from "@/components/ui/chat-message";
 
 // --- Sub-Components ---
 
