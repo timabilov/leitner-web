@@ -230,26 +230,21 @@ const Notes = ({ children }: any) => {
               </div>
             </Alert>
           </div>
-          <div className="px-4 grid w-full gap-x-6 md:grid-cols-2">
+         {/* 2. ACTION CARDS SECTION - 1 col on mobile, 2 col on sm+ */}
+          <div className="px-4 grid grid-cols-1 sm:grid-cols-4  md:grid-cols-2 w-full gap-4 max-w-4xl mx-auto md:justify-items-center">
             <CreateYoutubeNote
               className="w-4 h-4"
               component={
-                <Card className="bg-white z-40  hover:shadow-lg transition-shadow duration-200 hover:border-black pb-0 w-xs justify-self-end cursor-pointer">
-                  {/* Subtle background decorative blob */}
+                <Card className="sm:col-span-full md:max-w-[330px] md:col-span-1 md:justify-self-end bg-white z-40 hover:shadow-lg transition-all duration-300 hover:border-black w-full cursor-pointer relative overflow-hidden group">
                   <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/5 blur-3xl group-hover:bg-red-500/10 transition-colors" />
-
-                  <CardHeader className="pb-4">
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary/50 p-2 shadow-inner group-hover:scale-110 transition-transform duration-500">
-                      <Lottie
-                        animationData={youtubeAnimation}
-                        loop={true}
-                        className="w-6 h-6"
-                      />
+                  <CardHeader className="p-4 sm:p-6 pb-4">
+                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/50 p-2 shadow-inner transition-transform duration-500 group-hover:scale-110">
+                      <Lottie animationData={youtubeAnimation} loop={true} className="w-6 h-6" />
                     </div>
-                    <CardTitle className="text-md tracking-tight text-zinc-600">
+                    <CardTitle className="text-sm sm:text-md font-bold tracking-tight text-zinc-600">
                       {t("YouTube")}
                     </CardTitle>
-                    <CardDescription className="leading-normal">
+                    <CardDescription className="text-xs sm:text-sm leading-tight">
                       {t("For youtube videos (max 2 hours)")}
                     </CardDescription>
                   </CardHeader>
@@ -257,56 +252,26 @@ const Notes = ({ children }: any) => {
               }
             />
 
-            {/* <CardContent className="pt-0  border-t">
-                <div className="flex items-center justify-between rounded-2xl bg-background/50 p-4 transition-colors group-hover:bg-background">
-                  <span className="text-sm font-semibold text-foreground/80">
-                    {t("Create Note")}
-                  </span>
-                    <CreateYoutubeNote className="w-4 h-4" />
-                  <div className="rounded-full bg-black p-1.5 text-white shadow-lg shadow-black-500/30 cursor-pointer">
-                  </div>
-                </div>
-              </CardContent> */}
-            {/* </Card> */}
-
             <Card
               onClick={openFilePicker}
-              className="bg-white z-40 hover:shadow-lg transition-shadow duration-200 hover:border-black pb-0 w-xs justify-self-start cursor-pointer"
+              className="sm:col-span-full md:max-w-[330px] md:col-span-1 md:justify-self-start bg-white z-40 hover:shadow-lg transition-all duration-300 hover:border-black w-full cursor-pointer relative overflow-hidden group"
             >
-              {/* Decorative Organic Glow (Yellow) */}
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/5 blur-3xl group-hover:bg-amber-500/10 transition-colors" />
-
-              <CardHeader className="pb-4">
-                {/* Floating Icon Container */}
-                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary/50  shadow-inner group-hover:scale-110 transition-transform duration-500">
-                  <Lottie
-                    animationData={folderAnimation}
-                    loop={true}
-                    autoplay={true}
-                    className="w-6 h-6"
-                  />
+              <CardHeader className="p-4 sm:p-6 pb-4">
+                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/50 shadow-inner transition-transform duration-500 group-hover:scale-110">
+                  <Lottie animationData={folderAnimation} loop={true} autoplay={true} className="w-6 h-6" />
                 </div>
-
-                <CardTitle className="text-md tracking-tight text-zinc-600">
+                <CardTitle className="text-sm sm:text-md font-bold tracking-tight text-zinc-600">
                   {t("Multi note")}
                 </CardTitle>
-                <CardDescription className="leading-normal">
+                <CardDescription className="text-xs sm:text-sm leading-tight">
                   {t("For audio, text, recording, images")}
                 </CardDescription>
               </CardHeader>
-
-              {/* <CardContent className="pt-0 border-t">
-                <div className="flex items-center justify-between rounded-2xl bg-background/50 p-4 transition-colors group-hover:bg-background cursor-pointer">
-                  <span className="text-sm font-semibold text-foreground/80">
-                    {t("Create Folder")}
-                  </span>
-                  <div className="rounded-full bg-black p-1.5 text-white shadow-lg shadow-black-500/30 cursor-pointer">
-                    <Plus className="w-4 h-4" strokeWidth={3} />
-                  </div>
-                </div>
-              </CardContent> */}
             </Card>
           </div>
+
+
           <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
             <AIPromptInput
               setIsPolling={setIsPolling}
