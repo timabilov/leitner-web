@@ -48,6 +48,7 @@ import type { Message } from "@/components/ui/chat-message";
 /**
  * High-density metadata item
  */
+
 const MetaItem = ({ icon, label, value, onClick, active }: any) => (
   <div 
     onClick={onClick}
@@ -108,6 +109,13 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
   ]);
   
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+    // 2. Auto-focus on mount
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
 
   // 1. Auto-scroll logic (Improved)
   // We use a MutationObserver or a simple useEffect on messages length + loading state
@@ -117,6 +125,14 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isLoading, streamingMessageId]); 
+
+    // 3. Auto-focus when loading finishes
+  useEffect(() => {
+    if (!isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading]);
+
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -129,6 +145,7 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
     setMessages((prev) => [...prev, userMsg]);
     setInputValue("");
     setIsLoading(true);
+    inputRef.current?.focus();
 
     // Add AI Placeholder
     const aiMsgId = (Date.now() + 1).toString();
@@ -186,6 +203,7 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
     } finally {
       setIsLoading(false);
       setStreamingMessageId(null); // Stop streaming effect
+      inputRef.current?.focus();
     }
   };
 
@@ -248,9 +266,10 @@ const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string
         <form onSubmit={handleSendMessage} className="relative flex items-center w-full">
           <Input
             placeholder={t("Ask something about this note...")}
+            ref={inputRef} // 6. Attach the ref here
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            disabled={isLoading}
+            // disabled={isLoading}
             className="pr-12 py-6 rounded-full shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary"
           />
           <Button 
@@ -279,6 +298,16 @@ const extractYouTubeID = (url:string) => {
   const match = url.match(regex);
   return match ? match[1] : null;
 };
+
+const sanitizeMarkdown = (text) => {
+  if (text) {
+    return text.split(' ').map(word => 
+      word.length > 500 ? word.substring(0, 500) + "..." : word
+    ).join(' ');
+  }
+  return ""
+};
+
 
 const NoteDetailBase = () => {
   const { t } = useTranslation(); 
@@ -460,7 +489,7 @@ const NoteDetailBase = () => {
                   {note?.processing_error_message ? (
                     <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 font-medium">{note.processing_error_message}</div>
                   ) : (
-                    <MarkdownView>{note?.md_summary_ai}</MarkdownView>
+                    <MarkdownView>{sanitizeMarkdown(note?.md_summary_ai)}</MarkdownView>
                   )}
                 </motion.div>
               </TabsContent>
