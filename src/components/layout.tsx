@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useUserStore } from "@/store/userStore";
 import { AppSidebar } from "./app-sidebar"; // Your sidebar component
 import Header from "./header";
 import { SidebarInset, SidebarProvider } from "./ui/sidebar";
 import { AnimatedGrid, RisingBubbles } from "@/login";
+import { cn } from "@/lib/utils";
 
 const ArchitecturalBackground = () => (
   <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none select-none isolate">
@@ -52,52 +53,50 @@ const ArchitecturalBackground = () => (
  * @param {string} props.title - The title for the page header.
  * @param {React.RefObject<HTMLElement>} props.containerRef - A ref for the main scrollable element.
  */
+
 const Layout = ({ children, title, containerRef, search, searchValue, isSearching, noGap }) => {
-  const [showModal, setShowModal] = useState<boolean>(false)
   const { photo, fullName, email } = useUserStore();
-  const shortName =
-    fullName && fullName.split(" ").length > 1
-      ? `${fullName.split(" ")[0][0]}${fullName.split(" ")[1][0]}`?.toLowerCase()
-      : "";
+  
+  // Cleaned up shortname logic
+  const shortName = useMemo(() => {
+    if (!fullName) return "";
+    const parts = fullName.split(" ");
+    return parts.length > 1 
+      ? (parts[0][0] + parts[1][0]).toLowerCase() 
+      : parts[0][0].toLowerCase();
+  }, [fullName]);
 
   return (
-    // The SidebarProvider needs to be the root flex container that takes the full height of the screen.
     <SidebarProvider
-      className="flex h-screen bg-background"
-      style={{ "--sidebar-width": "calc(var(--spacing) * 64)" }}
+      className="flex h-screen w-full bg-background overflow-hidden"
     >
-      {/* 1. The Sidebar: It is a direct child of the flex container. */}
-      {/*    It will have its own fixed width and will NOT scroll. */}
-      <AppSidebar variant="sidebar" photo={photo} fullName={fullName} email={email} />
+      <AppSidebar photo={photo} fullName={fullName} email={email} />
       
-      {/* 2. The Content Area: This container will take the remaining space. */}
-      <SidebarInset className="flex flex-1 flex-col">
+      <SidebarInset className="flex flex-1 flex-col relative w-full overflow-hidden">
+        <Header 
+          showAlertBadge={true} 
+          // Passing props down...
+        />
         
-        {/* The Header is part of the content area and will also NOT scroll. */}
-        <Header photo={photo} shortName={shortName} title={title} search={search} searchValue={searchValue} isSearching={isSearching}/>
-        
-        {/* 
-          --- THIS IS THE SCROLLABLE CONTAINER ---
-          - `flex-1`: Makes it fill the remaining vertical space.
-          - `overflow-y-auto`: CRITICAL. This makes ONLY this part scrollable.
-          - `ref={containerRef}`: Attaches the ref for your in-page scrolling functions.
-        */}
         <main 
-         ref={containerRef}
-          id="main-container"
-          className={"flex-1 flex flex-col relative overflow-y-auto" + (noGap ? " p-0" :  " p-4 md:p-6 ")}
+          ref={containerRef}
+          className={cn(
+            "flex-1 flex flex-col relative overflow-y-auto isolate",
+            // Responsive padding
+            noGap ? "p-0" : "p-4 sm:p-6 md:p-8 lg:p-10"
+          )}
         >
-          {/* All your page content (like NoteDetail) goes here and will scroll inside this main tag. */}
+          {/* BACKGROUND: Fixed behind content */}
           <ArchitecturalBackground />
 
-          <div className="relative z-10 w-full max-w-7xl mx-auto">
+          <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-1 flex-col">
             {children}
           </div>
         </main>
-
       </SidebarInset>
     </SidebarProvider>
   );
 };
+
 
 export default Layout;

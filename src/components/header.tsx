@@ -13,106 +13,50 @@ import CreateFolder from "./create-folder";
 import { usePostHog } from 'posthog-js/react';
 import { cn } from "@/lib/utils";
 
-const Header = ({
-  isAlertEnabled,
-  showAlertBadge,
-}: {
-  isAlertEnabled?: boolean;
-  showAlertBadge?: boolean;
-}) => {
-  const posthog = usePostHog();
+import { SidebarTrigger } from "@/components/ui/sidebar";
+
+const Header = ({ isAlertEnabled, showAlertBadge, foldersQuery, isLoadingFolders, setChecked, checked, toggleSwitch }: any) => {
   const { t } = useTranslation();
-  const { companyId, setFolders } = useUserStore();
-  const [checked, setChecked] = useState<boolean>(!!isAlertEnabled);
   const id = useId();
-
-  const { data: foldersQuery, isLoading: isLoadingFolders } = useQuery({
-    queryKey: ["folders"],
-    refetchOnWindowFocus: false,
-    queryFn: async () =>
-      axiosInstance.get(API_BASE_URL + `/company/${companyId}/notes/folder`),
-    enabled: !!companyId,
-  });
-
-  useEffect(() => {
-    if (foldersQuery?.data) setFolders(foldersQuery?.data?.folders);
-  }, [foldersQuery?.data, setFolders]);
-
-  const toggleSwitch = (val: boolean) => {
-    setChecked(val);
-    posthog.capture("alert_status_changed", { enabled: val });
-  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md transition-all">
-      <div className="flex h-14 items-center justify-end px-4 gap-4 sm:px-8">
+      <div className="flex h-14 items-center justify-between px-4">
         
-        {/* 1. ALERT TOGGLE: Integrated Pill Logic */}
-        {showAlertBadge && (
-          <div className="hidden sm:block">
-            <AnimatedTooltip
-              trigger={[
-                <div
-                  key="alert-toggle"
-                  className="flex items-center gap-3 rounded-md border border-border/50 bg-muted/30 px-3 py-1.5 transition-colors hover:border-border"
-                >
-                  <button
-                    onClick={() => toggleSwitch(false)}
-                    className={cn(
-                      "transition-all duration-200",
-                      !checked ? "text-foreground opacity-100" : "text-muted-foreground opacity-40 hover:opacity-100"
-                    )}
-                  >
-                    <BellOff size={16} strokeWidth={2.5} />
-                  </button>
-
-                  <Switch
-                    id={id}
-                    checked={checked}
-                    onCheckedChange={toggleSwitch}
-                    className="data-[state=checked]:bg-primary"
-                  />
-
-                  <button
-                    onClick={() => toggleSwitch(true)}
-                    className={cn(
-                      "transition-all duration-200",
-                      checked ? "text-foreground opacity-100" : "text-muted-foreground opacity-40 hover:opacity-100"
-                    )}
-                  >
-                    <BellRing size={16} strokeWidth={2.5} />
-                  </button>
-                </div>,
-              ]}
-              items={[
-                <div key="tip" className="flex flex-col gap-1 p-1">
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground">
-                      {t("Notifications")}
-                   </p>
-                   <p className="text-[11px] font-medium text-muted-foreground">
-                      {t("Smart alerts for memory decay.")}
-                   </p>
-                </div>
-              ]}
-            />
-          </div>
-        )}
-
-        {/* 2. ACTION GROUP: Studio Buttons & Selects */}
+        {/* LEFT: Sidebar Toggle & Studio Title */}
         <div className="flex items-center gap-2">
-          {/* Create Folder inherits shadcn/ui button styles */}
-          <CreateFolder />
-          
-          {/* Select Component wrapped for precise width */}
-          <div className="w-auto">
-            <Select
-              data={foldersQuery?.data?.folders || []}
-              loading={isLoadingFolders}
-            />
-          </div>
+          <SidebarTrigger className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100" />
+          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
+          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em] hidden lg:block">
+            {t("Leitner AI")}
+          </span>
+        </div>
 
-          {/* Language Switcher */}
-          <LanguageSwitcher />
+        {/* RIGHT: Actions */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Hide Alert Toggle on small mobile to save space */}
+          {showAlertBadge && (
+            <div className="hidden xs:block">
+              <AnimatedTooltip
+                trigger={[
+                  <div key="alert-toggle" className="flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-2 py-1">
+                    <BellOff className={cn("size-4", !checked ? "text-foreground" : "text-muted-foreground/40")} />
+                    <Switch checked={checked} onCheckedChange={toggleSwitch} className="scale-75" />
+                    <BellRing className={cn("size-4", checked ? "text-foreground" : "text-muted-foreground/40")} />
+                  </div>,
+                ]}
+                items={[<p key="t">{t("Smart alerts")}</p>]}
+              />
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <CreateFolder />
+            <div className="w-[120px] sm:w-[180px]">
+              <Select data={foldersQuery?.data?.folders || []} loading={isLoadingFolders} />
+            </div>
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
     </header>

@@ -547,7 +547,7 @@ export function AIPromptInput({  setIsPolling, openFilePicker, files, setFiles, 
               disabled={isSubmitting || recorder.status === "recording"} 
               className="rounded-full h-10 w-10 bg-black hover:bg-black-600 text-white shadow-lg shadow-black/20 transition-all active:scale-95"
             >
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : <AIArrow className="h-5 w-5" strokeWidth={5} />}
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : /*<AIArrow className="h-5 w-5" strokeWidth={5} />*/ <ArrowUp />}
             </Button>
           </div>
         </div>
