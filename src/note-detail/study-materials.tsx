@@ -35,6 +35,7 @@ import { FlashcardsTab } from "@/note-detail/flashcard-tab";
 import { AIQuizTab } from "@/note-detail/quiz-tab";
 import { GenericAILoading } from "../components/generic-ai-loading";
 import successAnimation from "./../notes/done.json"; 
+import { AiOrbitAnimation } from "./ai-orbit-animation";
 
 export const StudyMaterials = ({ 
   noteId, 
@@ -251,9 +252,10 @@ export const StudyMaterials = ({
       ) : !isGenerated ? (
 
         /* --- STATE 3: UNLOCK SCREEN --- */
-        <div className="flex flex-col items-center justify-center text-center py-16 px-4 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/25">
-          <Avatar className="h-20 w-20 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-            <CatPenIcon className="w-10 h-10 text-primary" />
+        <div className="flex flex-col items-center justify-center text-center py-16 px-4 bg-muted/30 rounded-4xl border border-dashed border-muted-foreground/25">
+          <Avatar className="h-30 w-30 rounded-xl bg-transparent  flex items-center justify-center mb-6">
+            <AiOrbitAnimation />
+            {/* <CatPenIcon className="w-10 h-10 text-primary" /> */}
           </Avatar>
           <h3 className="text-2xl font-semibold mb-3">
             {t("Unlock Study Tools")}

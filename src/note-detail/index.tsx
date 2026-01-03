@@ -1,84 +1,92 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import * as Sentry from "@sentry/react"; 
-import { usePostHog } from 'posthog-js/react'
-import Layout from "@/components/layout";
-import { axiosInstance } from "@/services/auth";
-import { API_BASE_URL } from "@/services/config";
-import { useUserStore } from "@/store/userStore";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import MarkdownView from "@/components/markdown-view";
-import { motion } from "framer-motion";
-import { 
-  BellOff, 
-  BellRing, 
-  Calendar, 
-  ChevronDown, 
-  Dot, 
-  Send, 
-  Bot, 
-  User, 
-  Loader2,
-  Sparkles,
-  MessageCircleMore,
-  NotepadText,
-  ScrollText
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Card, CardContent, CardFooter } from "@/components/ui/card"; // Added CardFooter
-import AiModal from "./ai-modal";
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
-import { toast } from "sonner";
+import * as Sentry from "@sentry/react";
+import { usePostHog } from 'posthog-js/react';
 import JSZip from "jszip";
 import Zoom from "react-medium-image-zoom";
+
+// --- Services & Store ---
+import { axiosInstance } from "@/services/auth";
+import { API_BASE_URL  } from "@/services/config";
+import { useUserStore } from "@/store/userStore";
+
+// --- Components ---
+import Layout from "@/components/layout";
+import MarkdownView from "@/components/markdown-view";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
-import { useTranslation } from "react-i18next"; 
-import { Input } from "@/components/ui/input"; // Added Input
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"; // Added Avatar
-import { ScrollArea } from "@/components/ui/scroll-area"; // Added ScrollArea
-import AIIcon from "./ai-icon";
-import { AiOrbitAnimation } from "./ai-orbit-animation";
-import { AnimateIcon } from "@/components/animate-ui/icons/icon";
-import { SlidingNumber } from '@/components/animate-ui/primitives/texts/sliding-number';
-import typingAnimation from './typing2.json';
-import { File } from 'lucide-react';
 import { StudyMaterials } from "./study-materials";
-import Lottie from "lottie-react";
-import Typewriter from "./type-writter";
+import AiModal from "./ai-modal";
+
+// --- Icons ---
+import { 
+  BellRing, BellOff, Calendar, Globe, Paperclip, Youtube, 
+  MessageSquare, ScrollText, NotepadText, Sparkles, 
+  ChevronDown, LayoutGrid, MoreVertical, Clock, CheckCircle2,
+  Loader2,
+  Send
+} from "lucide-react";
+import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
+import AIIcon from "./ai-icon";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import CatLogo from "./cat-logo";
+import Typewriter from "./type-writter";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
+// --- Sub-Components ---
 
+/**
+ * High-density metadata item
+ */
+const MetaItem = ({ icon, label, value, onClick, active }: any) => (
+  <div 
+    onClick={onClick}
+    className={cn(
+      "flex items-center gap-2 px-2 py-1 rounded-md transition-colors whitespace-nowrap",
+      onClick ? "hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer" : "cursor-default",
+      active && "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50",
+      "hover:bg-zinc-100 dark:hover:bg-zinc-800  bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
+    )}
+  >
+    <span className="text-zinc-400">{icon}</span>
+    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{label}</span>
+    <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">{value}</span>
+  </div>
+);
 
-const SPRING_TRANSITION = {
-  type: "spring",
-  bounce: 0.2,
-  duration: 0.6,
-};
+/**
+ * Animated Tab Trigger
+ */
+const StudioTabTrigger = ({ value, icon, label, active }: any) => (
+  <TabsTrigger 
+    value={value}
+    className={cn(
+      "relative h-9 px-4 gap-2 rounded-md transition-all font-medium text-sm tracking-tight",
+      "data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-950 data-[state=active]:text-zinc-950 dark:data-[state=active]:text-zinc-50 data-[state=active]:shadow-sm",
+      "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+    )}
+  >
+    {icon}
+    {label}
+    {/* {active && (
+      <motion.div 
+        layoutId="tab-indicator"
+        className="absolute -bottom-[5px] left-2 right-2 h-[2px] bg-zinc-900 dark:bg-zinc-50 rounded-full"
+        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+      />
+    )} */}
+  </TabsTrigger>
+);
 
-export const POLLING_INTERVAL_MS = 5000;
-
-type Message = {
-  id: string;
-  role: "ai" | "user";
-  content: string;
-};
+// --- MAIN COMPONENT ---
 
 const ChatInterface = ({ noteName, noteId }: { noteName?: string; noteId: string }) => {
   const { t } = useTranslation();
@@ -276,451 +284,214 @@ const NoteDetailBase = () => {
   const { companyId, userId, email, fullName } = useUserStore();
   const posthog = usePostHog();
 
-  const [topics, setTopics] = useState([]);
-  const [isYouTubeVisible, setIsYouTubeVisible] = useState(false);
+  // Local UI State
   const [activeTab, setActiveTab] = useState<string>("overview");
-  const mainContainerRef = useRef(null);
+  const [isMediaExpanded, setIsMediaExpanded] = useState(true);
   const [isPolling, setIsPolling] = useState<boolean>(false);
-  const previewLoadingAlreadyFired = useRef(false);
+  const [previewFile, setPreviewFile] = useState<any>(null);
+  
+  // File State
   const [imagePaths, setImagePaths] = useState<any[]>([]);
   const [audioPaths, setAudioPaths] = useState<any[]>([]);
   const [pdfPaths, setPdfPaths] = useState<any[]>([]);
   const [textContent, setTextContent] = useState<string>("");
   const [isProcessingFiles, setProcessingFiles] = useState(false);
-  const [pdf, setPDF] = useState<File | undefined>();
 
-  // 2. Set Sentry User Context
-  useEffect(() => {
-    if (userId) {
-      Sentry.setUser({
-        id: String(userId),
-        email: email,
-        username: fullName,
-        company_id: companyId
-      });
-    }
-  }, [userId, email, fullName, companyId]);
-
-  const noteQuery = useQuery({
+  // 1. Data Fetching: Note Detail
+  const { data: noteQueryResponse } = useQuery({
     queryKey: [`notes-${noteId}`],
-    refetchOnWindowFocus: false,
-    queryFn: async () => {
-      try {
-        const response = await axiosInstance.get(
-          API_BASE_URL + `/company/${companyId}/notes/${noteId}`
-        );
-        return response;
-      } catch (error) {
-        Sentry.captureException(error, { tags: { query: 'fetch_note_detail' }, extra: { noteId } });
-        throw error;
-      }
-    },
+    queryFn: () => axiosInstance.get(`${API_BASE_URL}/company/${companyId}/notes/${noteId}`),
     enabled: !!companyId,
-    refetchInterval: (query) => {
-      const isGenerating =
-        query.state?.data?.data?.quiz_status === "in_progress" ||
-        query.state?.data?.data?.quiz_status === "ready_to_generate";
-      if (!isPolling) return false;
-      if (isGenerating) return POLLING_INTERVAL_MS;
-      else {
-        setIsPolling(false);
-        return false;
-      }
-    },
-  });
-
-  const noteIdResponse = noteQuery.data?.data?.id || "";
-  const noteType = noteQuery?.data?.data.note_type;
-
-  const noteFilesRequest = useQuery({
-    queryKey: [`notes`, `${noteId}`, "file"],
-    queryFn: async () => {
-      try {
-        return await axiosInstance.get(
-          API_BASE_URL + `/company/${companyId}/notes/${noteId}/documents-url`
-        );
-      } catch (error) {
-        Sentry.captureException(error, { tags: { query: 'fetch_note_files' }, extra: { noteId, email, userId } });
-        throw error;
-      }
-    },
-    enabled: !!noteIdResponse && noteType !== "youtube",
-  });
-
-  useEffect(() => {
-    if (
-      noteFilesRequest.isSuccess &&
-      noteFilesRequest.data?.data &&
-      !previewLoadingAlreadyFired.current
-    ) {
-      previewLoadingAlreadyFired.current = true;
-      handlePreviewFiles(noteFilesRequest.data.data);
+    refetchInterval: (query: any) => {
+      const status = query.state?.data?.data?.quiz_status;
+      return isPolling && (status === "in_progress" || status === "ready_to_generate") ? 500 : false;
     }
-    return () => {
-      [...imagePaths, ...audioPaths, ...pdfPaths].forEach((file) => {
-        URL.revokeObjectURL(file.url);
-      });
-    };
-  }, [noteFilesRequest.isSuccess, noteFilesRequest.data]);
+  });
 
-  const handlePreviewFiles = async (note) => {
-    if (!note?.file_url) return;
-    if (note?.youtube_url) return;
+  const note = noteQueryResponse?.data;
 
+  // 2. Data Fetching: Files
+  const { data: filesResponse } = useQuery({
+    queryKey: [`notes`, noteId, "file"],
+    queryFn: () => axiosInstance.get(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/documents-url`),
+    enabled: !!note && note.note_type !== "youtube",
+  });
+
+  // 3. Process Zip Files (Effect)
+  useEffect(() => {
+    if (filesResponse?.data?.file_url && !isProcessingFiles && imagePaths.length === 0) {
+      handleUnzip(filesResponse.data.file_url);
+    }
+  }, [filesResponse]);
+
+  const handleUnzip = async (url: string) => {
     setProcessingFiles(true);
-
     try {
-      const response = await fetch(note.file_url);
-      if (!response.ok) throw new Error(`Failed to download file: ${response.statusText}`);
-      const zipBlob = await response.blob();
-      const zip = await JSZip.loadAsync(zipBlob);
+      const res = await fetch(url);
+      const zip = await JSZip.loadAsync(await res.blob());
+      const imgs: any[] = [], auds: any[] = [], pdfs: any[] = [];
+      let txt = "";
 
-      const newImagePaths = [];
-      const newAudioPaths = [];
-      const newPdfPaths = [];
-      let newTextContent = '';
-
-      const filePromises: Promise<void>[] = [];
-      zip.forEach((relativePath, zipEntry) => {
-        const fileName = zipEntry.name;
-        const extension = fileName.toLowerCase().match(/\.[^.]+$/)?.[0] || '';
-        
-        const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-        const audioExtensions = ['.mp3', '.wav', '.m4a', '.ogg', '.webm'];
-        const pdfExtensions = ['.pdf'];
-        const textExtensions = ['.txt'];
-
-        const processFile = async () => {
-          const rawBlob = await zipEntry.async('blob');
-          if (imageExtensions.includes(extension)) {
-            const typedBlob = new Blob([rawBlob], { type: `image/${extension.slice(1)}` });
-            newImagePaths.push({ name: fileName, url: URL.createObjectURL(typedBlob) });
-          } else if (audioExtensions.includes(extension)) {
-            const typedBlob = new Blob([rawBlob], { type: `audio/${extension.slice(1)}` });
-            newAudioPaths.push({ name: fileName, url: URL.createObjectURL(typedBlob) });
-          } else if (pdfExtensions.includes(extension)) {
-            const typedBlob = new Blob([rawBlob], { type: 'application/pdf' });
-            newPdfPaths.push({ name: fileName, url: URL.createObjectURL(typedBlob) });
-          } else if (textExtensions.includes(extension)) {
-            newTextContent += await zipEntry.async('string') + '\n';
-          }
-        };
-        filePromises.push(processFile());
+      const promises: any[] = [];
+      zip.forEach((path, entry) => {
+        promises.push((async () => {
+          const blob = await entry.async("blob");
+          const name = entry.name.toLowerCase();
+          if (/\.(jpg|jpeg|png|webp|gif)$/.test(name)) imgs.push({ name: entry.name, url: URL.createObjectURL(blob) });
+          else if (/\.(mp3|wav|m4a|ogg|webm)$/.test(name)) auds.push({ name: entry.name, url: URL.createObjectURL(blob) });
+          else if (name.endsWith(".pdf")) pdfs.push({ name: entry.name, url: URL.createObjectURL(blob) });
+          else if (name.endsWith(".txt")) txt += await entry.async("string") + "\n";
+        })());
       });
-
-      await Promise.all(filePromises);
-
-      setImagePaths(newImagePaths);
-      setAudioPaths(newAudioPaths);
-      setPdfPaths(newPdfPaths);
-      setTextContent(newTextContent);
-
-    } catch (error) {
-      console.error("Preview processing error:", error);
-      Sentry.captureException(error, { tags: { action: 'process_zip_files' }, extra: { fileUrl: note.file_url, userId, email } });
-      toast.error(t("Failed to open preview files. Please try refreshing the page."));
-    } finally {
-      setProcessingFiles(false);
-    }
+      await Promise.all(promises);
+      setImagePaths(imgs); setAudioPaths(auds); setPdfPaths(pdfs); setTextContent(txt);
+    } finally { setProcessingFiles(false); }
   };
 
-  // const startPollingForQuiz = () => setIsPolling(true);
-
-  useEffect(() => {
-    if (isPolling) noteQuery.refetch();
-  }, [isPolling]);
-
-  const { data: note } = noteQuery?.data || {};
-
-  const youtubeVideoId = useMemo(() => {
-    return note?.youtube_url ? extractYouTubeID(note.youtube_url) : null;
-  }, [note]);
-
-  const handleSetTopics = (topic) => {
-    if (!topics.includes(topic)) {
-      setTopics((prevTopics) => [...prevTopics, topic]);
-    }
-  };
+  const attachmentCount = imagePaths.length + audioPaths.length + pdfPaths.length + (textContent ? 1 : 0);
 
   return (
-    <Layout title={note?.name} containerRef={mainContainerRef}>
-      <div className="flex flex-col h-full">
-        <div className="overflow-auto">
-          <div className="flex flex-row items-center justify-between w-full mb-4">
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link className="text-2xl" to="/notes">
-                      {t("Notes")}
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="text-2xl flex flex-row items-center">
-                    {getTypeIcon(note?.note_type, 5)}
-                    <span className="mr-3" />
-                    {note?.name || t("Loading...")}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-            {youtubeVideoId && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsYouTubeVisible(!isYouTubeVisible)}
-                aria-expanded={isYouTubeVisible}
-                aria-controls="youtube-embed-section"
-              >
-                <ChevronDown
-                  className={cn(
-                    "h-5 w-5 text-muted-foreground transition-transform duration-300",
-                    isYouTubeVisible && "rotate-180"
-                  )}
-                />
-              </Button>
-            )}
-          </div>
-          <div className="flex flex-row items-center justify-start w-full mb-4">
-            <Badge variant="secondary" className="mr-2">
-              <Calendar />
-              {note?.created_at ? new Date(note.created_at).toLocaleString() : ''}
-            </Badge>
-            <Badge variant="secondary" className="mr-2">
-              {t("Language")}:{' '}
-              {getNoteLanguageIso(note?.language)}
-            </Badge>
-            <Badge variant="secondary">{t("Attachments")}: {' '} {(imagePaths?.length + audioPaths?.length + pdfPaths?.length + (textContent ? 1 : 0))}</Badge>
-            <Tooltip>
-              <TooltipTrigger>
-                <Badge
-                  className={cn(
-                    "ml-4 h-5 w-5 p-0 flex items-center justify-center",
-                    note?.quiz_alerts_enabled && "border-pink-300 bg-pink-100 dark:border-pink-300/10 dark:bg-pink-400/10"
-                  )}
-                >
-                  {note?.quiz_alerts_enabled ? (
-                    <BellRing className="h-4 w-4 stroke-pink-700 dark:stroke-pink-500" />
-                  ) : (
-                    <BellOff className="h-4 w-4" />
-                  )}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{t("Notification alerts")}</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          {youtubeVideoId ? (
-            <div
-              id="youtube-embed-section"
-              className={cn(
-                "overflow-hidden transition-all duration-500 ease-in-out",
-                isYouTubeVisible ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
-              )}
-            >
-              <div className="mb-8 mt-4 w-full max-w-3xl mx-auto">
-                <div className="relative w-full overflow-hidden rounded-lg shadow-lg aspect-video">
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full"
-                    src={`https://www.youtube.com/embed/${youtubeVideoId}`}
-                    title={note?.name || t("YouTube video player")}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
+    <Layout title={note?.name} noGap>
+      <div className="flex flex-col min-h-screen bg-transparent">
+        
+        {/* --- 1. STUDIO HEADER: High-Density Utility --- */}
+        <div className="border-b border-zinc-200/50 bg-white dark:bg-zinc-950 px-6 py-4 sticky top-0 z-40 backdrop-blur-md">
+          <div className=" mx-auto">
+            <div className="flex items-center justify-between mb-4">
+              {/* Breadcrumb Logic */}
+              <div className="flex items-center gap-2 text-zinc-400">
+                <Link to="/notes" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">
+                  <LayoutGrid size={16} />
+                </Link>
+                <span className="text-zinc-300 dark:text-zinc-800">/</span>
+                <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold  text-lg">
+                   {getTypeIcon(note?.note_type, 6)}
+                   {note?.name || t("Loading...")}
                 </div>
               </div>
+              
+              <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500">
+                <MoreVertical size={16} />
+              </button>
             </div>
-          ) : (
-            <div>
-              {isProcessingFiles && (
-                <p>{t("Loading and processing attachments...")}</p>
-              )}
-              {!isProcessingFiles && (
-                <div className="max-w-full">
-                  {textContent && (
-                    <pre className="whitespace-pre-wrap mb-4">{textContent}</pre>
-                  )}
-                  <div className="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-8">
-                    {imagePaths.map((img, index) => (
-                      <Zoom key={index}>
-                        <div key={img.name} className="group relative">
-                          <img
-                            src={img.url}
-                            alt={img.name}
-                            className="h-30 w-full cursor-pointer rounded-lg object-cover border transition-transform duration-300 group-hover:scale-105"
-                            onClick={() =>  posthog.capture('img_clicked', { userId, email, name: img.name })}
-                          />
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-2 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            {img.name}
-                          </div>
-                        </div>
-                      </Zoom>
-                    ))}
-                  </div>
-                  {audioPaths.map((audio, index) => (
-                    <div key={audio.name + index} className="w-full mt-4 mb-4">
-                      <AudioPlayer key={audio.name} audio={audio} />
-                    </div>
-                  ))}
-                  {pdfPaths.map((pdf, index) => (
-                    <div className="flex flex-row items-center hover:bg-muted mt-2" key={index}>
-                      <Dot />
-                      <li
-                        onClick={() => {
-                          posthog.capture('pdf_clicked', { userId, email, name: pdf.name })
-                          setPDF(pdf)
-                        }}
-                        key={pdf.name + index}
-                        className="group relative flex items-center gap-2 cursor-pointer hover:underline text-blue-800 px-3 text-sm"
-                      >
-                        {pdf.name}
-                      </li>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          {pdf && (
-            <FilePreviewDialog
-              renderAsBlobUrl
-              url={pdf?.url}
-              name={pdf?.name}
-              onClose={() => setPDF(null)}
-            />
-          )}
-          <div className="@container/main w-full mt-10">
-           <Tabs
-              value={activeTab}
-              onValueChange={(val) => {
-                posthog.capture("tab_clicked", { userId, email, tab: val });
-                setActiveTab(val);
-              }}
-              className="w-full"
-            >
-              <div className="flex flex-row justify-between z-20">
-                <TabsList className="relative w-full p-1 gap-2 bg-muted text-muted-foreground inline-flex h-12 items-center max-w-3xl justify-center m-auto rounded-xl">
-                  
-                  {/* --- REUSABLE TAB TRIGGER LOGIC --- */}
-                  {[
-                    { id: "overview", label: t("Overview"), icon: <NotepadText /> },
-                    { id: "transcript", label: t("Transcript"), icon: <ScrollText /> },
-                    { id: "chat", label: t("AI Chat"), icon: <AnimateIcon loop>
-                    <MessageCircleMore />
-                  </AnimateIcon> },
-                   { id: "ai", label: t("AI Tools"), icon: noteQuery.data?.data?.quiz_status === "in_progress"  ?  <Lottie 
-                    animationData={typingAnimation} 
-                    loop={true} 
-                    autoplay={true}
-                    style={{ width: '20px' }}
-                />  :<AnimateIcon loop>
-                    <Sparkles />
-                  </AnimateIcon> }
-                  ].map((tab) => {
-                    const isActive = activeTab === tab.id;
-                    
-                    return (
-                      <TabsTrigger
-                        key={tab.id}
-                        value={tab.id}
-                        // Remove standard active/bg styles. We handle them manually.
-                        className={cn(
-                          "relative flex-1 flex flex-col items-center justify-center gap-2 px-4 py-2 cursor-pointer text-sm font-medium transition-colors rounded-lg",
-                          "text-muted-foreground hover:text-foreground", // Inactive state
-                          "data-[state=active]:text-foreground", // Active text color
-                          "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                          // IMPORTANT: Reset default background styles to avoid conflict
-                          "data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                        )}
-                        style={{ WebkitTapHighlightColor: "transparent" }}
-                      >
-                        {/* The Floating Background Pill */}
-                        {isActive && (
-                          <motion.div
-                            layoutId="active-pill"
-                            className="absolute inset-0 bg-background dark:bg-input/50 shadow-sm rounded-lg border border-black/5 dark:border-white/5"
-                            initial={false}
-                            transition={SPRING_TRANSITION}
-                            style={{ borderRadius: 8 }} // Ensure radius matches parent
-                          />
-                        )}
 
-                        {/* The Content (Text/Icon) - Must be Z-10 to sit on top */}
-                        <span className="relative z-10 flex items-center gap-2 mix-blend-multiply dark:mix-blend-screen">
-                          {tab.icon && <span>{tab.icon}</span>}
-                          {tab.label}
-                        </span>
-                      </TabsTrigger>
-                    );
-                  })}
-
-                </TabsList>
-
-                {/* ... Your AI Modal Logic ... */}
-                {!note?.processing_error_message && (
-                  <AiModal
-                    noteId={noteId}
-                    noteQuery={noteQuery}
-                    isPolling={isPolling}
-                    setIsPolling={setIsPolling}
-                    // startPollingForQuiz={startPollingForQuiz}
-                  />
-                )}
+            {/* Unified Metadata Bar */}
+            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar">
+              <MetaItem icon={<Calendar size={12} />} label={t("Created")} value={new Date(note?.created_at).toLocaleDateString()} />
+              <MetaItem icon={<Globe size={12} />} label={t("Language")} value={getNoteLanguageIso(note?.language)} />
+              <MetaItem 
+                icon={<Paperclip size={12} />} 
+                label={t("Resources")} 
+                value={`${attachmentCount} items`}
+                onClick={() => setIsMediaExpanded(!isMediaExpanded)}
+                active={isMediaExpanded}
+              />
+              <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+              
+              {/* Alert Toggle Integrated */}
+              <div className={cn(
+                "flex items-center gap-2 px-3 py-1 rounded-full border transition-all shrink-0",
+                note?.quiz_alerts_enabled 
+                  ? "bg-zinc-900 border-zinc-900 text-white shadow-sm" 
+                  : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-400"
+              )}>
+                {note?.quiz_alerts_enabled ? <BellRing size={12} strokeWidth={3} /> : <BellOff size={12} />}
+                <span className="text-[10px] font-black uppercase tracking-widest">{note?.quiz_alerts_enabled ? "Alerts On" : "Alerts Off"}</span>
               </div>
-
-              {/* ... The Rest of your Content ... */}
-              <Card className="relative rounded-md border-t-inherit shadow-md z-10 -mt-[30px]">
-                <TabsContent value="transcript" className="flex-1 mt-4 overflow-hidden">
-                  <CardContent className="p-6 text-sm text-muted-foreground">
-                    <MarkdownView setTopics={handleSetTopics}>{note?.transcript}</MarkdownView>
-                  </CardContent>
-                </TabsContent>
-                
-                <TabsContent value="overview" className="flex-1 min-h-0 py-8 overflow-y-auto">
-                  <CardContent className="p-6 text-sm text-muted-foreground border-none">
-                    {note?.processing_error_message && (
-                      <p className="text-sm font-medium text-destructive">
-                        {note?.processing_error_message}
-                      </p>
-                    )}
-                    <MarkdownView>{note?.md_summary_ai}</MarkdownView>
-                  </CardContent>
-                </TabsContent>
-
-                <TabsContent value="chat" className="flex-1 min-h-0 py-8 overflow-y-auto">
-                  <CardContent className="p-0 border-none">
-                    <ChatInterface noteName={note?.name} noteId={noteId} />
-                  </CardContent>
-                </TabsContent>
-
-                 <TabsContent value="ai" className="flex-1 mt-4 overflow-hidden">
-                  <CardContent className="p-6 text-sm text-muted-foreground">
-                    <StudyMaterials 
-                      noteId={noteId}
-                      noteQuery={noteQuery} // Pass the entire query object
-                      setIsPolling={setIsPolling} // Pass the polling setter
-                    />
-                  </CardContent>
-                </TabsContent>
-
-              </Card>
-            </Tabs>
+            </div>
           </div>
         </div>
+
+        <div className="w-full mx-auto px-6 py-8">
+          
+          {/* --- 2. RESOURCE TRAY: Collapsible Media --- */}
+          <AnimatePresence>
+            {isMediaExpanded && attachmentCount > 0 && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                className="mb-10 overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {note?.youtube_url && (
+                    <div className="aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black">
+                       <iframe className="w-full h-full" src={`https://www.youtube.com/embed/${note.youtube_url.split('v=')[1]}`} allowFullScreen />
+                    </div>
+                  )}
+                  {imagePaths.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                       {imagePaths.map((img, i) => (
+                         <Zoom key={i}><img src={img.url} className="aspect-square object-cover rounded-md border border-zinc-200" /></Zoom>
+                       ))}
+                    </div>
+                  )}
+                  {audioPaths.map((aud, i) => <AudioPlayer key={i} audio={aud} />)}
+                  {pdfPaths.map((pdf, i) => (
+                    <button key={i} onClick={() => setPreviewFile(pdf)} className="flex items-center gap-3 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 hover:border-zinc-300 transition-all">
+                      <div className="h-8 w-8 rounded-lg bg-red-50 dark:bg-red-950/20 flex items-center justify-center text-red-600"><ScrollText size={16} /></div>
+                      <span className="text-sm font-semibold truncate">{pdf.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* --- 3. WORKSPACE: Tabs Switcher --- */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="flex items-center justify-between mb-8 overflow-x-auto no-scrollbar">
+              <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 w-full">
+                <StudioTabTrigger value="overview" icon={<NotepadText size={14} />} label={t("Overview")} active={activeTab === "overview"} />
+                <StudioTabTrigger value="transcript" icon={<ScrollText size={14} />} label={t("Transcript")} active={activeTab === "transcript"} />
+                <StudioTabTrigger value="chat" icon={<MessageSquare size={14} />} label={t("AI Chat")} active={activeTab === "chat"} />
+                <StudioTabTrigger value="ai" icon={<AIIcon size={30} className="w-28 h-28"/>} label={t("AI Tools")} active={activeTab === "ai"} />
+              </TabsList>
+              
+              {!note?.processing_error_message && (
+                <AiModal noteId={noteId} noteQuery={noteQueryResponse} isPolling={isPolling} setIsPolling={setIsPolling} />
+              )}
+            </div>
+
+            {/* --- 4. CONTENT VIEWPORTS --- */}
+            <div className="relative min-h-[500px]">
+              <TabsContent value="overview" className="mt-0 focus-visible:ring-0">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="prose prose-zinc dark:prose-invert max-w-none">
+                  {note?.processing_error_message ? (
+                    <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 font-medium">{note.processing_error_message}</div>
+                  ) : (
+                    <MarkdownView>{note?.md_summary_ai}</MarkdownView>
+                  )}
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="transcript" className="mt-0 focus-visible:ring-0">
+                <div className="bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800">
+                  <MarkdownView>{note?.transcript}</MarkdownView>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="chat" className="mt-0 focus-visible:ring-0">
+                <ChatInterface noteName={note?.name} noteId={noteId!} />
+              </TabsContent>
+
+              <TabsContent value="ai" className="mt-0 focus-visible:ring-0">
+                <StudyMaterials noteId={noteId!} noteQuery={noteQueryResponse} setIsPolling={setIsPolling} />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
       </div>
+
+      {previewFile && (
+        <FilePreviewDialog renderAsBlobUrl url={previewFile.url} name={previewFile.name} onClose={() => setPreviewFile(null)} />
+      )}
     </Layout>
   );
 };
 
-// 4. Export with Wrappers
-const NoteDetail = Sentry.withProfiler(
-  Sentry.withErrorBoundary(NoteDetailBase, {
-    fallback: <div className="p-10 text-center text-red-500">Error loading note details.</div>
-  })
-);
 
-export default NoteDetail;
+export default NoteDetailBase;
+
+// Helper function for conditional classes
+function cn(...inputs: any) {
+  return inputs.filter(Boolean).join(" ");
+}

@@ -9,7 +9,6 @@ import { useQuery } from "@tanstack/react-query";
 import { API_BASE_URL } from "@/services/config";
 import { axiosInstance } from "@/services/auth";
 import { useUserStore } from "@/store/userStore";
-import { POLLING_INTERVAL_MS } from ".";
 import { GradientProgress } from '@/components/gradient-progress';
 import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react"; 
@@ -37,7 +36,7 @@ export function FlashcardsTab({ noteId }) {
     refetchInterval: (query) => {
       const isGenerating = query.state?.data?.data?.quiz_status === 'in_progress';
       if (isGenerating) {
-        return POLLING_INTERVAL_MS;
+        return 5000;
       } else {
         return false;
       }

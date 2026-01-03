@@ -36,8 +36,8 @@ Sentry.init({
       createRoutesFromChildren,
       matchRoutes,
     }),
-  ]
-  // enabled: ! import.meta.env.MODE.DEV,
+  ],
+  enabled: import.meta.env.MODE !== 'development',
 });
 
 // Initialize PostHog

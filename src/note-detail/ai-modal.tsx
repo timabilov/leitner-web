@@ -48,7 +48,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
   // --- ANIMATION STATE ---
   const [showSuccess, setShowSuccess] = useState(false);
   // Store the status from the previous render to detect changes
-  const prevStatusRef = useRef(noteQuery.data?.data?.quiz_status);
+  const prevStatusRef = useRef(noteQuery?.data?.data?.quiz_status);
 
   const generateStudyMaterialNoteMutation = useMutation({
     mutationFn: () => {
@@ -81,7 +81,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
   // --- LOGIC: DETECT COMPLETION WITHOUT FLASH ---
   // usage of useLayoutEffect prevents the "flicker" of content before animation
   useLayoutEffect(() => {
-    const currentStatus = noteQuery.data?.data?.quiz_status;
+    const currentStatus = noteQuery?.data?.data?.quiz_status;
     const prevStatus = prevStatusRef.current;
 
     // Trigger only if we transitioned from 'in_progress' to 'generated'
@@ -101,7 +101,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
 
     // Update the ref for the next render
     prevStatusRef.current = currentStatus;
-  }, [noteQuery.data?.data?.quiz_status, setIsPolling]);
+  }, [noteQuery?.data?.data?.quiz_status, setIsPolling]);
 
   const noteAlertsMutation = useMutation({
     mutationFn: (enabled: boolean) => {
@@ -135,11 +135,11 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
   // Loading Logic: True if processing OR if mutation is pending
   // BUT: If showSuccess is true, we are technically "done" loading, but showing animation
   const isLoading = 
-    (noteQuery.data?.data?.quiz_status === "in_progress" || generateStudyMaterialNoteMutation.isPending) && 
+    (noteQuery?.data?.data?.quiz_status === "in_progress" || generateStudyMaterialNoteMutation.isPending) && 
     !showSuccess;
 
-  const alertEnabled = noteQuery.data?.data?.quiz_alerts_enabled;
-  const isGenerated = noteQuery.data?.data?.quiz_status === 'generated';
+  const alertEnabled = noteQuery?.data?.data?.quiz_alerts_enabled;
+  const isGenerated = noteQuery?.data?.data?.quiz_status === 'generated';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -161,7 +161,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
               </DialogTitle>
               {view === 'quiz' ? (
                 <DialogDescription>
-                  {t("Get yourself prepared with random {{noteName}} questions", { noteName: noteQuery.data?.data?.name })}
+                  {t("Get yourself prepared with random {{noteName}} questions", { noteName: noteQuery?.data?.data?.name })}
                 </DialogDescription>
               ) : view === 'flash' ? null : (
                 <DialogDescription>
@@ -175,7 +175,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
         {/* --- STATE 1: LOADING --- */}
         {isLoading ? (
           <GenericAILoading
-            mainTitle={noteQuery.data?.data?.name || t("Note name")}
+            mainTitle={noteQuery?.data?.data?.name || t("Note name")}
             subtitle={t("Generating quiz")}
             description={t("It might take a minute, please wait")}
           />

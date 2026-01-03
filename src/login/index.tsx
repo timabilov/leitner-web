@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { jwtDecode } from 'jwt-decode';
 import { usePostHog } from 'posthog-js/react'
 import OnboardingModal from '@/onboarding';
+import { AiOrbitAnimation } from '@/note-detail/ai-orbit-animation';
 
 
 
@@ -364,7 +365,20 @@ const LoginBase = () => {
 
   return (
     <div className="relative min-h-screen w-full text-slate-900 selection:bg-purple-100 font-sans overflow-hidden">
-      
+      <style>
+        {
+          `
+           @keyframes slow-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+          .animate-slow-bounce {
+            /* 3s duration = Slow speed */
+            /* ease-in-out = Smooth "floating" feeling */
+            animation: slow-bounce 3s ease-in-out infinite;
+          }`
+        }
+      </style>
       <AnimatedGrid />
        <OnboardingModal 
         isOpen={showOnboarding} 
@@ -385,11 +399,12 @@ const LoginBase = () => {
       <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10"></header>
 
       <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
-        <div className="mb-12 flex flex-col items-center gap-2">
-          <div className="flex items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
-            <CatPenIcon className="h-10 w-10" strokeWidth={2.5} />
+        <div className="mb-2 flex flex-col items-center gap-2">
+          <div className="flex items-center justify-center text-white ">
+            <CatPenIcon className="h-30 w-30 animate-slow-bounce" strokeWidth={2.5} />
+            {/* <AiOrbitAnimation /> */}
           </div>
-          <h3 className="text-4xl font-bold tracking-tight text-slate-700">Leitner AI</h3>
+          <h3 className="text-4xl font-bold  text-slate-700  tracking-tighter  dark:text-zinc-50">Leitner AI</h3>
         </div>
 
         <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
@@ -431,9 +446,9 @@ const LoginBase = () => {
 
         <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
           By signing in, you agree to our{" "}
-          <Link to="/terms" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-800">Term of Use</Link>
+          <Link to="/terms" className="underline decoration-slate-300 underline-offset-2 text-slate-900">Term of Use</Link>
           {" "}and{" "}
-          <Link to="/privacy" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-800">Privacy Policy</Link>
+          <Link to="/privacy" className="underline decoration-slate-300 underline-offset-2 text-slate-900">Privacy Policy</Link>
         </p>
       </main>
     </div>
