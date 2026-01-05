@@ -42,7 +42,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
       className="border-r border-zinc-200/50 bg-white dark:bg-zinc-950 dark:border-zinc-800/50" 
       {...props}
     >
-      <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 py-7 gap-3">
+      <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 group-data-[collapsible=icon]:px-2 py-7 gap-3">
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 shadow-sm">
           <CatLogo size={18} />
         </div>
@@ -52,7 +52,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
         </span>
       </SidebarHeader>
 
-      <SidebarContent className="px-2 pt-4 gap-0 overflow-x-hidden">
+      <SidebarContent className="px-2 group-data-[collapsible=icon]:px-1 pt-4 gap-0 overflow-x-hidden">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1 relative">
@@ -84,7 +84,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                         <motion.div
                           layoutId="activeIndicator"
                           className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full z-10"
-                          style={{ backgroundImage: 'linear-gradient(to bottom, #FE5E5F, #C04796)' }}
+                          style={{ backgroundColor: 'black' }}
                           transition={{ type: "spring", stiffness: 380, damping: 30 }}
                         />
                       )}

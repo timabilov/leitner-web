@@ -329,15 +329,23 @@ const NoteDetailBase = () => {
   const [isProcessingFiles, setProcessingFiles] = useState(false);
 
   // 1. Data Fetching: Note Detail
-  const { data: noteQueryResponse } = useQuery({
+  const { data: noteQueryResponse, refetch } = useQuery({
     queryKey: [`notes-${noteId}`],
     queryFn: () => axiosInstance.get(`${API_BASE_URL}/company/${companyId}/notes/${noteId}`),
     enabled: !!companyId,
     refetchInterval: (query: any) => {
+      console.log("1-isPolling", isPolling);
       const status = query.state?.data?.data?.quiz_status;
-      return isPolling && (status === "in_progress" || status === "ready_to_generate") ? 500 : false;
+      return isPolling && (status === "in_progress" || status === "ready_to_generate") ? 3000 : false;
     }
   });
+
+
+    useEffect(() => {
+      console.log("2-isPolling", isPolling)
+      if (isPolling && noteQueryResponse) refetch();
+    }, [isPolling]);
+
 
   const note = noteQueryResponse?.data;
 

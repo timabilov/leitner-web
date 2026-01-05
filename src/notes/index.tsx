@@ -218,7 +218,7 @@ const Notes = ({ children }: any) => {
           <div className=" w-full max-w-2xl m-auto mt-8">
             <Alert className="flex items-center justify-between border-none bg-transparent">
               <Avatar className="h-18 w-18 rounded-full  flex items-center mr-2 animate-slow-bounce">
-                <CatPenIcon />
+                <CatPenIcon size={58} />
               </Avatar>
               <div className="flex-1 flex-col justify-between gap-1">
                 <AlertTitle className="flex-1 text-xl">

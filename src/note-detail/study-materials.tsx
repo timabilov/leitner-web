@@ -57,7 +57,7 @@ export const StudyMaterials = ({
 
   // Animation State
   const [showSuccess, setShowSuccess] = useState(false);
-  const prevStatusRef = useRef(noteQuery.data?.data?.quiz_status);
+  const prevStatusRef = useRef(noteQuery.data?.quiz_status);
 
   // --- MUTATIONS ---
   const generateStudyMaterialNoteMutation = useMutation({
@@ -67,6 +67,7 @@ export const StudyMaterials = ({
       );
     },
     onSuccess: () => {
+      console.log("setIsPolling", setIsPolling);
       if (setIsPolling) setIsPolling(true);
       setErrorMessage(null);
       // Optimistic update
@@ -119,7 +120,7 @@ export const StudyMaterials = ({
 
   // --- EFFECTS ---
   useLayoutEffect(() => {
-    const currentStatus = noteQuery.data?.data?.quiz_status;
+    const currentStatus = noteQuery.data?.quiz_status;
     const prevStatus = prevStatusRef.current;
 
     if (prevStatus === 'in_progress' && currentStatus === 'generated') {
@@ -129,15 +130,15 @@ export const StudyMaterials = ({
       return () => clearTimeout(timer);
     }
     prevStatusRef.current = currentStatus;
-  }, [noteQuery.data?.data?.quiz_status, setIsPolling]);
+  }, [noteQuery.data?.quiz_status, setIsPolling]);
 
   // --- RENDER HELPERS ---
   const isLoading =
-    (noteQuery.data?.data?.quiz_status === "in_progress" || generateStudyMaterialNoteMutation.isPending) && 
+    (noteQuery.data?.quiz_status === "in_progress" || generateStudyMaterialNoteMutation.isPending) && 
     !showSuccess;
 
-  const alertEnabled = noteQuery.data?.data?.quiz_alerts_enabled;
-  const isGenerated = noteQuery.data?.data?.quiz_status === 'generated';
+  const alertEnabled = noteQuery.data?.quiz_alerts_enabled;
+  const isGenerated = noteQuery.data?.quiz_status === 'generated';
 
   // --- HEADER SECTION (Handles Titles & Back Buttons) ---
   const renderHeader = () => {
@@ -182,16 +183,16 @@ export const StudyMaterials = ({
     );
   };
 
+  {console.log("isGenerated", isGenerated, " noteQuery.data?.data?.quiz_status", noteQuery.data?.quiz_status)}
   return (
     <div className="w-full max-w-4xl mx-auto p-1 md:p-6 min-h-[500px]">
-      
       {renderHeader()}
 
       {/* --- STATE 1: LOADING --- */}
       {isLoading ? (
         <div className="flex flex-col items-center justify-center min-h-[400px]">
           <GenericAILoading
-            mainTitle={noteQuery.data?.data?.name || t("Note name")}
+            mainTitle={noteQuery?.data?.name || t("Note name")}
             subtitle={(
               <TypeAnimation
                 sequence={[
@@ -284,7 +285,7 @@ export const StudyMaterials = ({
             <AIQuizTab 
               quizLevel={quizLevel} 
               setQuizLevel={setQuizLevel} 
-              quizData={noteQuery?.data?.data?.questions} 
+              quizData={noteQuery?.data?.questions} 
               noteId={noteId} 
             />
           ) : (
@@ -297,7 +298,7 @@ export const StudyMaterials = ({
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <CardHeader className="flex flex-col items-center text-center p-8">
                   <div className="mb-6 p-4 bg-pink-500/10 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <QuizHardPenIcon className="h-10 w-10 text-primary" />
+                    <QuizHardPenIcon className="h-10 w-10 text-primary" useBrandGradient />
                   </div>
                   <CardTitle className="text-xl mb-2">{t("AI Quiz")}</CardTitle>
                   <CardDescription className="text-base">
