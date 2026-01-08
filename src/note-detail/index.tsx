@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/react";
 import { usePostHog } from "posthog-js/react";
 import JSZip from "jszip";
 import Zoom from "react-medium-image-zoom";
-
+import { useSearchParams } from "react-router-dom";
 // --- Services & Store ---
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
@@ -17,8 +17,7 @@ import { useUserStore } from "@/store/userStore";
 import Layout from "@/components/layout";
 import MarkdownView from "@/components/markdown-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -27,7 +26,7 @@ import {
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import { StudyMaterials } from "./study-materials";
-import AiModal from "./ai-modal";
+
 
 // --- Icons ---
 import {
@@ -36,19 +35,18 @@ import {
   Calendar,
   Globe,
   Paperclip,
-  Youtube,
   MessageSquare,
   ScrollText,
   NotepadText,
-  Sparkles,
-  ChevronDown,
   LayoutGrid,
   MoreVertical,
-  Clock,
-  CheckCircle2,
-  Loader2,
-  Send,
   User,
+  Send,
+  Loader2,
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
 import AIIcon from "./ai-icon";
@@ -58,9 +56,7 @@ import Typewriter from "./type-writter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Message } from "@/components/ui/chat-message";
-import { TypeAnimation } from "react-type-animation";
-import { GenericAILoading } from "@/components/generic-ai-loading";
-import { AiLoader } from "@/notes/AILoader";
+import ChatInterface from "./chat-interface";
 
 // --- Sub-Components ---
 
@@ -68,7 +64,7 @@ import { AiLoader } from "@/notes/AILoader";
  * High-density metadata item
  */
 
-const MetaItem = ({ icon, label, value, onClick, active }: any) => (
+const MetaItem = ({ icon, label, value, onClick, active, iconEnd }: any) => (
   <div
     onClick={onClick}
     className={cn(
@@ -87,6 +83,7 @@ const MetaItem = ({ icon, label, value, onClick, active }: any) => (
     <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
       {value}
     </span>
+    {iconEnd}
   </div>
 );
 
@@ -116,233 +113,8 @@ const StudioTabTrigger = ({ value, icon, label, active }: any) => (
 
 // --- MAIN COMPONENT ---
 
-const ChatInterface = ({
-  noteName,
-  noteId,
-}: {
-  noteName?: string;
-  noteId: string;
-}) => {
-  const { t } = useTranslation();
-  const { companyId } = useUserStore();
-  const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Track the ID of the message currently being generated
-  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(
-    null
-  );
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "init-1",
-      role: "ai",
-      content: t(
-        "Hello! I've analyzed your note '{{name}}'. Ask me anything about it!",
-        { name: noteName || "Untitled" }
-      ),
-    },
-  ]);
-
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // 2. Auto-focus on mount
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
-
-  // 1. Auto-scroll logic (Improved)
-  // We use a MutationObserver or a simple useEffect on messages length + loading state
-  // But for typewriter, we want to scroll often.
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isLoading, streamingMessageId]);
-
-  // 3. Auto-focus when loading finishes
-  useEffect(() => {
-    if (!isLoading) {
-      inputRef.current?.focus();
-    }
-  }, [isLoading]);
-
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!inputValue.trim() || isLoading) return;
-
-    const userText = inputValue.trim();
-
-    // Add User Message
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: userText,
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setInputValue("");
-    setIsLoading(true);
-    inputRef.current?.focus();
-
-    // Add AI Placeholder
-    const aiMsgId = (Date.now() + 1).toString();
-    setStreamingMessageId(aiMsgId); // Mark this ID as streaming
-    setMessages((prev) => [...prev, { id: aiMsgId, role: "ai", content: "" }]);
-
-    // Prepare History
-    const historyPayload = messages.map((m) => ({
-      role: m.role === "ai" ? "model" : "user",
-      message: m.content,
-    }));
-
-    let lastIndex = 0;
-
-    try {
-      await axiosInstance.post(
-        `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat`,
-        {
-          message: userText,
-          history: historyPayload,
-        },
-
-        {
-          timeout: 120000, // 2 minutes
-          onDownloadProgress: (progressEvent) => {
-            const xhr = progressEvent.event.target;
-            const fullResponse = xhr.responseText || "";
-            const newChunk = fullResponse.substring(lastIndex);
-
-            if (newChunk) {
-              lastIndex = fullResponse.length;
-
-              setMessages((prev) =>
-                prev.map((msg) =>
-                  msg.id === aiMsgId
-                    ? { ...msg, content: msg.content + newChunk }
-                    : msg
-                )
-              );
-            }
-          },
-        }
-      );
-    } catch (error) {
-      console.error("Chat error:", error);
-      Sentry.captureException(error);
-
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === aiMsgId
-            ? {
-                ...msg,
-                content: t("Sorry, I encountered an error. Please try again."),
-              }
-            : msg
-        )
-      );
-    } finally {
-      setIsLoading(false);
-      setStreamingMessageId(null); // Stop streaming effect
-      inputRef.current?.focus();
-    }
-  };
-
-  return (
-    <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto">
-      <ScrollArea className="flex-1 pr-4">
-        <div className="flex flex-col gap-4 py-4">
-          {messages.map((message) => {
-            const isAi = message.role === "ai";
-            // Check if this specific message is the one currently streaming
-            const isStreaming = message.id === streamingMessageId;
-
-            return (
-              <div
-                key={message.id}
-                className={cn(
-                  "flex w-full gap-3",
-                  !isAi ? "flex-row-reverse" : "flex-row"
-                )}
-              >
-                <Avatar
-                  className={cn(
-                    "h-10 w-10 border",
-                    isAi ? "bg-black" : "bg-muted"
-                  )}
-                >
-                  {isAi ? (
-                    <CatLogo className="h-4 w-4 text-white m-auto" />
-                  ) : (
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-
-                <div
-                  className={cn(
-                    "relative max-w-[80%] px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap leading-relaxed",
-                    !isAi
-                      ? "bg-primary text-primary-foreground rounded-tr-sm"
-                      : "bg-muted text-foreground rounded-tl-sm"
-                  )}
-                >
-                  {/* --- RENDER LOGIC --- */}
-                  {/* If it's AI, use the Typewriter. If user, show plain text. */}
-                  {isAi ? (
-                    <Typewriter
-                      content={message.content}
-                      isStreaming={isStreaming}
-                    />
-                  ) : (
-                    message.content
-                  )}
-
-                  {/* Fallback for initial loading before first chunk arrives */}
-                  {isAi && isStreaming && message.content.length === 0 && "..."}
-                </div>
-              </div>
-            );
-          })}
-          {/* Scroll Anchor */}
-          <div ref={scrollRef} className="h-1" />
-        </div>
-      </ScrollArea>
-
-      <div className="pt-4 border-t bg-background">
-        <form
-          onSubmit={handleSendMessage}
-          className="relative flex items-center w-full"
-        >
-          <Input
-            placeholder={t("Ask something about this note...")}
-            ref={inputRef} // 6. Attach the ref here
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            // disabled={isLoading}
-            className="pr-12 py-6 rounded-full shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!inputValue.trim() || isLoading}
-            className="absolute right-1.5 rounded-full h-9 w-9 shrink-0 cursor-pointer"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
-        </form>
-        <p className="text-[10px] text-muted-foreground text-center mt-2">
-          {t("AI can make mistakes. Check important info.")}
-        </p>
-      </div>
-    </div>
-  );
-};
 
 const extractYouTubeID = (url: string) => {
   if (!url) return null;
@@ -371,7 +143,6 @@ const NoteDetailBase = () => {
   const posthog = usePostHog();
 
   // Local UI State
-  const [activeTab, setActiveTab] = useState<string>("overview");
   const [isMediaExpanded, setIsMediaExpanded] = useState(true);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [previewFile, setPreviewFile] = useState<any>(null);
@@ -382,6 +153,23 @@ const NoteDetailBase = () => {
   const [pdfPaths, setPdfPaths] = useState<any[]>([]);
   const [textContent, setTextContent] = useState<string>("");
   const [isProcessingFiles, setProcessingFiles] = useState(false);
+  // 1. Initialize search params
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // 2. Get active tab from URL, fallback to "overview" if missing
+  const activeTab = searchParams.get("tab") || "overview";
+
+    // 3. Handler to update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setSearchParams(
+      (prev) => {
+        prev.set("tab", value);
+        return prev;
+      },
+      { replace: true } // Uses 'replace' to prevent cluttering browser history
+    );
+  };
+
 
   // 1. Data Fetching: Note Detail
   const { data: noteQueryResponse, refetch } = useQuery({
@@ -502,7 +290,13 @@ const NoteDetailBase = () => {
                 </Link>
                 <span className="text-zinc-300 dark:text-zinc-800">/</span>
                 <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold  text-lg">
-                  {getTypeIcon(note?.note_type, 6)}
+                  {
+                    note?.note_type === "youtube" ? (
+                      <div className="w-6 h-6">
+                        {getTypeIcon(note?.note_type)}
+                      </div>
+                    ) : getTypeIcon(note?.note_type, 6)
+                  }
                   {isNoteProcessing ?  t("Loading...") : note?.name || "-" }
                 </div>
               </div>
@@ -530,6 +324,7 @@ const NoteDetailBase = () => {
                 value={`${attachmentCount} items`}
                 onClick={() => attachmentCount > 0 ? setIsMediaExpanded(!isMediaExpanded) : null}
                 active={isMediaExpanded}
+                iconEnd={isMediaExpanded ?  <ChevronUp />:  <ChevronDown />}
               />
               <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
 
@@ -623,8 +418,7 @@ const NoteDetailBase = () => {
           </AnimatePresence>
           {/* --- 3. WORKSPACE: Tabs Switcher --- */}
           <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
+          value={activeTab} onValueChange={handleTabChange}
             className="w-full"
           >
             <div className="flex items-center justify-between mb-8 overflow-x-auto no-scrollbar">

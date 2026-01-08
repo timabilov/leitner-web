@@ -1,26 +1,19 @@
 import { useUserStore } from "@/store/userStore";
-import { redirect } from "react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
 import {
-  FolderArchive,
   Loader2Icon,
-  LoaderIcon,
-  Plus,
   Search,
-  SearchCode,
   SearchX,
-  Youtube,
 } from "lucide-react";
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -32,23 +25,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import CatPenIcon from "./cat-pen-icon";
 import debounce from "lodash.debounce";
-import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import * as Sentry from "@sentry/react";
 import { usePostHog } from "posthog-js/react";
-import { LeitnerCatAnimation } from "./leitner-cat-animation";
 import Lottie from "lottie-react";
-import searchAnimation from "./search.json";
 import youtubeAnimation from "./youtube.json";
 import folderAnimation from "./folder.json";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
-import { NoteCreationToast } from "./note-creation-toast";
 
 const isNoteInLoadingState = (note: any) => {
   console.log("note status is", note)
@@ -64,6 +48,7 @@ const Notes = ({ children }: any) => {
    // 2. Create the Ref
   const notesListRef = useRef<HTMLDivElement>(null);
   const { companyId, isLoggedIn, fullName, email, userId } = useUserStore();
+
   const [viewMode, setViewMode] = useState<string>("grid");
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,6 +57,7 @@ const Notes = ({ children }: any) => {
   const [loadingNoteIds, setProcessingNoteIds] = useState<number[]>([]);
 
   const { t } = useTranslation(); // Translation hook
+
 
    // 3. Create the Scroll Handler
   const scrollToNotes = () => {
@@ -93,13 +79,11 @@ const Notes = ({ children }: any) => {
     },
     enabled: !!userId || isPolling,
     refetchInterval: (query) => {
-      console.log("====1")
       const notes = query.state?.data?.data.notes;
       if (!notes || !Array.isArray(notes) || notes.length === 0) {
         return false;
       }
       const loadingNotes = notes.filter(isNoteInLoadingState) || []; // TODO fix later in be, some notes never change status
-      console.log("loadingNotes", loadingNotes);
       const loadingNotesCount = loadingNotes?.length;
       if (loadingNotesCount > 0) {
         setProcessingNotes(loadingNotesCount);
@@ -306,13 +290,6 @@ const Notes = ({ children }: any) => {
               isDragActive={isDragActive}
               refetch={notesQuery.refetch}
             />
-          {/* <NoteCreationToast 
-            step={'Note submitted. Analyzing content..'}
-            progress={100} 
-            status={'success'} 
-            noteId={'noteId'} 
-            name={"New Note"} 
-          /> */}
           </div>
           <div className="sm:flex justify-between p-4 mt-4">
             <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight"  ref={notesListRef} >
@@ -361,12 +338,6 @@ const Notes = ({ children }: any) => {
             <div className="relative w-full max-w-full overflow-hidden rounded-xl border bg-white transition-all duration-300 hover:border-black hover:shadow-lg focus-within:border-black focus-within:shadow-lg">
               <div className="flex items-center px-3 py-1">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/40 mr-2">
-                  {/* <Lottie
-                    animationData={searchAnimation}
-                    loop={true}
-                    autoplay={true}
-                    className="h-5 w-5"
-                  /> */}
                   <Search className="w-4 h-4" />
                 </div>
 
@@ -411,10 +382,6 @@ const Notes = ({ children }: any) => {
             {searchQuery && searchNotesQuery.isPending ? (
               <div className="col-span-full flex flex-col items-center justify-center py-20">
                 <div className="relative">
-                  {/* <LoaderIcon className="size-12 animate-spin text-slate-200" /> */}
-                  {/* <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="h-2 w-2 bg-pink-500 rounded-full animate-pulse" />
-                   </div> */}
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
                 </div>
                 <p className="mt-4 text-slate-400 font-medium animate-pulse">
