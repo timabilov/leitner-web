@@ -3,7 +3,7 @@ import { redirect } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
 import {
@@ -48,8 +48,10 @@ import youtubeAnimation from "./youtube.json";
 import folderAnimation from "./folder.json";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
+import { NoteCreationToast } from "./note-creation-toast";
 
 const isNoteInLoadingState = (note: any) => {
+  console.log("note status is", note)
   return (
     note.status !== "failed" &&
     note.status !== "transcribed" &&
@@ -59,12 +61,27 @@ const isNoteInLoadingState = (note: any) => {
 
 const Notes = ({ children }: any) => {
   const posthog = usePostHog();
+   // 2. Create the Ref
+  const notesListRef = useRef<HTMLDivElement>(null);
   const { companyId, isLoggedIn, fullName, email, userId } = useUserStore();
   const [viewMode, setViewMode] = useState<string>("grid");
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [files, setFiles] = useState<any[]>([]);
+  const [processingNotes, setProcessingNotes] = useState(0);
+  const [loadingNoteIds, setProcessingNoteIds] = useState<number[]>([]);
+
   const { t } = useTranslation(); // Translation hook
+
+   // 3. Create the Scroll Handler
+  const scrollToNotes = () => {
+    if (notesListRef.current) {
+      notesListRef.current.scrollIntoView({ 
+        behavior: "smooth", 
+        block: "start" 
+      });
+    }
+  };
 
   const notesQuery = useQuery({
     queryKey: ["notes"],
@@ -76,14 +93,20 @@ const Notes = ({ children }: any) => {
     },
     enabled: !!userId || isPolling,
     refetchInterval: (query) => {
+      console.log("====1")
       const notes = query.state?.data?.data.notes;
-      if (!notes || !Array.isArray(notes) || notes.length === 0 || !isPolling) {
+      if (!notes || !Array.isArray(notes) || notes.length === 0) {
         return false;
       }
-      const hasLoadingNotes = false; //!!notes.some(isNoteInLoadingState); // TODO fix later in be, some notes never change status
-      if (hasLoadingNotes) {
-        return 5000; // Poll every 5 seconds if there are loading notes
+      const loadingNotes = notes.filter(isNoteInLoadingState) || []; // TODO fix later in be, some notes never change status
+      console.log("loadingNotes", loadingNotes);
+      const loadingNotesCount = loadingNotes?.length;
+      if (loadingNotesCount > 0) {
+        setProcessingNotes(loadingNotesCount);
+        setProcessingNoteIds(loadingNotes);
+        return 3000; // Poll every 5 seconds if there are loading notes
       } else {
+        setProcessingNotes(0)
         setIsPolling(false);
         return false;
       }
@@ -99,9 +122,6 @@ const Notes = ({ children }: any) => {
     },
   });
 
-  useEffect(() => {
-    if (isPolling && notesQuery) notesQuery.refetch();
-  }, [isPolling]);
 
   const searchNotesQuery = useQuery({
     queryKey: ["searchNotes", searchQuery],
@@ -174,6 +194,8 @@ const Notes = ({ children }: any) => {
       search={debouncedSearch}
       searchValue={searchQuery}
       isSearching={searchNotesQuery.isPending}
+      processingNotes={processingNotes}
+      onProcessingClick={scrollToNotes} 
     >
       <style>
         {`
@@ -233,6 +255,7 @@ const Notes = ({ children }: any) => {
          {/* 2. ACTION CARDS SECTION - 1 col on mobile, 2 col on sm+ */}
           <div className="px-4 grid grid-cols-1 sm:grid-cols-4  md:grid-cols-2 w-full gap-4 max-w-4xl mx-auto md:justify-items-center">
             <CreateYoutubeNote
+              refetch={notesQuery.refetch}
               className="w-4 h-4"
               component={
                 <Card className="sm:col-span-full md:max-w-[330px] md:col-span-1 md:justify-self-end bg-white z-40 hover:shadow-lg transition-all duration-300 hover:border-black w-full cursor-pointer relative overflow-hidden group">
@@ -281,10 +304,18 @@ const Notes = ({ children }: any) => {
               getInputProps={getInputProps}
               getRootProps={getRootProps}
               isDragActive={isDragActive}
+              refetch={notesQuery.refetch}
             />
+          {/* <NoteCreationToast 
+            step={'Note submitted. Analyzing content..'}
+            progress={100} 
+            status={'success'} 
+            noteId={'noteId'} 
+            name={"New Note"} 
+          /> */}
           </div>
           <div className="sm:flex justify-between p-4 mt-4">
-            <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+            <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight"  ref={notesListRef} >
               {t("All notes")}
             </h3>
             <ButtonGroup

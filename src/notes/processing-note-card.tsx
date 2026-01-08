@@ -1,13 +1,16 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
+import { useNavigate } from 'react-router';
 
-const ProcessingNoteCard = ({ view }) => {
+const ProcessingNoteCard = ({ view, id }) => {
   // Use semantic tokens: border-border, bg-background
-  const cardBase = "group relative bg-background border border-border overflow-hidden rounded-xl h-full ";
-
+  const cardBase = "group relative bg-background border border-border overflow-hidden rounded-xl h-full cursor-pointer hover:border-foreground/30 ";
+  const navigate = useNavigate();
   return (
-    <div className={cn(
+    <div 
+     onClick={() => navigate(`/notes/${id}`)}
+     className={cn(
       cardBase,
       view === "grid" ? "flex flex-col p-5 min-h-[200px]" : "flex items-center p-3 gap-4"
     )}>
@@ -37,7 +40,7 @@ const ProcessingNoteCard = ({ view }) => {
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-foreground"></span>
           </div>
           <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.15em]">
-            AI Analysis Active
+            Processing
           </span>
         </div>
       </div>
@@ -70,7 +73,7 @@ const ProcessingNoteCard = ({ view }) => {
         }}
         className="absolute inset-0 z-20 pointer-events-none"
         style={{
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)",
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)",
         }}
       />
     </div>

@@ -10,6 +10,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import NoteDetail from "./note-detail";
 import PricingPage from "./prices";
 import { ProtectedRoute, PublicRoute } from "./components/protected-route";
+import Alerts from "./alerts";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/notes" element={<Notes />} />
                 <Route path="/notes/:noteId" element={<NoteDetail />} />
                 <Route path="/price-page" element={<PricingPage />} />
+                <Route path="/alerts" element={<Alerts />} />
               </Route>
 
               {/* --- CATCH ALL (404) --- */}

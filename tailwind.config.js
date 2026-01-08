@@ -18,9 +18,9 @@ module.exports = {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
           },
-          shimmer: {
-            '0%': { backgroundPosition: '200% 0' },
-            '100%': { backgroundPosition: '-200% 0' },
+         shimmer: {
+          '0%': { 'background-position': '200% 0' }, // Use quotes and kebab-case
+          '100%': { 'background-position': '-200% 0' },
         },
       },
       animation: {
@@ -28,7 +28,7 @@ module.exports = {
         'spin-slow': 'spin 5s linear infinite', // We create a custom slow-spin utility
         'gradient-shift': 'gradient-shift 4s ease-in-out infinite',
         'progress-indeterminate': 'progress-indeterminate 1.5s ease-in-out infinite',
-        shimmer: 'shimmer 3s ease-in-out infinite',
+        shimmer: 'shimmer 2s linear infinite',
       },
     },
     fontFamily: {

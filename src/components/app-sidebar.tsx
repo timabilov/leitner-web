@@ -10,7 +10,7 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Home, FolderOpen, Smartphone, ShieldCheck, FileText, Handshake, HatGlasses, CatIcon } from "lucide-react";
+import { Home, FolderOpen, Smartphone, ShieldCheck, FileText, Handshake, HatGlasses, CatIcon, Bell } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { NavUser } from "./nav-user";
@@ -27,6 +27,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
   const items = [
     { title: t("Notes"), icon: Home, key: "/notes" },
     { title: t("Folders"), icon: FolderOpen, key: "/folders" },
+    { title: t("Alerts"), icon: Bell, key: "/alerts" },
     { title: t("App"), icon: Smartphone, key: "/app" },
   ];
 

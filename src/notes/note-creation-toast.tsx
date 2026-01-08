@@ -1,7 +1,7 @@
 "use client";
 
 import { GradientProgress } from "@/components/gradient-progress";
-import { Loader2, XCircle } from "lucide-react";
+import { ExternalLink, Loader2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Lottie from "lottie-react";
 import successAnimation from './done.json';
@@ -11,14 +11,17 @@ interface NoteCreationToastProps {
   step: string;
   progress: number;
   status: "loading" | "success" | "error";
+  noteId?: string | number;
+  name?: string | null
+  onClick?: () => void;
 }
 
-export function NoteCreationToast({ step, progress, status }: NoteCreationToastProps) {
+export function NoteCreationToast({ step, progress, status, name, onClick }: NoteCreationToastProps) {
   return (
     <div 
       className={cn(
         // Layout & Size (Standard Sonner Width)
-        "pointer-events-auto relative flex w-full md:w-[356px] flex-col gap-3 overflow-hidden",
+        "pointer-events-auto relative flex w-full md:w-[356px] flex-col gap-3 overflow-hidden w-full",
         // Visuals (Shadcn Toast Styles)
         "rounded-xl border bg-background p-4 shadow-lg transition-all",
         // Conditional Border Color
@@ -27,7 +30,7 @@ export function NoteCreationToast({ step, progress, status }: NoteCreationToastP
     >
       {/* Header Row */}
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 overflow-hidden">
+        <div className="flex items-center gap-3 overflow-hidden w-full">
           
           {/* Icon Wrapper */}
           <div className={cn(
@@ -59,9 +62,9 @@ export function NoteCreationToast({ step, progress, status }: NoteCreationToastP
           </div>
 
           {/* Text Content */}
-          <div className="flex flex-col gap-1 overflow-hidden">
-            <span className="text-sm font-semibold leading-none tracking-tight">
-              {status === "success" ? "Complete" : status === "error" ? "Error" : "Creating Note"}
+          <div className="flex flex-col gap-1 overflow-hidden w-full">
+            <span onClick={onClick} className={`w-full text-sm font-semibold leading-none tracking-tight ${status === "success" ? "underline cursor-pointer" : ""}`}>
+              {status === "success" ? <div className=" w-full flex justify-between items-center">{`Analyzing ${name}`}  <ExternalLink className="w-3 h-3 ml-2" /> </div> : status === "error" ? "Error" : "Creating Note"}
             </span>
             <span className="text-xs text-muted-foreground truncate">
               {step}

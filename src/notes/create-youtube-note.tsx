@@ -30,7 +30,7 @@ import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react"; 
 import { usePostHog } from 'posthog-js/react';
 
-const CreateYoutubeNote = ({ component }) => {
+const CreateYoutubeNote = ({ component, refetch }) => {
   const { t } = useTranslation(); // Initialize the translation hook
   const { userId, email } = useUserStore();
 
@@ -158,6 +158,7 @@ const CreateYoutubeNote = ({ component }) => {
       setUrlInputValue("");
       setIsOpen(false);
       toast.success(t("Note has been created"));
+      refetch();
     },
     onError: (error) => {
         Sentry.captureException(error, { 
@@ -205,7 +206,7 @@ const CreateYoutubeNote = ({ component }) => {
           </div>
         </div>
         <DialogFooter>
-          <Label htmlFor={"lang"}>{t("Translation:")}</Label>
+          <Label htmlFor={"lang"}>{t("Translate to")}:</Label>
 
           <Select
             defaultValue="auto"

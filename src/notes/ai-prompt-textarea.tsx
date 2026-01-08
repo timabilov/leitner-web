@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { NoteCreationToast } from "./note-creation-toast";
 import AIArrow from "./AiArrow";
+import { useNavigate } from "react-router";
 
 // Import your custom toast component
 
@@ -185,11 +186,12 @@ const AudioPreview = ({ file, onRemove }: { file: any, onRemove: () => void }) =
 // ============================================================================
 // 3. MAIN COMPONENT: AIPromptInput
 // ============================================================================
-export function AIPromptInput({  setIsPolling, openFilePicker, files, setFiles, getInputProps, getRootProps, isDragActive }: any) {
+export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps, getRootProps, isDragActive, refetch }: any) {
   const { t } = useTranslation();
   const posthog = usePostHog();
+  const navigate = useNavigate();
   const { companyId, userId, email, selectedFolder } = useUserStore();
-  
+
   const [prompt, setPrompt] = useState("");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
@@ -199,30 +201,31 @@ export function AIPromptInput({  setIsPolling, openFilePicker, files, setFiles, 
     progressInterval: NodeJS.Timeout | null;
     zipData: any | null;
     noteId: string | null;
+    name: string | null
   }>({
     toastId: null,
     progressInterval: null,
     zipData: null,
-    noteId: null
+    noteId: null,
+    name: null
   });
 
   // --- PROGRESS HELPERS ---
-  
   // Helper to render/update your custom toast
-  const updateToast = (step: string, progress: number, status: "loading" | "success" | "error" = "loading") => {
+  const updateToast = (step: string, progress: number, status: "loading" | "success" | "error" = "loading", noteId?: string) => {
     // If we have an ID, we dismiss specifically or let Sonner handle replacement
     // Sonner's toast.custom returns an ID we can use to update
     if (flowContext.current.toastId) {
       toast.custom(
-        () => <NoteCreationToast step={step} progress={progress} status={status} />, 
+        () => <NoteCreationToast step={step} progress={progress} status={status} noteId={noteId} name={flowContext.current.name}  onClick={() => status === 'success' ?  navigate(`/notes/${noteId}`) : null} />, 
         { 
           id: flowContext.current.toastId, 
-          duration: status === 'success' ? 4000 : Infinity // Auto dismiss on success only
+          duration: 3000 // Auto dismiss on success only
         }
       );
     } else {
        const id = toast.custom(
-        () => <NoteCreationToast step={step} progress={progress} status={status} />, 
+        () => <NoteCreationToast step={step} progress={progress} status={status} noteId={noteId}/>, 
         { duration: Infinity }
       );
       flowContext.current.toastId = id;
@@ -350,12 +353,11 @@ export function AIPromptInput({  setIsPolling, openFilePicker, files, setFiles, 
         startSimulatedProgress(t("Finalizing..."), 90);
         return axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${nId}/setAsUploaded`, {})
     },
-    onSuccess: () => {
+    onSuccess: (_, noteId) => {
       stopProgress();
       // Show Success State with Lottie
-      updateToast(t("Note created successfully!"), 100, "success");
-      
-      setIsPolling(true);
+      updateToast("Please wait a bit...", 100, "success", noteId );
+      refetch();
       
       // Delay clearing inputs slightly so user sees success state
       setTimeout(() => {
@@ -377,6 +379,7 @@ export function AIPromptInput({  setIsPolling, openFilePicker, files, setFiles, 
         { duration: Infinity }
     );
     flowContext.current.toastId = id;
+     flowContext.current.name = t("New Recording");
 
     try {
       startSimulatedProgress(t("Compressing files..."), 0);
@@ -539,8 +542,18 @@ export function AIPromptInput({  setIsPolling, openFilePicker, files, setFiles, 
               </motion.div>
             )}
           </AnimatePresence>
-
           <div className="flex-shrink-0 ml-auto">
+            <AnimatePresence>
+                <motion.span 
+                  initial={{ opacity: 0 }} 
+                  animate={{ opacity: 1 }} 
+                  exit={{ opacity: 0 }}
+                  className="hidden sm:inline-block mr-3 text-[10px] text-muted-foreground/60 font-medium select-none"
+                >
+                  ⌘ + Enter
+                </motion.span>
+            </AnimatePresence>
+
             <Button 
               onClick={saveNote} 
               size="icon" 
