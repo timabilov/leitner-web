@@ -56,7 +56,7 @@ const Layout = ({ children, title, containerRef, noGap, processingNotes, onProce
       <AppSidebar photo={photo} fullName={fullName} email={email} />
       
       <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
-        <Header showAlertBadge={true} processingNotes={processingNotes} onProcessingClick={onProcessingClick} />
+        <Header processingNotes={processingNotes} onProcessingClick={onProcessingClick} />
         
         <main 
           ref={containerRef}

@@ -25,7 +25,7 @@ export default function SortableGrid({ data, view }) {
         <Sortable value={items} onValueChange={handleValueChange} getItemValue={getItemValue}>
       */}
       {/* {items.map((item) => <NoteCard0  item={item}  view={view}/> )} */}
-      {items.map((item) => <NoteCard  item={item}  view={view}/> )}
+      {items.map((item) => <NoteCard  key={item.id} item={item}  view={view}/> )}
       {/* {items.map((item) => <NoteCard2  item={item}  view={view}/> )}
       {items.map((item) => <NoteCard3  item={item}  view={view}/> )}
       {items.map((item) => <NoteCard4  item={item}  view={view}/> )} */}

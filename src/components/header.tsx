@@ -17,7 +17,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "./ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-const Header = ({ isAlertEnabled, showAlertBadge, foldersQuery, isLoadingFolders, setChecked, checked, toggleSwitch, processingNotes, onProcessingClick }: any) => {
+const Header = ({  foldersQuery, isLoadingFolders, setChecked, checked, toggleSwitch, processingNotes, onProcessingClick }: any) => {
   const { t } = useTranslation();
   const id = useId();
 
@@ -58,21 +58,6 @@ const Header = ({ isAlertEnabled, showAlertBadge, foldersQuery, isLoadingFolders
         {/* RIGHT: Actions */}
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Hide Alert Toggle on small mobile to save space */}
-          {showAlertBadge && (
-            <div className="hidden xs:block">
-              <AnimatedTooltip
-                trigger={[
-                  <div key="alert-toggle" className="flex items-center gap-2 rounded-md border border-border/50 bg-muted/30 px-2 py-1">
-                    <BellOff className={cn("size-4", !checked ? "text-foreground" : "text-muted-foreground/40")} />
-                    <Switch checked={checked} onCheckedChange={toggleSwitch} className="scale-75" />
-                    <BellRing className={cn("size-4", checked ? "text-foreground" : "text-muted-foreground/40")} />
-                  </div>,
-                ]}
-                items={[<p key="t">{t("Smart alerts")}</p>]}
-              />
-            </div>
-          )}
-
           <div className="flex items-center gap-1.5 sm:gap-2">
             <CreateFolder />
             <div className="">

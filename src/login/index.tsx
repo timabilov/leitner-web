@@ -254,7 +254,7 @@ const LoginBase = () => {
       localStorage.setItem('user-store', JSON.stringify({
         state: { accessToken: data.access_token, refreshToken: data.refresh_token }
       }));
-
+      posthog.identify(data.id, { email: variables.user.email, new_user: true });
       if (data?.new) {
         setSessionData({
           id: data.id,
@@ -270,7 +270,6 @@ const LoginBase = () => {
           fullAdmin: data?.company?.full_admin_access || false
         });
         setShowOnboarding(true);
-        posthog.identify(data.id, { email: variables.user.email, new_user: true });
       } else {
         // Existing user flow
         setUserData(data.id, data?.name, variables?.user?.email, data.company_id, data?.company?.subscription, data.company.name, data?.company?.trial_started_date && new Date(data.company.trial_started_date), data?.company?.trial_days, variables?.user?.photo, data?.company?.full_admin_access || false);

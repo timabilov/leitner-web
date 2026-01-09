@@ -35,7 +35,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 
 const isNoteInLoadingState = (note: any) => {
-  console.log("note status is", note)
   return (
     note.status !== "failed" &&
     note.status !== "transcribed" &&
