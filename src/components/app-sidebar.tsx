@@ -10,7 +10,18 @@ import {
   SidebarFooter,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
-import { Home, FolderOpen, Smartphone, ShieldCheck, FileText, Handshake, HatGlasses, CatIcon, Bell } from "lucide-react";
+import {
+  Home,
+  FolderOpen,
+  Smartphone,
+  ShieldCheck,
+  FileText,
+  Handshake,
+  HatGlasses,
+  CatIcon,
+  Bell,
+  GlassesIcon,
+} from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { NavUser } from "./nav-user";
@@ -37,10 +48,10 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
   ];
 
   return (
-    <Sidebar 
+    <Sidebar
       // Changed to collapsible to allow mobile/ipad trigger behavior
-      collapsible="icon" 
-      className="border-r border-zinc-200/50 bg-white dark:bg-zinc-950 dark:border-zinc-800/50" 
+      collapsible="icon"
+      className="border-r border-zinc-200/50 bg-white dark:bg-zinc-950 dark:border-zinc-800/50"
       {...props}
     >
       <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 group-data-[collapsible=icon]:px-2 py-7 gap-3">
@@ -62,42 +73,60 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                   {t("Library")}
                 </span>
               </div>
-              
+
               {items.map((item) => {
-                const isActive = pathname === item.key || (item.key !== "/" && pathname.startsWith(item.key));
+                const isActive =
+                  pathname === item.key ||
+                  (item.key !== "/" && pathname.startsWith(item.key));
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       onClick={() => navigate(item.key)}
                       className={cn(
-                        "h-9 px-3 transition-colors duration-200 rounded-md relative group",
-                        isActive ? "text-zinc-900 dark:text-zinc-50" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                        "h-9 px-3 transition-colors duration-200 rounded-md relative group cursor-pointer",
+                        isActive
+                          ? "text-zinc-900 dark:text-zinc-50"
+                          : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
                       )}
                     >
                       {isActive && (
                         <motion.div
                           layoutId="activeNav"
                           className="absolute inset-0 bg-zinc-100 dark:bg-zinc-900 z-0 rounded-md"
-                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 380,
+                            damping: 30,
+                          }}
                         />
                       )}
                       {isActive && (
                         <motion.div
                           layoutId="activeIndicator"
                           className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full z-10"
-                          style={{ backgroundColor: 'black' }}
-                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                          style={{ backgroundColor: "black" }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 380,
+                            damping: 30,
+                          }}
                         />
                       )}
                       <div className="relative z-10 flex items-center gap-3">
-                        <item.icon className={cn(
-                          "size-4 stroke-[1.8px] transition-colors",
-                          isActive ? "text-zinc-900 dark:text-zinc-50" : "opacity-70 group-hover:opacity-100"
-                        )} />
-                        <span className={cn(
-                          "text-sm font-medium tracking-tight group-data-[collapsible=icon]:hidden",
-                          isActive ? "opacity-100" : "opacity-80"
-                        )}>
+                        <item.icon
+                          className={cn(
+                            "size-4 stroke-[1.8px] transition-colors",
+                            isActive
+                              ? "text-zinc-900 dark:text-zinc-50"
+                              : "opacity-70 group-hover:opacity-100"
+                          )}
+                        />
+                        <span
+                          className={cn(
+                            "text-sm font-medium tracking-tight group-data-[collapsible=icon]:hidden",
+                            isActive ? "opacity-100" : "opacity-80"
+                          )}
+                        >
                           {item.title}
                         </span>
                       </div>
@@ -106,7 +135,54 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                 );
               })}
               <SidebarSeparator className="my-6 mx-3 bg-zinc-100 dark:bg-zinc-800 group-data-[collapsible=icon]:hidden" />
-              {/* ... Footer links logic similar to items mapping ... */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  //onClick={() => navigate(item.key)}
+                  className={cn(
+                    "h-9 px-3 transition-colors duration-200 rounded-md relative group cursor-pointer",
+                    "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "text-sm font-medium tracking-tight group-data-[collapsible=icon]:hidden flex items-center gap-3",
+                      "opacity-80"
+                    )}
+                  >
+                    <Handshake
+                      className={cn(
+                        "size-4 stroke-[1.8px] transition-colors",
+                        "opacity-70 group-hover:opacity-100"
+                      )}
+                    />
+                    {t("Terms of use")}
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  //onClick={() => navigate(item.key)}
+                  className={cn(
+                    "h-9 px-3 transition-colors duration-200 rounded-md relative group cursor-pointer",
+                    "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "text-sm font-medium tracking-tight group-data-[collapsible=icon]:hidden flex items-center gap-3",
+                      "opacity-80"
+                    )}
+                  >
+                    <HatGlasses
+                      className={cn(
+                        "size-4 stroke-[1.8px] transition-colors",
+                        "opacity-70 group-hover:opacity-100"
+                      )}
+                    />
+                    {t("Privacy policy")}
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -46,7 +46,7 @@ const Notes = ({ children }: any) => {
   const posthog = usePostHog();
    // 2. Create the Ref
   const notesListRef = useRef<HTMLDivElement>(null);
-  const { companyId, isLoggedIn, fullName, email, userId } = useUserStore();
+  const { companyId, isLoggedIn, fullName, email, userId, selectedFolder } = useUserStore();
 
   const [viewMode, setViewMode] = useState<string>("grid");
   const [isPolling, setIsPolling] = useState<boolean>(false);
@@ -69,11 +69,11 @@ const Notes = ({ children }: any) => {
   };
 
   const notesQuery = useQuery({
-    queryKey: ["notes"],
+    queryKey: ["notes",  selectedFolder?.id],
     refetchOnWindowFocus: false,
     queryFn: async () => {
       return axiosInstance.get(
-        API_BASE_URL + `/company/${companyId}/notes/all`
+        API_BASE_URL + `/company/${companyId}/notes/all${selectedFolder ? `?folder_id=${selectedFolder?.id}` : ''}`
       );
     },
     enabled: !!userId || isPolling,

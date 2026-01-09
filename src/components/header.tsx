@@ -16,11 +16,31 @@ import { cn } from "@/lib/utils";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "./ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { toast } from "sonner";
 
-const Header = ({  foldersQuery, isLoadingFolders, setChecked, checked, toggleSwitch, processingNotes, onProcessingClick }: any) => {
+const Header = ({  setChecked, checked, toggleSwitch, processingNotes, onProcessingClick }: any) => {
   const { t } = useTranslation();
-  const id = useId();
+  const { companyId } = useUserStore();
 
+  
+    const { data: foldersQuery, isLoading: isLoadingFolders} = useQuery({
+    queryKey: ['folders'],
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    queryFn: async () => {
+      return axiosInstance.get(API_BASE_URL + `/company/${companyId}/notes/folder`);
+    },
+    enabled: !!companyId,
+    onError: (error) => {
+      console.error('Get folders error:', error);
+    },
+    onSuccess: (response) => {
+      console.log("response is1", response.data)
+    }
+  });
+
+  
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md transition-all">
           <style>
