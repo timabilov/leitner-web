@@ -25,10 +25,10 @@ import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 
 // Icons
-import AIIcon from "@/note-detail/ai-icon";
+import AIIcon from "@/note-detail/assets/ai-icon";
 import CatPenIcon from "@/notes/cat-pen-icon";
-import QuizHardPenIcon from "@/note-detail/quiz-hard-pen-icon";
-import FlashcardIcon from "@/note-detail/flashcard-icon";
+import QuizHardPenIcon from "@/note-detail/assets/quiz-hard-pen-icon";
+import FlashcardIcon from "@/note-detail/assets/flashcard-icon";
 
 // Components
 import { FlashcardsTab } from "@/note-detail/flashcard-tab";

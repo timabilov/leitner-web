@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import * as Sentry from "@sentry/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { usePostHog } from "posthog-js/react";
 import JSZip from "jszip";
 import Zoom from "react-medium-image-zoom";
@@ -12,12 +11,10 @@ import { useSearchParams } from "react-router-dom";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
-
 // --- Components ---
 import Layout from "@/components/layout";
 import MarkdownView from "@/components/markdown-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +23,6 @@ import {
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import { StudyMaterials } from "./study-materials";
-
 
 // --- Icons ---
 import {
@@ -40,23 +36,19 @@ import {
   NotepadText,
   LayoutGrid,
   MoreVertical,
-  User,
-  Send,
-  Loader2,
-  ArrowDown,
-  ArrowUp,
   ChevronDown,
   ChevronUp,
+  Pencil,
+  CheckCheck,
+  Check,
+  CornerDownLeft,
+  Loader2,
 } from "lucide-react";
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
-import AIIcon from "./ai-icon";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import CatLogo from "./cat-logo";
-import Typewriter from "./type-writter";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import type { Message } from "@/components/ui/chat-message";
+import AIIcon from "./assets/ai-icon";
 import ChatInterface from "./chat-interface";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 // --- Sub-Components ---
 
@@ -101,20 +93,10 @@ const StudioTabTrigger = ({ value, icon, label, active }: any) => (
   >
     {icon}
     {label}
-    {/* {active && (
-      <motion.div 
-        layoutId="tab-indicator"
-        className="absolute -bottom-[5px] left-2 right-2 h-[2px] bg-zinc-900 dark:bg-zinc-50 rounded-full"
-        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-      />
-    )} */}
   </TabsTrigger>
 );
 
 // --- MAIN COMPONENT ---
-
-
-
 
 const extractYouTubeID = (url: string) => {
   if (!url) return null;
@@ -146,6 +128,8 @@ const NoteDetailBase = () => {
   const [isMediaExpanded, setIsMediaExpanded] = useState(true);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [previewFile, setPreviewFile] = useState<any>(null);
+  const [noteName, setNoteName] = useState<string>("");
+  const [editNameMode, toggleEditNameMode] = useState<boolean>(false);
 
   // File State
   const [imagePaths, setImagePaths] = useState<any[]>([]);
@@ -159,7 +143,7 @@ const NoteDetailBase = () => {
   // 2. Get active tab from URL, fallback to "overview" if missing
   const activeTab = searchParams.get("tab") || "overview";
 
-    // 3. Handler to update URL when tab changes
+  // 3. Handler to update URL when tab changes
   const handleTabChange = (value: string) => {
     setSearchParams(
       (prev) => {
@@ -170,7 +154,6 @@ const NoteDetailBase = () => {
     );
   };
 
-
   // 1. Data Fetching: Note Detail
   const { data: noteQueryResponse, refetch } = useQuery({
     queryKey: [`notes-${noteId}`],
@@ -178,7 +161,6 @@ const NoteDetailBase = () => {
       axiosInstance.get(`${API_BASE_URL}/company/${companyId}/notes/${noteId}`),
     enabled: !!companyId,
     refetchInterval: (query: any) => {
-      console.log("1-isPolling", isPolling);
       const quiz_status = query.state?.data?.data?.quiz_status;
       const isNoteProcessing =
         query.state?.data?.data?.status !== "failed" &&
@@ -194,20 +176,24 @@ const NoteDetailBase = () => {
   });
 
   const isNoteProcessing = useMemo(() => {
-    if (noteQueryResponse?.data?.status !== "failed" && noteQueryResponse?.data?.status  !== "transcribed" &&  noteQueryResponse?.data?.status !== "draft") {
+    if (
+      noteQueryResponse?.data?.status !== "failed" &&
+      noteQueryResponse?.data?.status !== "transcribed" &&
+      noteQueryResponse?.data?.status !== "draft"
+    ) {
       setIsPolling(true);
-      return true
+      return true;
     } else {
       setIsPolling(false);
       return false;
     }
   }, [noteQueryResponse]);
 
-  // useEffect(() => {
-  //   if (isPolling || isNoteProcessing) refetch();
-  // }, [isPolling, isNoteProcessing]);
-
-  const note = noteQueryResponse?.data;
+  const note = useMemo(() => {
+    if (noteQueryResponse?.data?.name)
+      setNoteName(noteQueryResponse?.data?.name);
+    return noteQueryResponse?.data || {};
+  }, [noteQueryResponse]);
 
   // 2. Data Fetching: Files
   const { data: filesResponse } = useQuery({
@@ -229,6 +215,40 @@ const NoteDetailBase = () => {
       handleUnzip(filesResponse.data.file_url);
     }
   }, [filesResponse]);
+
+  // --- 2. NEW MUTATION FOR SAVING NAME ---
+  const saveNameMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      return axiosInstance.put(
+        `${API_BASE_URL}/company/${companyId}/notes/${noteId}/name`,
+        { name: newName }
+      );
+    },
+    onSuccess: (res) => {
+      toggleEditNameMode(false);
+      setNoteName(res.data.name); // Ensure local state matches server
+      refetch(); // Update global cache
+      toast.success(t("Note name updated"));
+    },
+    onError: (err) => {
+      toast.error(t("Failed to update name"));
+      // Revert name if needed, or just let user try again
+    }
+  });
+
+
+  const handleSaveName = () => {
+    if (!noteName.trim()) {
+      toast.error(t("Name cannot be empty"));
+      return;
+    }
+    if (noteName === note.name) {
+      toggleEditNameMode(false); // No changes made
+      return;
+    }
+    saveNameMutation.mutate(noteName);
+  };
+
 
   const handleUnzip = async (url: string) => {
     setProcessingFiles(true);
@@ -281,7 +301,7 @@ const NoteDetailBase = () => {
           <div className=" mx-auto">
             <div className="flex items-center justify-between mb-4">
               {/* Breadcrumb Logic */}
-              <div className="flex items-center gap-2 text-zinc-400">
+              <div className="flex items-center gap-2 text-zinc-400 max-w-3xl">
                 <Link
                   to="/notes"
                   className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
@@ -290,14 +310,99 @@ const NoteDetailBase = () => {
                 </Link>
                 <span className="text-zinc-300 dark:text-zinc-800">/</span>
                 <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold  text-lg">
-                  {
-                    note?.note_type === "youtube" ? (
-                      <div className="w-6 h-6">
-                        {getTypeIcon(note?.note_type)}
-                      </div>
-                    ) : getTypeIcon(note?.note_type, 6)
-                  }
-                  {isNoteProcessing ?  t("Loading...") : note?.name || "-" }
+                  {note?.note_type === "youtube" ? (
+                    <div className="w-6 h-6">
+                      {getTypeIcon(note?.note_type)}
+                    </div>
+                  ) : (
+                    getTypeIcon(note?.note_type, 6)
+                  )}
+                   {editNameMode ? (    
+                      <Input
+                        placeholder="Type here..."
+                        // CHANGED: w-auto -> w-[200px] sm:w-[400px] md:w-[600px] to make it much wider
+                        className="border-none md:text-xl/4 md:max-h-[26px] shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-0 px-0 w-[200px] sm:w-[400px] md:w-[600px]"
+                        value={noteName}
+                        onChange={(e) => setNoteName(e.target.value)}
+                        name="noteName"
+                        type="text"
+                        autoFocus
+                        disabled={saveNameMutation.isPending}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.currentTarget.blur();
+                            handleSaveName();
+                          }
+                          if (e.key === "Escape") {
+                            e.currentTarget.blur();
+                            setNoteName(note.name);
+                            toggleEditNameMode(false);
+                          }
+                        }}
+                      />
+                  ) : isNoteProcessing ? (
+                    t("Loading...")
+                  ) : (
+                    // CHANGED: max-w-[300px] -> max-w-[200px] sm:max-w-[400px] md:max-w-[600px]
+                    <span className="md:text-xl h-auto  w-auto py-0 px-0 truncate max-w-[200px] sm:max-w-[400px] md:max-w-[600px]">
+                      {note?.name || "-"}
+                    </span>
+                  )}
+
+                  {!isNoteProcessing && (
+                    <Tooltip delayDuration={300}>
+                      <TooltipContent>
+                        {editNameMode ? "Save (Enter)" : "Edit name"}
+                      </TooltipContent>
+                      <TooltipTrigger>
+                        <button
+                          onClick={() => {
+                            if (editNameMode) {
+                              handleSaveName(); // Save on click
+                            } else {
+                              toggleEditNameMode(true);
+                            }
+                          }}
+                          disabled={saveNameMutation.isPending}
+                          className="relative flex items-center justify-center h-8 w-8 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                        >
+                          <AnimatePresence mode="wait" initial={false}>
+                            {saveNameMutation.isPending ? (
+                               <motion.div
+                                key="loading"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                               >
+                                 <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
+                               </motion.div>
+                            ) : editNameMode ? (
+                              <motion.div
+                                key="save"
+                                initial={{ y: 5, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -5, opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                              >
+                                <CornerDownLeft className="w-3 h-3 text-zinc-900 dark:text-zinc-100" />
+                              </motion.div>
+                            ) : (
+                              <motion.div
+                                key="edit"
+                                initial={{ y: 5, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -5, opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                              >
+                                <Pencil className="w-3.5 h-3.5 text-zinc-400" />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </button>
+                      </TooltipTrigger>
+                    </Tooltip>
+                  )}
                 </div>
               </div>
 
@@ -322,41 +427,50 @@ const NoteDetailBase = () => {
                 icon={<Paperclip size={12} />}
                 label={t("Attachments")}
                 value={`${attachmentCount} items`}
-                onClick={() => attachmentCount > 0 ? setIsMediaExpanded(!isMediaExpanded) : null}
+                onClick={() =>
+                  attachmentCount > 0
+                    ? setIsMediaExpanded(!isMediaExpanded)
+                    : null
+                }
                 active={isMediaExpanded}
-                iconEnd={isMediaExpanded ?  <ChevronUp />:  <ChevronDown />}
+                iconEnd={isMediaExpanded ? <ChevronUp /> : <ChevronDown />}
               />
               <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
 
               {/* Alert Toggle Integrated */}
-                 <Tooltip>
-                  <TooltipContent>
-                    <p>{note?.quiz_alerts_enabled ? t("Quiz reminders are enabled, so we're targeting this area.") + "🎯" : t("It's totally okay to find this tricky. Get reminders and alerts to help boost your score.") }</p>
-                  </TooltipContent>
-                  <TooltipTrigger>
-                       <div
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1 rounded-full border transition-all shrink-0",
-                  note?.quiz_alerts_enabled
-                    ? "bg-zinc-900 border-zinc-900 text-white shadow-sm"
-                    : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-400"
-                )}
-              >
-                {note?.quiz_alerts_enabled ? (
-                  <BellRing size={12} strokeWidth={3} />
-                ) : (
-                  <BellOff size={12} />
-                )}
-             
-                <span className="text-[10px] font-black uppercase tracking-widest">
-                  {note?.quiz_alerts_enabled ? "Alerts On" : "Alerts Off"}
-                </span>
-              </div>
-                  </TooltipTrigger>
-                </Tooltip>
+              <Tooltip>
+                <TooltipContent>
+                  <p>
+                    {note?.quiz_alerts_enabled
+                      ? t(
+                          "Quiz reminders are enabled, so we're targeting this area."
+                        ) + "🎯"
+                      : t(
+                          "It's totally okay to find this tricky. Get reminders and alerts to help boost your score."
+                        )}
+                  </p>
+                </TooltipContent>
+                <TooltipTrigger>
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1 rounded-full border transition-all shrink-0",
+                      note?.quiz_alerts_enabled
+                        ? "bg-zinc-900 border-zinc-900 text-white shadow-sm"
+                        : "bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-zinc-400"
+                    )}
+                  >
+                    {note?.quiz_alerts_enabled ? (
+                      <BellRing size={12} strokeWidth={3} />
+                    ) : (
+                      <BellOff size={12} />
+                    )}
 
-
-             
+                    <span className="text-[10px] font-black uppercase tracking-widest">
+                      {note?.quiz_alerts_enabled ? "Alerts On" : "Alerts Off"}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -418,7 +532,8 @@ const NoteDetailBase = () => {
           </AnimatePresence>
           {/* --- 3. WORKSPACE: Tabs Switcher --- */}
           <Tabs
-          value={activeTab} onValueChange={handleTabChange}
+            value={activeTab}
+            onValueChange={handleTabChange}
             className="w-full"
           >
             <div className="flex items-center justify-between mb-8 overflow-x-auto no-scrollbar">

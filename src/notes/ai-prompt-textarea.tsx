@@ -511,7 +511,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                       </DropdownMenuRadioGroup>
                     }
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="rounded-lg" onSelect={() => recorder.getDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> {t("Refresh")}</DropdownMenuItem>
+                    <DropdownMenuItem className="rounded-lg" onSelect={() => recorder.getDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> {t("Update microphone list")}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {recorder.isBlocked && <p className="text-xs text-red-500 ml-2">{t("Mic blocked")}</p>}

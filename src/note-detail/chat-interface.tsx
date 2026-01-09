@@ -14,7 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import CatLogo from "./cat-logo";
+import CatLogo from "./assets/cat-logo";
 import Typewriter from "./type-writter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

@@ -21,13 +21,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
-import QuizPenIcon from "./quiz-pen-icon";
-import QuizHardPenIcon from "./quiz-hard-pen-icon";
-import QuizBonusPenIcon from "./quiz-bonus-pen-icon";
+import QuizPenIcon from "./assets/quiz-pen-icon";
+import QuizHardPenIcon from "./assets/quiz-hard-pen-icon";
+import QuizBonusPenIcon from "./assets/quiz-bonus-pen-icon";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
-import CatLogo from "./cat-logo";
-import GiftIcon from "./gift-icon";
+import CatLogo from "./assets/cat-logo";
+import GiftIcon from "./assets/gift-icon";
 import {GradientProgress}  from '@/components/gradient-progress'
 import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react"; 

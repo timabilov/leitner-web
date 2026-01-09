@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import AIIcon from '@/note-detail/ai-icon';
+import AIIcon from '@/note-detail/assets/ai-icon';
 import { useTranslation } from 'react-i18next'; // Import the hook
 import { AiOrbitAnimation } from '@/note-detail/ai-orbit-animation';
 

@@ -17,7 +17,7 @@ import { NavUser } from "./nav-user";
 import CatPenIcon from "@/notes/cat-pen-icon";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import CatLogo from "@/note-detail/cat-logo";
+import CatLogo from "@/note-detail/assets/cat-logo";
 
 export function AppSidebar({ fullName, photo, email, ...props }) {
   const { t } = useTranslation();

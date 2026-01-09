@@ -11,7 +11,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import SortableGrid from "@/notes/sortable-example";
-import CatLogo from "@/note-detail/cat-logo";
+import CatLogo from "@/note-detail/assets/cat-logo";
 
 
 const Alerts = ({ children }: any) => {

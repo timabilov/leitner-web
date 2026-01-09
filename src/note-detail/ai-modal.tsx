@@ -15,10 +15,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState, useRef, useLayoutEffect } from "react"; // Changed useEffect to useLayoutEffect
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
-import AIIcon from "@/note-detail/ai-icon";
+import AIIcon from "@/note-detail/assets/ai-icon";
 import { Card, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import QuizHardPenIcon from "@/note-detail/quiz-hard-pen-icon";
-import FlashcardIcon from "@/note-detail/flashcard-icon";
+import QuizHardPenIcon from "@/note-detail/assets/quiz-hard-pen-icon";
+import FlashcardIcon from "@/note-detail/assets/flashcard-icon";
 import { StickyAiButton } from "../components/sticky-ai-button";
 import { FlashcardsTab } from "@/note-detail/flashcard-tab";
 import { AIQuizTab } from "@/note-detail/quiz-tab";

@@ -44,7 +44,7 @@ Sentry.init({
 posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
   api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com',
   // BEST PRACTICE: Disable autocapture in development to save event quota
-  autocapture: import.meta.env.PROD, 
+  autocapture: /*import.meta.env.PROD*/ false, 
   capture_pageview: false, // We will handle this manually for SPAs (optional, see step 5)
   session_recording: {
     maskAllInputs: true, // Privacy best practice

@@ -180,7 +180,7 @@ export const NoteCard = ({ item, view }) => {
                 </div>
 
                 {progress > 0 && progress < 1 && !isProcessing && (
-                  <div className="mt-3 w-3/4">
+                  <div className="mt-3 w-full">
                     <GradientProgress value={Math.round(progress * 100)} className="h-1" />
                   </div>
                 )}
@@ -189,7 +189,7 @@ export const NoteCard = ({ item, view }) => {
               {/* --- FOOTER --- */}
               <div className={cn(
                 "relative z-10 flex items-center",
-                view === "grid" ? "mt-auto pt-4 border-t border-border/40 justify-between" : "ml-auto gap-6"
+                view === "grid" ? " pt-4 border-t border-border/40 justify-between mt-4" : "ml-auto gap-6"
               )}>
                 <div className="flex items-center gap-3">
                   <span className="text-base select-none grayscale-[0.4] group-hover:grayscale-0 transition-all opacity-90">

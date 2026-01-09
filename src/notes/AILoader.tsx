@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import AIIcon from "@/note-detail/ai-icon";
+import AIIcon from "@/note-detail/assets/ai-icon";
 
 interface AiLoaderProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "ripple" | "typing" | "scanner";
