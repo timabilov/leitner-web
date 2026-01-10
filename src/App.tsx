@@ -11,6 +11,8 @@ import NoteDetail from "./note-detail";
 import PricingPage from "./prices";
 import { ProtectedRoute, PublicRoute } from "./components/protected-route";
 import Alerts from "./alerts";
+import Folders from "./folders";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -43,11 +45,12 @@ function App() {
                 <Route path="/notes/:noteId" element={<NoteDetail />} />
                 <Route path="/price-page" element={<PricingPage />} />
                 <Route path="/alerts" element={<Alerts />} />
+                 <Route path="/folders" element={<Folders />} />
               </Route>
 
               {/* --- CATCH ALL (404) --- */}
               {/* Redirect unknown URLs to home/login */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
             </Routes>
           </Suspense>
           <Toaster />

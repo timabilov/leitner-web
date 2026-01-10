@@ -6,6 +6,9 @@ import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import SortableGrid from "./sortable-example";
 import {
+  Folder,
+  Folders,
+  Layers,
   Loader2Icon,
   Search,
   SearchX,
@@ -291,8 +294,14 @@ const Notes = ({ children }: any) => {
             />
           </div>
           <div className="sm:flex justify-between p-4 mt-4">
-            <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight"  ref={notesListRef} >
-              {t("All notes")}
+            <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight flex items-center"  ref={notesListRef} >
+             {
+              selectedFolder ? <Folder className="h-5 w-5 mr-2" /> :  <Folders className="h-5 w-5 mr-2"/>
+             }
+              {
+                selectedFolder ? selectedFolder?.name : t("All notes")
+              }
+
             </h3>
             <ButtonGroup
               orientation="horizontal"
