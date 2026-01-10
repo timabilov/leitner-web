@@ -84,11 +84,33 @@ const ChatInterface = ({
     inputRef.current?.focus();
   }, []);
 
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages.length, isLoading, streamingMessageId]); // Depend on length change
+  }, [messages.length, isLoading]);
+
+  // Keep scrolling to bottom during streaming
+  useEffect(() => {
+    if (!streamingMessageId) return;
+
+    const scrollToBottom = () => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollIntoView({ behavior: "auto" });
+      }
+    };
+
+    // Use requestAnimationFrame for smooth continuous scrolling
+    let rafId: number;
+    const scroll = () => {
+      scrollToBottom();
+      rafId = requestAnimationFrame(scroll);
+    };
+    rafId = requestAnimationFrame(scroll);
+
+    return () => cancelAnimationFrame(rafId);
+  }, [streamingMessageId]);
 
   useEffect(() => {
     if (!isLoading) {
