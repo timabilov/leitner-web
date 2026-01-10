@@ -46,7 +46,7 @@ export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterP
   }, [content, displayedContent, isStreaming]);
 
   return (
-    <>
+    <span className="[&_p]:inline [&_p]:m-0">
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
@@ -112,7 +112,7 @@ export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterP
       {isStreaming && displayedContent.length < content.length && (
         <span className="inline-block w-1.5 h-4 ml-0.5 align-middle bg-primary/70 animate-pulse" />
       )}
-    </>
+    </span>
   );
 };
 

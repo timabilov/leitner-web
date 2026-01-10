@@ -12,6 +12,7 @@ import {
   User,
   Send,
   Loader2,
+  RotateCcw,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CatLogo from "./assets/cat-logo";
@@ -21,6 +22,11 @@ import { Button } from "@/components/ui/button";
 import type { Message } from "@/components/ui/chat-message";
 import { useChatStore } from "@/store/chatStore"; // Import the store
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 
 
@@ -38,6 +44,7 @@ const ChatInterface = ({
   const chats = useChatStore((state) => state.chats);
   const addMessage = useChatStore((state) => state.addMessage);
   const updateMessageContent = useChatStore((state) => state.updateMessageContent);
+  const clearChat = useChatStore((state) => state.clearChat);
 
   // Get messages for THIS specific note, default to empty array
   const messages = chats[noteId] || [];
@@ -93,6 +100,12 @@ const ChatInterface = ({
     }
   }, [isLoading]);
 
+
+  const handleClearChat = () => {
+    if (isLoading) return; // Don't clear while loading
+    clearChat(noteId);
+    hasInitialized.current = false; // Reset so init message shows again
+  };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -171,8 +184,6 @@ const ChatInterface = ({
   };
 
   return (
-    // ... JSX REMAINS EXACTLY THE SAME ...
-    // ... just ensure you are mapping over the 'messages' const defined from the store ...
      <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto">
       <ScrollArea className="flex-1 pr-4">
         <div className="flex flex-col gap-4 py-4">
@@ -239,24 +250,42 @@ const ChatInterface = ({
         >
           <Input
             placeholder={t("Ask something about this note...")}
-            ref={inputRef} // 6. Attach the ref here
+            ref={inputRef}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            // disabled={isLoading}
-            className="pr-12 py-6 rounded-full shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary"
+            className="pr-24 py-6 rounded-full shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary"
           />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!inputValue.trim() || isLoading}
-            className="absolute right-1.5 rounded-full h-9 w-9 shrink-0 cursor-pointer"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-          </Button>
+          <div className="absolute right-1.5 flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={handleClearChat}
+                  disabled={isLoading || messages.length === 0}
+                  className="rounded-full h-9 w-9 shrink-0"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{t("Clear chat history")}</p>
+              </TooltipContent>
+            </Tooltip>
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!inputValue.trim() || isLoading}
+              className="rounded-full h-9 w-9 shrink-0 cursor-pointer"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
         </form>
         <p className="text-[10px] text-muted-foreground text-center mt-2">
           {t("AI can make mistakes. Check important info.")}
