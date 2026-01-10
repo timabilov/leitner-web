@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL, ISO_TO_LANGUAGE } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,8 @@ import { usePostHog } from 'posthog-js/react';
 
 const CreateYoutubeNote = ({ component, refetch }) => {
   const { t } = useTranslation(); // Initialize the translation hook
-  const { userId, email } = useUserStore();
+  const queryClient = useQueryClient();
+  const { userId, email, companyId } = useUserStore();
 
   const availableLanguages = [
     { iso: "auto", flag: "🤖", language: t("Auto") },
@@ -50,8 +51,6 @@ const CreateYoutubeNote = ({ component, refetch }) => {
   const [videoId, setVideoId] = useState<string | undefined>();
   const [selectedLanguage, setSelectedLanguage] = useState("auto");
   const [noteId, setNoteId] = useState<string | undefined>();
-
-  const companyId = useUserStore((state) => state.companyId);
 
   useEffect(() => {
     posthog.capture('youtube_dialog_toggled', { userId, email, state: isOpen })
@@ -159,6 +158,8 @@ const CreateYoutubeNote = ({ component, refetch }) => {
       setIsOpen(false);
       toast.success(t("Note has been created"));
       refetch();
+      // Invalidate folders query to update folder counts
+      queryClient.invalidateQueries({ queryKey: ["folders", companyId] });
     },
     onError: (error) => {
         Sentry.captureException(error, { 

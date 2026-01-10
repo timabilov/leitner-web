@@ -14,21 +14,15 @@ import {
   Home,
   FolderOpen,
   Smartphone,
-  ShieldCheck,
-  FileText,
-  Handshake,
-  HatGlasses,
-  CatIcon,
   Bell,
-  GlassesIcon,
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { NavUser } from "./nav-user";
-import CatPenIcon from "@/notes/cat-pen-icon";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import CatLogo from "@/note-detail/assets/cat-logo";
+import { FoldersPanel } from "./folders-panel";
 
 export function AppSidebar({ fullName, photo, email, ...props }) {
   const { t } = useTranslation();
@@ -40,11 +34,6 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
     { title: t("Folders"), icon: FolderOpen, key: "/folders" },
     { title: t("Alerts"), icon: Bell, key: "/alerts" },
     { title: t("App"), icon: Smartphone, key: "/app" },
-  ];
-
-  const footerLinks = [
-    { title: t("Privacy"), icon: HatGlasses, key: "/privacy" },
-    { title: t("Terms"), icon: Handshake, key: "/terms" },
   ];
 
   return (
@@ -134,59 +123,30 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                   </SidebarMenuItem>
                 );
               })}
-              <SidebarSeparator className="my-6 mx-3 bg-zinc-100 dark:bg-zinc-800 group-data-[collapsible=icon]:hidden" />
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  //onClick={() => navigate(item.key)}
-                  className={cn(
-                    "h-9 px-3 transition-colors duration-200 rounded-md relative group cursor-pointer",
-                    "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "text-sm font-medium tracking-tight group-data-[collapsible=icon]:hidden flex items-center gap-3",
-                      "opacity-80"
-                    )}
-                  >
-                    <Handshake
-                      className={cn(
-                        "size-4 stroke-[1.8px] transition-colors",
-                        "opacity-70 group-hover:opacity-100"
-                      )}
-                    />
-                    {t("Terms of use")}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  //onClick={() => navigate(item.key)}
-                  className={cn(
-                    "h-9 px-3 transition-colors duration-200 rounded-md relative group cursor-pointer",
-                    "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "text-sm font-medium tracking-tight group-data-[collapsible=icon]:hidden flex items-center gap-3",
-                      "opacity-80"
-                    )}
-                  >
-                    <HatGlasses
-                      className={cn(
-                        "size-4 stroke-[1.8px] transition-colors",
-                        "opacity-70 group-hover:opacity-100"
-                      )}
-                    />
-                    {t("Privacy policy")}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+
+              {/* Folders Panel */}
+              <FoldersPanel />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      {/* Terms & Privacy Links - Outside footer border */}
+      <div className="flex items-center justify-center gap-2 px-4 py-3 text-[10px] group-data-[collapsible=icon]:hidden">
+        <button
+          onClick={() => navigate("/terms")}
+          className="text-blue-500/70 dark:text-blue-400/60 hover:text-blue-600/90 dark:hover:text-blue-400/80 transition-colors hover:underline"
+        >
+          {t("Terms of use")}
+        </button>
+        <span className="text-zinc-300 dark:text-zinc-700">&</span>
+        <button
+          onClick={() => navigate("/privacy")}
+          className="text-blue-500/70 dark:text-blue-400/60 hover:text-blue-600/90 dark:hover:text-blue-400/80 transition-colors hover:underline"
+        >
+          {t("Privacy policy")}
+        </button>
+      </div>
 
       <SidebarFooter className="border-t border-zinc-200/50 dark:border-zinc-800/50 p-2">
         <NavUser user={{ name: fullName, email: email, avatar: photo }} />

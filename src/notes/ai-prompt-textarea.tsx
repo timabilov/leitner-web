@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePostHog } from 'posthog-js/react';
 import * as Sentry from "@sentry/react";
 import { toast } from "sonner";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
@@ -191,6 +191,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
   const { t } = useTranslation();
   const posthog = usePostHog();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { companyId, userId, email, selectedFolder } = useUserStore();
 
   // --- FOLDER QUERY ---
@@ -370,12 +371,14 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
       // Show Success State with Lottie
       updateToast("Please wait a bit...", 100, "success", noteId );
       refetch();
-      
+      // Invalidate folders query to update folder counts
+      queryClient.invalidateQueries({ queryKey: ["folders", companyId] });
+
       // Delay clearing inputs slightly so user sees success state
       setTimeout(() => {
-          setPrompt(""); 
+          setPrompt("");
           setFiles([]);
-          flowContext.current = { toastId: null, progressInterval: null, zipData: null, noteId: null };
+          flowContext.current = { toastId: null, progressInterval: null, zipData: null, noteId: null, name: null };
       }, 1000);
     },
     onError: (e: any) => handleError(e, "Finalization")
@@ -565,7 +568,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                   initial={{ opacity: 0 }} 
                   animate={{ opacity: 1 }} 
                   exit={{ opacity: 0 }}
-                  className="hidden sm:inline-block mr-3 text-[10px] text-muted-foreground/60 font-medium select-none"
+                  className="hidden sm:inline-block mr-3 text-[10px] text-muted-foreground/90 font-medium select-none"
                 >
                   ⌘ + Enter
                 </motion.span>
