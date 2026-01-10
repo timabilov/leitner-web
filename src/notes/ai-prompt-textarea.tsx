@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePostHog } from 'posthog-js/react';
 import * as Sentry from "@sentry/react";
 import { toast } from "sonner";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
@@ -33,6 +33,7 @@ import {
 import { NoteCreationToast } from "./note-creation-toast";
 import AIArrow from "./AiArrow";
 import { useNavigate } from "react-router";
+import Select from "@/components/select";
 
 // Import your custom toast component
 
@@ -191,6 +192,17 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
   const posthog = usePostHog();
   const navigate = useNavigate();
   const { companyId, userId, email, selectedFolder } = useUserStore();
+
+  // --- FOLDER QUERY ---
+  const { data: foldersQuery, isLoading: isLoadingFolders } = useQuery({
+    queryKey: ['folders'],
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    queryFn: async () => {
+      return axiosInstance.get(API_BASE_URL + `/company/${companyId}/notes/folder`);
+    },
+    enabled: !!companyId,
+  });
 
   const [prompt, setPrompt] = useState("");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
@@ -505,7 +517,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                   <DropdownMenuContent align="start" className="w-[300px] rounded-2xl p-2">
                     <DropdownMenuLabel>{t("Microphone")}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    {recorder.isFetching ? <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("Fetching...")}</DropdownMenuItem> : 
+                    {recorder.isFetching ? <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("Fetching...")}</DropdownMenuItem> :
                       <DropdownMenuRadioGroup value={recorder.selectedMicId} onValueChange={recorder.setSelectedMicId}>
                         {recorder.devices.map(d => <DropdownMenuRadioItem key={d.deviceId} value={d.deviceId} className="rounded-lg">{d.label || "Mic"}</DropdownMenuRadioItem>)}
                       </DropdownMenuRadioGroup>
@@ -514,6 +526,11 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                     <DropdownMenuItem className="rounded-lg" onSelect={() => recorder.getDevices(true)}><RefreshCw className="h-4 w-4 mr-2" /> {t("Update microphone list")}</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+
+                <div className="ml-2">
+                  <Select data={foldersQuery?.data?.folders || []} loading={isLoadingFolders} />
+                </div>
+
                 {recorder.isBlocked && <p className="text-xs text-red-500 ml-2">{t("Mic blocked")}</p>}
               </motion.div>
             ) : (
