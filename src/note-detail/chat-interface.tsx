@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CatLogo from "./assets/cat-logo";
-import Typewriter from "./type-writter";
+import MarkdownTypewriter from "./markdown-typewriter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Message } from "@/components/ui/chat-message";
@@ -213,9 +213,9 @@ const ChatInterface = ({
                   )}
                 >
                   {/* --- RENDER LOGIC --- */}
-                  {/* If it's AI, use the Typewriter. If user, show plain text. */}
+                  {/* If it's AI, use Markdown with Typewriter effect. If user, show plain text. */}
                   {isAi ? (
-                    <Typewriter
+                    <MarkdownTypewriter
                       content={message.content}
                       isStreaming={isStreaming}
                     />
