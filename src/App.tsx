@@ -12,6 +12,7 @@ import PricingPage from "./prices";
 import { ProtectedRoute, PublicRoute } from "./components/protected-route";
 import Alerts from "./alerts";
 import Folders from "./folders";
+import MobileApp from "./mobileapp";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ function App() {
                 <Route path="/price-page" element={<PricingPage />} />
                 <Route path="/alerts" element={<Alerts />} />
                  <Route path="/folders" element={<Folders />} />
+                <Route path="/app" element={<MobileApp />} />
               </Route>
 
               {/* --- CATCH ALL (404) --- */}

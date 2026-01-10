@@ -135,14 +135,14 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
       <div className="flex items-center justify-center gap-2 px-4 py-3 text-[10px] group-data-[collapsible=icon]:hidden">
         <button
           onClick={() => navigate("/terms")}
-          className="text-blue-500/70 dark:text-blue-400/60 hover:text-blue-600/90 dark:hover:text-blue-400/80 transition-colors hover:underline"
+          className="text-blue-700/50 dark:text-blue-400/60 hover:text-blue-600/90 dark:hover:text-blue-400/80 transition-colors hover:underline"
         >
           {t("Terms of use")}
         </button>
         <span className="text-zinc-300 dark:text-zinc-700">&</span>
         <button
           onClick={() => navigate("/privacy")}
-          className="text-blue-500/70 dark:text-blue-400/60 hover:text-blue-600/90 dark:hover:text-blue-400/80 transition-colors hover:underline"
+          className="text-blue-700/50 dark:text-blue-400/60 hover:text-blue-600/90 dark:hover:text-blue-400/80 transition-colors hover:underline"
         >
           {t("Privacy policy")}
         </button>
