@@ -1,27 +1,23 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 // --- Services & Store ---
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 // --- Icons ---
 import {
-  User,
   Send,
   Loader2,
   RotateCcw,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import CatLogo from "./assets/cat-logo";
-import MarkdownTypewriter from "./markdown-typewriter";
+import { ChatMessage } from "./chat-message";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Message } from "@/components/ui/chat-message";
 import { useChatStore } from "@/store/chatStore"; // Import the store
-import { cn } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -101,13 +97,13 @@ const ChatInterface = ({
   }, [isLoading]);
 
 
-  const handleClearChat = () => {
+  const handleClearChat = useCallback(() => {
     if (isLoading) return; // Don't clear while loading
     clearChat(noteId);
     hasInitialized.current = false; // Reset so init message shows again
-  };
+  }, [isLoading, clearChat, noteId]);
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
+  const handleSendMessage = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
@@ -181,65 +177,19 @@ const ChatInterface = ({
       setStreamingMessageId(null);
       inputRef.current?.focus();
     }
-  };
+  }, [inputValue, isLoading, messages, noteId, companyId, addMessage, updateMessageContent, t]);
 
   return (
      <div className="flex flex-col h-[600px] w-full max-w-3xl mx-auto">
       <ScrollArea className="flex-1 pr-4">
         <div className="flex flex-col gap-4 py-4">
-          {messages.map((message) => { 
-             const isAi = message.role === "ai";
-            // Check if this specific message is the one currently streaming
-            const isStreaming = message.id === streamingMessageId;
-
-            return (
-              <div
-                key={message.id}
-                className={cn(
-                  "flex w-full gap-3",
-                  !isAi ? "flex-row-reverse" : "flex-row"
-                )}
-              >
-                <Avatar
-                  className={cn(
-                    "h-10 w-10 border",
-                    isAi ? "bg-black" : "bg-muted"
-                  )}
-                >
-                  {isAi ? (
-                    <CatLogo className="h-4 w-4 text-white m-auto" />
-                  ) : (
-                    <AvatarFallback>
-                      <User className="h-4 w-4" />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-
-                <div
-                  className={cn(
-                    "relative max-w-[80%] px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap leading-relaxed",
-                    !isAi
-                      ? "bg-primary text-primary-foreground rounded-tr-sm"
-                      : "bg-muted text-foreground rounded-tl-sm"
-                  )}
-                >
-                  {/* --- RENDER LOGIC --- */}
-                  {/* If it's AI, use Markdown with Typewriter effect. If user, show plain text. */}
-                  {isAi ? (
-                    <MarkdownTypewriter
-                      content={message.content}
-                      isStreaming={isStreaming}
-                    />
-                  ) : (
-                    message.content
-                  )}
-
-                  {/* Fallback for initial loading before first chunk arrives */}
-                  {isAi && isStreaming && message.content.length === 0 && "..."}
-                </div>
-              </div>
-            );
-          })}
+          {messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              message={message}
+              isStreaming={message.id === streamingMessageId}
+            />
+          ))}
           <div ref={scrollRef} className="h-1" />
         </div>
       </ScrollArea>
