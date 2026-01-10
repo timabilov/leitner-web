@@ -33,8 +33,8 @@ export function FoldersPanel() {
   };
 
   return (
-    <div className="mt-6 mx-3 group-data-[collapsible=icon]:hidden">
-      <div className="rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/30 p-3 min-h-[240px] max-h-[480px] flex flex-col">
+    <div className="group-data-[collapsible=icon]:hidden">
+      <div className="rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/30 p-3 min-h-[180px] max-h-[320px] flex flex-col">
         {/* Panel Header */}
         <div className="flex items-center justify-between mb-2 flex-shrink-0">
           <h3 className="text-md font-semibold text-zinc-900 dark:text-zinc-50 tracking-tight">

@@ -15,6 +15,8 @@ import {
   FolderOpen,
   Smartphone,
   Bell,
+  FileText,
+  Shield,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -124,28 +126,126 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                 );
               })}
 
-              {/* Folders Panel */}
-              <FoldersPanel />
+              {/* Separator before Terms/Privacy */}
+              <SidebarSeparator className="my-2 group-data-[collapsible=icon]:hidden" />
+
+              {/* Terms of Use Menu Item */}
+              <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
+                <SidebarMenuButton
+                  onClick={() => navigate("/terms")}
+                  className={cn(
+                    "h-9 px-3 transition-colors duration-200 rounded-md relative group cursor-pointer",
+                    pathname === "/terms"
+                      ? "text-zinc-900 dark:text-zinc-50"
+                      : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                  )}
+                >
+                  {pathname === "/terms" && (
+                    <motion.div
+                      layoutId="activeNav"
+                      className="absolute inset-0 bg-zinc-100 dark:bg-zinc-900 z-0 rounded-md"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  {pathname === "/terms" && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full z-10"
+                      style={{ backgroundColor: "black" }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  <div className="relative z-10 flex items-center gap-3">
+                    <FileText
+                      className={cn(
+                        "size-4 stroke-[1.8px] transition-colors",
+                        pathname === "/terms"
+                          ? "text-zinc-900 dark:text-zinc-50"
+                          : "opacity-70 group-hover:opacity-100"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-sm font-medium tracking-tight",
+                        pathname === "/terms" ? "opacity-100" : "opacity-80"
+                      )}
+                    >
+                      {t("Terms of use")}
+                    </span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Privacy Policy Menu Item */}
+              <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
+                <SidebarMenuButton
+                  onClick={() => navigate("/privacy")}
+                  className={cn(
+                    "h-9 px-3 transition-colors duration-200 rounded-md relative group cursor-pointer",
+                    pathname === "/privacy"
+                      ? "text-zinc-900 dark:text-zinc-50"
+                      : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
+                  )}
+                >
+                  {pathname === "/privacy" && (
+                    <motion.div
+                      layoutId="activeNav"
+                      className="absolute inset-0 bg-zinc-100 dark:bg-zinc-900 z-0 rounded-md"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  {pathname === "/privacy" && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full z-10"
+                      style={{ backgroundColor: "black" }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 30,
+                      }}
+                    />
+                  )}
+                  <div className="relative z-10 flex items-center gap-3">
+                    <Shield
+                      className={cn(
+                        "size-4 stroke-[1.8px] transition-colors",
+                        pathname === "/privacy"
+                          ? "text-zinc-900 dark:text-zinc-50"
+                          : "opacity-70 group-hover:opacity-100"
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "text-sm font-medium tracking-tight",
+                        pathname === "/privacy" ? "opacity-100" : "opacity-80"
+                      )}
+                    >
+                      {t("Privacy policy")}
+                    </span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Terms & Privacy Links - Outside footer border */}
-      <div className="flex items-center justify-center gap-2 px-4 py-3 text-[10px] group-data-[collapsible=icon]:hidden">
-        <button
-          onClick={() => navigate("/terms")}
-          className="text-blue-700/50 dark:text-blue-400/60 hover:text-blue-600/90 dark:hover:text-blue-400/80 transition-colors hover:underline"
-        >
-          {t("Terms of use")}
-        </button>
-        <span className="text-zinc-300 dark:text-zinc-700">&</span>
-        <button
-          onClick={() => navigate("/privacy")}
-          className="text-blue-700/50 dark:text-blue-400/60 hover:text-blue-600/90 dark:hover:text-blue-400/80 transition-colors hover:underline"
-        >
-          {t("Privacy policy")}
-        </button>
+      {/* Folders Panel - Pinned to bottom */}
+      <div className="px-2 pb-2">
+        <FoldersPanel />
       </div>
 
       <SidebarFooter className="border-t border-zinc-200/50 dark:border-zinc-800/50 p-2">
