@@ -14,7 +14,7 @@ export interface QuizOption {
 }
 
 export interface QuizData {
-  easy_questions: QuizOption[];
+  chat_questions: QuizOption[];
 }
 
 interface QuizDisplayProps {
@@ -37,7 +37,7 @@ const QuizItem = ({ item, index }: { item: QuizOption; index: number }) => {
     <Card className="mb-4 border-muted-foreground/20 overflow-hidden">
       <div className="bg-muted/50 px-4 py-2 border-b flex items-center gap-2">
         <Badge variant="outline" className="h-5 text-[10px]">Q{index + 1}</Badge>
-        <span className="text-xs font-medium text-muted-foreground">Multiple Choice</span>
+        <span className="text-xs font-medium text-muted-foreground">Single Choice</span>
       </div>
       <CardContent className="pt-4">
         <h4 className="font-semibold text-sm mb-4 leading-relaxed text-foreground">
@@ -100,13 +100,13 @@ const QuizItem = ({ item, index }: { item: QuizOption; index: number }) => {
 };
 
 export const QuizDisplay = ({ data }: QuizDisplayProps) => {
-  if (!data || !data.easy_questions || data.easy_questions.length === 0) {
+  if (!data || !data.chat_questions || data.chat_questions.length === 0) {
     return <div className="text-sm text-red-500">Error: Invalid Quiz Data</div>;
   }
 
   return (
     <div className="w-full max-w-[95%] mt-2">
-      {data.easy_questions.map((q, i) => (
+      {data.chat_questions.map((q, i) => (
         <QuizItem key={i} item={q} index={i} />
       ))}
     </div>
