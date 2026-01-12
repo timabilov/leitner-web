@@ -36,7 +36,7 @@ import { API_BASE_URL } from "@/services/config";
 
 
 
-const Select = ({ data }: any) => {
+const FolderSelect = ({ data }: any) => {
   const posthog = usePostHog();
   const { t } = useTranslation();
   const setSelectedFolder = useUserStore((store) => store.setSelectedFolder);
@@ -197,4 +197,4 @@ const Select = ({ data }: any) => {
   );
 };
 
-export default Select;
+export default FolderSelect;

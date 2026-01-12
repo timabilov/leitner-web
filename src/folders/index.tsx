@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,7 +16,7 @@ import {
   MoreVertical,
   Calendar,
   FileText,
-  CheckCircle2, // Added for selection indicator
+  CheckCircle2,
 } from "lucide-react";
 import Lottie from "lottie-react";
 
@@ -52,15 +51,16 @@ export default function Folders() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const posthog = usePostHog();
- const { data } = useFolders(); // Uses cached data if available
+  const { data } = useFolders();
 
-  // 1. Get selectedFolder from store to compare IDs
-  const { companyId, setSelectedFolder, selectedFolder, totalNotesCount} = useUserStore();
+  const { companyId, setSelectedFolder, selectedFolder, totalNotesCount } = useUserStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
-
+  
+  // 1. New State to track if user has started searching/filtering
+  const [hasSearched, setHasSearched] = useState(false);
 
   // --- CREATE MUTATION ---
   const createFolderMutation = useMutation({
@@ -93,21 +93,15 @@ export default function Folders() {
       return data?.folders?.filter((f: any) =>
         f.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
-    return []
+    return [];
   }, [data?.folders, searchQuery]);
 
-  // --- SELECTION HANDLER ---
   const handleSelectFolder = (folder: any) => {
-    // If folder is null, it means "All Folders"
     setSelectedFolder(folder);
-
     if (folder) {
       posthog.capture("folder_selected", { folder_id: folder.id });
-      // Optional: Navigate if you want this to open a new page
-      // navigate(`/notes?folder_id=${folder.id}`);
     } else {
       posthog.capture("folder_selected_all");
-      // navigate(`/notes`);
     }
   };
 
@@ -134,7 +128,11 @@ export default function Folders() {
               <Input
                 placeholder={t("Search folders...")}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  // 2. Disable future animations once user types
+                  if (!hasSearched) setHasSearched(true); 
+                }}
                 className="pl-9 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm"
               />
             </div>
@@ -149,14 +147,7 @@ export default function Folders() {
         </div>
 
         {/* --- FOLDER GRID --- */}
-        {/*isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-2xl" />
-            ))}
-          </div>
-        ) :*/ filteredFolders.length === 0 && !searchQuery ? (
-          // Empty state only if no search query and no folders
+        {filteredFolders.length === 0 && !searchQuery ? (
           <div className="flex flex-col items-center justify-center py-20 bg-muted/30 rounded-3xl border border-dashed">
             <div className="w-24 h-24 mb-4 opacity-50 grayscale">
               <Lottie animationData={folderAnimation} loop={false} />
@@ -170,38 +161,38 @@ export default function Folders() {
           </div>
         ) : (
           <motion.div
-            layout
+            layout 
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           >
-            <AnimatePresence>
-              {/* 1. The "All Folders" Card */}
-              {
-                !searchQuery && (
-                  <FolderCard
-                    folder={{
-                      id: "ALL_FOLDERS", // Pseudo ID for key
-                      name: t("All Notes"),
-                      count: totalNotesCount, // Use the count from API
-                      created_at: null,
-                    }}
-                    index={0}
-                    // Check if selectedFolder is null (which means All)
-                    isSelected={!selectedFolder}
-                    onClick={() => handleSelectFolder(null)}
-                    isSpecial={true}
-                  />
-                )
-              }
+            <AnimatePresence mode="popLayout">
+              {/* All Folders Card */}
+              {!searchQuery && (
+                <FolderCard
+                  folder={{
+                    id: "ALL_FOLDERS",
+                    name: t("All Notes"),
+                    count: totalNotesCount,
+                    created_at: null,
+                  }}
+                  index={0}
+                  isSelected={!selectedFolder}
+                  onClick={() => handleSelectFolder(null)}
+                  isSpecial={true}
+                  // 3. Pass the prop to disable animation
+                  skipAnimation={hasSearched}
+                />
+              )}
 
-              {/* 2. The Actual Folders */}
+              {/* Actual Folders */}
               {filteredFolders.map((folder: any, index: number) => (
                 <FolderCard
                   key={folder.id}
                   folder={folder}
                   index={index + 1}
-                  // Check ID match
                   isSelected={selectedFolder?.id === folder.id}
                   onClick={() => handleSelectFolder(folder)}
+                  // 3. Pass the prop to disable animation
+                  skipAnimation={hasSearched}
                 />
               ))}
             </AnimatePresence>
@@ -212,7 +203,8 @@ export default function Folders() {
       {/* --- CREATE DIALOG --- */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+           {/* ... existing dialog code ... */}
+           <DialogHeader>
             <DialogTitle>{t("Create New Folder")}</DialogTitle>
             <DialogDescription>
               {t("Give your collection a name to organize your notes.")}
@@ -254,26 +246,29 @@ export default function Folders() {
 }
 
 // --- SUB-COMPONENT: FOLDER CARD ---
-const FolderCard = ({ folder, index, onClick, isSelected, isSpecial }: any) => {
+const FolderCard = ({ folder, index, onClick, isSelected, isSpecial, skipAnimation }: any) => {
   const { t } = useTranslation();
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      layout // Added layout here so cards slide smoothly when others are filtered
+      // 4. Conditionally set initial/animate based on skipAnimation prop
+      initial={skipAnimation ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ delay: index * 0.05 }}
+      transition={
+        skipAnimation 
+          ? { duration: 0 } // Instant appearance during search
+          : { delay: index * 0.05 } // Staggered delay on initial load
+      }
       onClick={onClick}
       className={cn(
         "group relative rounded-2xl p-5 cursor-pointer transition-all duration-300 overflow-hidden border",
-        // Default State
-        "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800   hover:-translate-y-1",
-        // Selected State (Active)
+        "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:-translate-y-1",
         isSelected &&
-          "border-[#fe5e5f]/30 ring-1 ring-[#fe5e5f]  dark:bg-[#fe5e5f]/10   dark:shadow-none"
+          "border-[#fe5e5f]/30 ring-1 ring-[#fe5e5f] dark:bg-[#fe5e5f]/10 dark:shadow-none"
       )}
     >
-      {/* Selection Checkmark Badge (only when selected) */}
       {isSelected && (
         <motion.div
           initial={{ scale: 0 }}
@@ -288,23 +283,11 @@ const FolderCard = ({ folder, index, onClick, isSelected, isSpecial }: any) => {
       <div
         className={cn(
           "absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl transition-opacity duration-500 pointer-events-none",
-          // isSelected
-          //   ? "bg-amber-500/20 opacity-100"
-          //   : "bg-amber-500/10 opacity-0 group-hover:opacity-100"
         )}
       />
 
       <div className="flex justify-between items-start mb-4 relative z-10">
-        <div
-          className={cn(
-            "p-3 rounded-xl transition-colors",
-            // Change Icon bg color if selected
-            // isSelected
-            //   ? "bg-amber-100 dark:bg-amber-900/30"
-            //   : "bg-zinc-50 dark:bg-zinc-800"
-          )}
-        >
-  
+        <div className={cn("p-3 rounded-xl transition-colors")}>
             <Folder
               className={cn(
                 "w-6 h-6 transition-colors",
@@ -317,7 +300,6 @@ const FolderCard = ({ folder, index, onClick, isSelected, isSpecial }: any) => {
             />
         </div>
 
-        {/* Only show menu for actual folders, not the 'All Notes' card */}
         {!isSpecial && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>

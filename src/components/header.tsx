@@ -1,4 +1,4 @@
-import Select from "./select";
+
 import { ArrowDown } from "lucide-react";
 import { LanguageSwitcher } from "./language-switcher";
 import CreateFolder from "./create-folder";
@@ -6,6 +6,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "./ui/spinner";
 
 import { useFolders } from "@/hooks/use-folders";
+import FolderSelect from "./select-folder";
 
 const Header = ({  processingNotes, onProcessingClick }: any) => {
    const { data } = useFolders(); 
@@ -50,7 +51,7 @@ const Header = ({  processingNotes, onProcessingClick }: any) => {
           <div className="flex items-center gap-1.5 sm:gap-2">
             <CreateFolder />
             <div className="">
-              <Select data={data?.folders || []} /*loading={isLoadingFolders}*/ />
+              <FolderSelect data={data?.folders || []} /*loading={isLoadingFolders}*/ />
             </div>
             <LanguageSwitcher />
           </div>

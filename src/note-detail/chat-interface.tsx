@@ -23,6 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea"; // Change this from Input
 
 
 
@@ -50,7 +51,7 @@ const ChatInterface = ({
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
     const hasInitialized = useRef(false);
 
   // 0. INIT DEFAULT MESSAGE (Robust Logic)
@@ -124,6 +125,22 @@ const ChatInterface = ({
     clearChat(noteId);
     hasInitialized.current = false; // Reset so init message shows again
   }, [isLoading, clearChat, noteId]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // SCENARIO 1: Enter (without modifiers) -> SEND
+    if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      handleSendMessage();
+      return;
+    }
+
+    // SCENARIO 2: Cmd+Enter (Mac) or Ctrl+Enter (Windows) -> Add New Line
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault(); // Stop default generic submit
+        setInputValue(prev => prev + "\n"); // Append newline
+        // Note: Ideally you'd insert at cursor position, but this is the simple way
+    }
+  };
 
   const handleSendMessage = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -245,16 +262,19 @@ const ChatInterface = ({
           onSubmit={handleSendMessage}
           className="relative flex items-center w-full"
         >
-          <Input
+          <Textarea
             placeholder={t("Ask something about this note...")}
             ref={inputRef}
+            name="prompt"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            className="pr-24 py-6 rounded-full shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary"
+            onKeyDown={handleKeyDown}
+            className="pr-24 py-3 px-3 rounded-2xl shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary"
+            rows={1}
           />
           <div className="absolute right-1.5 flex items-center gap-1">
             <Tooltip>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <Button
                   type="button"
                   size="icon"

@@ -568,18 +568,26 @@ const NoteDetailBase = () => {
                   label={t("Transcript")}
                   active={activeTab === "transcript"}
                 />
-                <StudioTabTrigger
-                  value="chat"
-                  icon={<MessageSquare size={14} />}
-                  label={t("AI Chat")}
-                  active={activeTab === "chat"}
-                />
-                <StudioTabTrigger
-                  value="ai"
-                  icon={<AIIcon size={30} className="w-28 h-28" />}
-                  label={t("AI Tools")}
-                  active={activeTab === "ai"}
-                />
+                {
+                  !note?.processing_error_message && (
+                    <>
+                      <StudioTabTrigger
+                        value="chat"
+                        icon={<MessageSquare size={14} />}
+                        label={t("AI Chat")}
+                        active={activeTab === "chat"}
+                      />
+                      <StudioTabTrigger
+                        value="ai"
+                        icon={<AIIcon size={30} className="w-28 h-28" />}
+                        label={t("AI Tools")}
+                        active={activeTab === "ai"}
+                      />
+                    
+                    </>
+
+                  )
+                }
               </TabsList>
             </div>
 

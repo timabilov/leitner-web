@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { useDropzone } from "react-dropzone";
+import { useState, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { AudioVisualizer } from "@/components/audio-visualiser";
 import TextareaAutosize from "react-textarea-autosize";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePostHog } from 'posthog-js/react';
-import * as Sentry from "@sentry/react";
 import { toast } from "sonner";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
 
@@ -31,9 +29,8 @@ import {
   ChevronDown, Loader2, RefreshCw, Pause, Play, Trash2, ArrowUp, AudioLinesIcon
 } from "lucide-react";
 import { NoteCreationToast } from "./note-creation-toast";
-import AIArrow from "./AiArrow";
 import { useNavigate } from "react-router";
-import Select from "@/components/select";
+import FolderSelect from "@/components/select-folder";
 
 // Import your custom toast component
 
@@ -521,7 +518,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                 </DropdownMenu>
 
                 <div className="ml-2">
-                  <Select data={folders || []} /*loading={isLoadingFolders}*/ />
+                  <FolderSelect data={folders || []} /*loading={isLoadingFolders}*/ />
                 </div>
 
                 {recorder.isBlocked && <p className="text-xs text-red-500 ml-2">{t("Mic blocked")}</p>}
