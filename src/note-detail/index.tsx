@@ -39,10 +39,9 @@ import {
   ChevronDown,
   ChevronUp,
   Pencil,
-  CheckCheck,
-  Check,
   CornerDownLeft,
   Loader2,
+  FileText,
 } from "lucide-react";
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
 import AIIcon from "./assets/ai-icon";
@@ -125,7 +124,7 @@ const NoteDetailBase = () => {
   const posthog = usePostHog();
 
   // Local UI State
-  const [isMediaExpanded, setIsMediaExpanded] = useState(true);
+  const [isMediaExpanded, setIsMediaExpanded] = useState(false);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [noteName, setNoteName] = useState<string>("");
@@ -405,10 +404,24 @@ const NoteDetailBase = () => {
                   )}
                 </div>
               </div>
+                  {
+                    note?.youtube_url  && (
+                                   <Tooltip>
+                      <TooltipTrigger>
+                           <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 cursor-pointer" onClick={() => {
+                                setIsMediaExpanded(!isMediaExpanded)
+                              }} >
+                      <MoreVertical size={16} />
+                    </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-background">{t("Attached youtube video")}</p>
+                      </TooltipContent>
+                    </Tooltip>
 
-              <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500">
-                <MoreVertical size={16} />
-              </button>
+                   
+                    )
+                  }
             </div>
 
             {/* Unified Metadata Bar */}
@@ -424,7 +437,7 @@ const NoteDetailBase = () => {
                 value={getNoteLanguageIso(note?.language)}
               />
               <MetaItem
-                icon={<Paperclip size={12} />}
+                icon={ <Paperclip size={12} />}
                 label={t("Attachments")}
                 value={`${attachmentCount} items`}
                 onClick={() =>
@@ -433,7 +446,7 @@ const NoteDetailBase = () => {
                     : null
                 }
                 active={isMediaExpanded}
-                iconEnd={isMediaExpanded ? <ChevronUp /> : <ChevronDown />}
+                iconEnd={attachmentCount ?  (isMediaExpanded ? <ChevronUp /> : <ChevronDown />) : null}
               />
               <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
 
@@ -478,21 +491,19 @@ const NoteDetailBase = () => {
         <div className="w-full mx-auto px-6 py-8">
           {/* --- 2. RESOURCE TRAY: Collapsible Media --- */}
           <AnimatePresence>
-            {isMediaExpanded && attachmentCount > 0 && (
+            {(isMediaExpanded && (attachmentCount > 0 ||  note?.youtube_url))  && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 className="mb-10 overflow-hidden"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className=" w-full mx-auto    relative">
                   {note?.youtube_url && (
-                    <div className="aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black">
+                    <div className="md:col-span-2 w-full max-w-3xl mx-auto aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black relative">
                       <iframe
                         className="w-full h-full"
-                        src={`https://www.youtube.com/embed/${
-                          note.youtube_url.split("v=")[1]
-                        }`}
+                       src={`https://www.youtube.com/embed/${extractYouTubeID(note?.youtube_url)}`}
                         allowFullScreen
                       />
                     </div>
@@ -526,6 +537,13 @@ const NoteDetailBase = () => {
                       </span>
                     </button>
                   ))}
+                  {/* --- NEW: Text Content Button --- */}
+                    {textContent && (
+                     <pre>
+                      {textContent}
+                     </pre>
+                    )}
+
                 </div>
               </motion.div>
             )}
