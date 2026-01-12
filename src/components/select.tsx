@@ -90,6 +90,17 @@ const Select = ({ data }: any) => {
             <CommandInput placeholder={t("Search folder...")} />
             <CommandList>
               <CommandEmpty>{t("No folders found.")}</CommandEmpty>
+                  <CommandGroup>
+                <CommandItem
+                  onSelect={() => {
+                    setSelectedFolder(undefined as any);
+                    setOpen(false);
+                  }}
+                >
+                  {t("All folders")}
+                </CommandItem>
+              </CommandGroup>
+
               <CommandGroup heading={t("Examples")}>
                 {data?.map((item: any) => (
                   <CommandItem
@@ -113,18 +124,9 @@ const Select = ({ data }: any) => {
                 ))}
               </CommandGroup>
               <CommandSeparator />
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => {
-                    setSelectedFolder(undefined as any);
-                    setOpen(false);
-                  }}
-                >
-                  {t("All folders")}
-                </CommandItem>
-              </CommandGroup>
+          
               <CommandSeparator />
-              <CommandGroup>
+              <CommandGroup  className="sticky bottom-0 z-10 bg-popover border-t border-zinc-200 dark:border-zinc-800 p-1">
                 <CommandItem
                   onSelect={() => {
                     setOpen(false);

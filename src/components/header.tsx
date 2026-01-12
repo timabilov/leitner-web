@@ -1,29 +1,14 @@
-import { useUserStore } from "@/store/userStore";
-import { useQuery } from "@tanstack/react-query";
-import { axiosInstance } from "@/services/auth";
-import { API_BASE_URL } from "@/services/config";
 import Select from "./select";
-import { ArrowDown, BellOff, BellRing } from "lucide-react";
-import { AnimatedTooltip } from "./ui/motion-tooltip";
-import { useState, useId, useEffect } from "react";
-import { Switch } from "./ui/switch";
+import { ArrowDown } from "lucide-react";
 import { LanguageSwitcher } from "./language-switcher";
-import { useTranslation } from "react-i18next";
 import CreateFolder from "./create-folder";
-import { usePostHog } from 'posthog-js/react';
-import { cn } from "@/lib/utils";
-
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "./ui/spinner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { toast } from "sonner";
 
-const Header = ({  setChecked, checked, toggleSwitch, processingNotes, onProcessingClick }: any) => {
-  const { t } = useTranslation();
-  const { companyId, folders } = useUserStore();
+import { useFolders } from "@/hooks/use-folders";
 
-
-  
+const Header = ({  processingNotes, onProcessingClick }: any) => {
+   const { data } = useFolders(); 
   
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md transition-all">
@@ -65,7 +50,7 @@ const Header = ({  setChecked, checked, toggleSwitch, processingNotes, onProcess
           <div className="flex items-center gap-1.5 sm:gap-2">
             <CreateFolder />
             <div className="">
-              <Select data={folders || []} /*loading={isLoadingFolders}*/ />
+              <Select data={data?.folders || []} /*loading={isLoadingFolders}*/ />
             </div>
             <LanguageSwitcher />
           </div>

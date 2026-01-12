@@ -74,7 +74,7 @@ createRoot(document.getElementById('root')!).render(
      <PostHogProvider client={posthog}>
       <Sentry.ErrorBoundary fallback={ErrorFallback} onReset={() => window.location.reload()}>
         <BrowserRouter>
-             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">\
+             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
                   <QueryClientProvider client={queryClient}>
                       <App />
                   </QueryClientProvider>

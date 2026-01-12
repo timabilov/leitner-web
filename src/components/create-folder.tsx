@@ -44,7 +44,7 @@ const CreateFolder = () => {
         { name: folderInputValue }
       ),
     onSuccess: () => {
-      queryClient.refetchQueries({ queryKey: ['folders'] });
+    queryClient.invalidateQueries({ queryKey: ["folders"] });
       setFolderInputValue("");
       setIsOpen(false);
     },

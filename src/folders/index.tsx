@@ -46,15 +46,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import folderAnimation from "./../notes/folder.json";
+import { useFolders } from "@/hooks/use-folders";
 
 export default function Folders() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const posthog = usePostHog();
+ const { data } = useFolders(); // Uses cached data if available
 
   // 1. Get selectedFolder from store to compare IDs
-  const { companyId, setSelectedFolder, selectedFolder, folders, totalNotesCount} = useUserStore();
+  const { companyId, setSelectedFolder, selectedFolder, totalNotesCount} = useUserStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -88,12 +89,12 @@ export default function Folders() {
 
   // --- FILTERING ---
   const filteredFolders = useMemo(() => {
-    if (folders?.length)
-      return folders?.filter((f: any) =>
+    if (data?.folders?.length)
+      return data?.folders?.filter((f: any) =>
         f.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     return []
-  }, [folders, searchQuery]);
+  }, [data?.folders, searchQuery]);
 
   // --- SELECTION HANDLER ---
   const handleSelectFolder = (folder: any) => {

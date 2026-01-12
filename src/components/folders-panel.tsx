@@ -7,18 +7,20 @@ import { useUserStore } from "@/store/userStore";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useMemo } from "react";
+import { useFolders } from "@/hooks/use-folders";
 
 export function FoldersPanel() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setSelectedFolder, folders, selectedFolder } = useUserStore();
+ const { data } = useFolders(); // Uses cached data if available
 
 
 
   // Get recent folders (limit to 5)
   const recentFolders = useMemo(() => {
-    return folders?.slice(0, 5) || []}
-    , []);
+    return data?.folders?.slice(0, 5) || []}
+    , [data]);
 
   const handleFolderClick = (folder: any) => {
     // Set selected folder in context
