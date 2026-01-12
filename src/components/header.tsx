@@ -20,24 +20,8 @@ import { toast } from "sonner";
 
 const Header = ({  setChecked, checked, toggleSwitch, processingNotes, onProcessingClick }: any) => {
   const { t } = useTranslation();
-  const { companyId } = useUserStore();
+  const { companyId, folders } = useUserStore();
 
-  
-    const { data: foldersQuery, isLoading: isLoadingFolders} = useQuery({
-    queryKey: ['folders'],
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    queryFn: async () => {
-      return axiosInstance.get(API_BASE_URL + `/company/${companyId}/notes/folder`);
-    },
-    enabled: !!companyId,
-    onError: (error) => {
-      console.error('Get folders error:', error);
-    },
-    onSuccess: (response) => {
-      console.log("response is1", response.data)
-    }
-  });
 
   
   
@@ -81,7 +65,7 @@ const Header = ({  setChecked, checked, toggleSwitch, processingNotes, onProcess
           <div className="flex items-center gap-1.5 sm:gap-2">
             <CreateFolder />
             <div className="">
-              <Select data={foldersQuery?.data?.folders || []} loading={isLoadingFolders} />
+              <Select data={folders || []} /*loading={isLoadingFolders}*/ />
             </div>
             <LanguageSwitcher />
           </div>

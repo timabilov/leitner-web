@@ -1,9 +1,8 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import "./App.css";
 import Notes from "./notes";
 import Login from "./login";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Navigate, Route, Routes } from "react-router";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
@@ -13,18 +12,38 @@ import { ProtectedRoute, PublicRoute } from "./components/protected-route";
 import Alerts from "./alerts";
 import Folders from "./folders";
 import MobileApp from "./mobileapp";
+import { useQuery } from "@tanstack/react-query";
+import { useUserStore } from "./store/userStore";
+import { axiosInstance } from "./services/auth";
+import { API_BASE_URL } from "./services/config";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false, // default: true
-    },
-  },
-});
+
 
 function App() {
+  const { companyId, userId, setFolders, setAllNotesCount} = useUserStore();
+
+      // --- DATA FETCHING ---
+    const { data:foldersData, isLoading } = useQuery({
+      queryKey: ["folders", companyId],
+      enabled: !!userId && !!companyId,
+      queryFn:  () =>  axiosInstance.get(`${API_BASE_URL}/company/${companyId}/notes/folder`),
+    });
+
+
+    useEffect(() => {
+      console.log("data is", foldersData?.data?.folders)
+      if (foldersData?.data?.folders?.length){
+        setFolders(foldersData?.data.folders)
+        setAllNotesCount(foldersData?.data?.total_notes_count)
+      }
+    }, [foldersData]);
+
+
+
+
+
+
   return (
-    <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
           <Suspense
@@ -58,7 +77,6 @@ function App() {
           <Toaster />
         </GoogleOAuthProvider>
       </TooltipProvider>
-    </QueryClientProvider>
   );
 }
 

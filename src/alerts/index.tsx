@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import {
+  Bell,
   CircleAlert,
 } from "lucide-react";
 import Layout from "@/components/layout";
@@ -46,7 +47,20 @@ const Alerts = ({ children }: any) => {
         <div className="@container/main flex flex-1 flex-col ">
           <div className=" w-full">
             <div className="col-span-12 px-4">
-              <Alert className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+              <span className="p-2  rounded-xl">
+                <Bell className="w-6 h-6" />
+              </span>
+              <span> {t("Library")}</span>
+             
+            </h1>
+            <p className="text-muted-foreground">
+              {t("Organize your learning materials into collections.")}
+            </p>
+          </div>
+
+              <Alert className="flex items-center justify-between mt-2">
                 <Avatar className="rounded-md bg-gray-950 flex items-center">
                   <CatLogo />
                 </Avatar>

@@ -19,6 +19,7 @@ import posthog from 'posthog-js'
 import * as Sentry from "@sentry/react";
 import PostHogPageview from './components/posthog-page-view.tsx';
 import { ThemeProvider } from './components/theme-provider.tsx';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // tsc -b && ===> build command
 Sentry.init({
@@ -59,6 +60,13 @@ posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
   }
 })
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // default: true
+    },
+  },
+});
 
 
 createRoot(document.getElementById('root')!).render(
@@ -66,8 +74,10 @@ createRoot(document.getElementById('root')!).render(
      <PostHogProvider client={posthog}>
       <Sentry.ErrorBoundary fallback={ErrorFallback} onReset={() => window.location.reload()}>
         <BrowserRouter>
-             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-                <App />
+             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">\
+                  <QueryClientProvider client={queryClient}>
+                      <App />
+                  </QueryClientProvider>
               </ThemeProvider>
             <PostHogPageview />
         </BrowserRouter>

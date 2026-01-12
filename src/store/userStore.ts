@@ -26,6 +26,7 @@ interface UserStore {
   subscriptionLastCheckedDate?: number;
   fullAdminAccess?: boolean; // Optional parameter for full admin access
   countryCode?: string;
+  totalNotesCount?: number | 0;
   isLoggedIn: () => boolean,
   setEmail: (email: string) => void;
   setFullName: (name: string) => void;
@@ -56,6 +57,7 @@ interface UserStore {
   clearStore: () => void;
   setCountryCode: (code: string) => void;
   setFolders: (folders:  {name: string, id: number, items: any}[]) => void;
+  setAllNotesCount: (count: number) => void;
 }
 
 export const useUserStore = create<UserStore>()(
@@ -72,6 +74,7 @@ export const useUserStore = create<UserStore>()(
       notificationsDenied: undefined,
       pushTokenRegistered: undefined,
       folders: [],
+      totalNotesCount: 0,
       subscriptionStatus: 'free',
       effectiveSubscription: 'pro_plus',
       companyTrialStarted: undefined,
@@ -90,6 +93,7 @@ export const useUserStore = create<UserStore>()(
       setSubscriptionStatus: (status) => set({ subscriptionStatus: status }),
       setSelectedFolder: (selectedFolder?) => set({ selectedFolder }),
       setFolders: (folders) => set({folders}),
+      setAllNotesCount: (count) => set({ totalNotesCount: count }),
       setEffectiveSubscription: (subscription) => set({ effectiveSubscription: subscription }),
       setCompanyTrialStarted: (timestamp) => set({ companyTrialStarted: timestamp }),
       setCompanyTrialDays: (days) => set({ companyTrialDays: days }),

@@ -192,18 +192,8 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
   const posthog = usePostHog();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { companyId, userId, email, selectedFolder } = useUserStore();
+  const { companyId, userId, email, selectedFolder, folders } = useUserStore();
 
-  // --- FOLDER QUERY ---
-  const { data: foldersQuery, isLoading: isLoadingFolders } = useQuery({
-    queryKey: ['folders'],
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    queryFn: async () => {
-      return axiosInstance.get(API_BASE_URL + `/company/${companyId}/notes/folder`);
-    },
-    enabled: !!companyId,
-  });
 
   const [prompt, setPrompt] = useState("");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
@@ -531,7 +521,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                 </DropdownMenu>
 
                 <div className="ml-2">
-                  <Select data={foldersQuery?.data?.folders || []} loading={isLoadingFolders} />
+                  <Select data={folders || []} /*loading={isLoadingFolders}*/ />
                 </div>
 
                 {recorder.isBlocked && <p className="text-xs text-red-500 ml-2">{t("Mic blocked")}</p>}

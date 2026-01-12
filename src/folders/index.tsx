@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -7,19 +7,19 @@ import { usePostHog } from "posthog-js/react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-// --- Icons & Assets ---
-import { 
-  Folder, 
-  FolderOpen, 
-  Plus, 
-  Search, 
-  Loader2, 
+// --- Icons ---
+import {
+  Folder,
+  FolderOpen,
+  Plus,
+  Search,
+  Loader2,
   MoreVertical,
   Calendar,
-  FileText
+  FileText,
+  CheckCircle2, // Added for selection indicator
 } from "lucide-react";
 import Lottie from "lottie-react";
-// Assuming you have this from previous code
 
 // --- Store & Services ---
 import { useUserStore } from "@/store/userStore";
@@ -45,35 +45,29 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import folderAnimation from './../notes/folder.json';
+import folderAnimation from "./../notes/folder.json";
 
 export default function Folders() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const posthog = usePostHog();
-  
-  // Store actions (assuming you have a setter for the selected folder)
-  const { companyId, setSelectedFolder } = useUserStore();
+
+  // 1. Get selectedFolder from store to compare IDs
+  const { companyId, setSelectedFolder, selectedFolder, folders, totalNotesCount} = useUserStore();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
 
-  // --- 1. DATA FETCHING ---
-  const { data: foldersData, isLoading } = useQuery({
-    queryKey: ["folders", companyId],
-    queryFn: async () => {
-      const res = await axiosInstance.get(`${API_BASE_URL}/company/${companyId}/notes/folder`);
-      return res.data.folders; // Assuming response structure based on your controller
-    },
-    enabled: !!companyId,
-  });
 
-  // --- 2. CREATE FOLDER MUTATION ---
+  // --- CREATE MUTATION ---
   const createFolderMutation = useMutation({
     mutationFn: async (name: string) => {
-      return axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/folder/create`, { name });
+      return axiosInstance.post(
+        `${API_BASE_URL}/company/${companyId}/notes/folder/create`,
+        { name }
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["folders"] });
@@ -92,39 +86,41 @@ export default function Folders() {
     createFolderMutation.mutate(newFolderName);
   };
 
-  // --- 3. FILTERING ---
-  const filteredFolders = foldersData?.filter((f: any) => 
-    f.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // --- FILTERING ---
+  const filteredFolders = useMemo(() => {
+    if (folders?.length)
+      return folders?.filter((f: any) =>
+        f.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    return []
+  }, [folders, searchQuery]);
 
-  // --- 4. SELECTION HANDLER ---
+  // --- SELECTION HANDLER ---
   const handleSelectFolder = (folder: any) => {
-    // 1. Set global store state
-    if (setSelectedFolder) {
-      setSelectedFolder(folder);
-    }
-    
-    // 2. Track event
-    posthog.capture("folder_selected", { folder_id: folder.id });
+    // If folder is null, it means "All Folders"
+    setSelectedFolder(folder);
 
-    // 3. Navigate to Notes page filtered by this folder
-    // You can pass query param or rely on the store state you just set
-    navigate(`/notes?folder_id=${folder.id}`);
+    if (folder) {
+      posthog.capture("folder_selected", { folder_id: folder.id });
+      // Optional: Navigate if you want this to open a new page
+      // navigate(`/notes?folder_id=${folder.id}`);
+    } else {
+      posthog.capture("folder_selected_all");
+      // navigate(`/notes`);
+    }
   };
 
   return (
     <Layout title={t("Folders")} noGap>
       <div className="min-h-screen bg-transparent px-6 py-8 w-full max-w-7xl mx-auto">
-        
-        {/* --- HEADER SECTION --- */}
+        {/* --- HEADER --- */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-              <span className="p-2  rounded-xl">
-                <FolderOpen className="w-6 h-6" />
+              <span className="p-2 rounded-xl">
+                <FolderOpen className="text-zinc-800 dark:text-zinc-100" />
               </span>
-              <span> {t("Library")}</span>
-             
+              <span>{t("Library")}</span>
             </h1>
             <p className="text-muted-foreground">
               {t("Organize your learning materials into collections.")}
@@ -132,19 +128,16 @@ export default function Folders() {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
-            {/* Search */}
             <div className="relative flex-1 md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
+              <Input
                 placeholder={t("Search folders...")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm"
               />
             </div>
-
-            {/* Create Button */}
-            <Button 
+            <Button
               onClick={() => setIsCreateOpen(true)}
               className="bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-zinc-900 shadow-lg shadow-zinc-500/20"
             >
@@ -155,35 +148,58 @@ export default function Folders() {
         </div>
 
         {/* --- FOLDER GRID --- */}
-        {isLoading ? (
+        {/*isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-             {[1, 2, 3, 4].map((i) => (
-               <Skeleton key={i} className="h-32 w-full rounded-2xl" />
-             ))}
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+            ))}
           </div>
-        ) : filteredFolders?.length === 0 ? (
+        ) :*/ filteredFolders.length === 0 && !searchQuery ? (
+          // Empty state only if no search query and no folders
           <div className="flex flex-col items-center justify-center py-20 bg-muted/30 rounded-3xl border border-dashed">
-             <div className="w-24 h-24 mb-4 opacity-50 grayscale">
-                <Lottie animationData={folderAnimation} loop={false} />
-             </div>
-             <h3 className="text-lg font-semibold text-muted-foreground">{t("No folders found")}</h3>
-             {searchQuery ? (
-               <p className="text-sm text-muted-foreground/60">{t("Try a different search term")}</p>
-             ) : (
-               <Button variant="link" onClick={() => setIsCreateOpen(true)}>{t("Create your first folder")}</Button>
-             )}
+            <div className="w-24 h-24 mb-4 opacity-50 grayscale">
+              <Lottie animationData={folderAnimation} loop={false} />
+            </div>
+            <h3 className="text-lg font-semibold text-muted-foreground">
+              {t("No folders found")}
+            </h3>
+            <Button variant="link" onClick={() => setIsCreateOpen(true)}>
+              {t("Create your first folder")}
+            </Button>
           </div>
         ) : (
-          <motion.div 
-            layout 
+          <motion.div
+            layout
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           >
             <AnimatePresence>
+              {/* 1. The "All Folders" Card */}
+              {
+                !searchQuery && (
+                  <FolderCard
+                    folder={{
+                      id: "ALL_FOLDERS", // Pseudo ID for key
+                      name: t("All Notes"),
+                      count: totalNotesCount, // Use the count from API
+                      created_at: null,
+                    }}
+                    index={0}
+                    // Check if selectedFolder is null (which means All)
+                    isSelected={!selectedFolder}
+                    onClick={() => handleSelectFolder(null)}
+                    isSpecial={true}
+                  />
+                )
+              }
+
+              {/* 2. The Actual Folders */}
               {filteredFolders.map((folder: any, index: number) => (
-                <FolderCard 
-                  key={folder.id} 
-                  folder={folder} 
-                  index={index}
+                <FolderCard
+                  key={folder.id}
+                  folder={folder}
+                  index={index + 1}
+                  // Check ID match
+                  isSelected={selectedFolder?.id === folder.id}
                   onClick={() => handleSelectFolder(folder)}
                 />
               ))}
@@ -204,11 +220,11 @@ export default function Folders() {
           <div className="flex flex-col gap-4 py-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl">
-                 <Folder className="w-6 h-6 text-amber-500" />
+                <Folder className="w-6 h-6 text-amber-500" />
               </div>
               <Input
                 autoFocus
-                placeholder={t("e.g., Biology 101, Marketing Ideas...")}
+                placeholder={t("e.g., Biology 101...")}
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
@@ -216,11 +232,12 @@ export default function Folders() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>{t("Cancel")}</Button>
-            <Button 
-              onClick={handleCreateFolder} 
+            <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>
+              {t("Cancel")}
+            </Button>
+            <Button
+              onClick={handleCreateFolder}
               disabled={createFolderMutation.isPending || !newFolderName.trim()}
-              className="min-w-[100px]"
             >
               {createFolderMutation.isPending ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -236,7 +253,7 @@ export default function Folders() {
 }
 
 // --- SUB-COMPONENT: FOLDER CARD ---
-const FolderCard = ({ folder, index, onClick }: any) => {
+const FolderCard = ({ folder, index, onClick, isSelected, isSpecial }: any) => {
   const { t } = useTranslation();
 
   return (
@@ -246,44 +263,107 @@ const FolderCard = ({ folder, index, onClick }: any) => {
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ delay: index * 0.05 }}
       onClick={onClick}
-      className="group relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 cursor-pointer hover:shadow-xl hover:shadow-zinc-200/50 dark:hover:shadow-black/50  transition-all duration-300 overflow-hidden"
+      className={cn(
+        "group relative rounded-2xl p-5 cursor-pointer transition-all duration-300 overflow-hidden border",
+        // Default State
+        "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800   hover:-translate-y-1",
+        // Selected State (Active)
+        isSelected &&
+          "border-[#fe5e5f]/30 ring-1 ring-[#fe5e5f]  dark:bg-[#fe5e5f]/10   dark:shadow-none"
+      )}
     >
-      {/* Decorative Gradient Blob on Hover */}
-      <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      {/* Selection Checkmark Badge (only when selected) */}
+      {isSelected && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute top-4 right-4 text-[#fe5e5f] z-20"
+        >
+          <CheckCircle2 className="w-5 h-5 fill-[#fe5e5f] text-white dark:text-zinc-900" />
+        </motion.div>
+      )}
+
+      {/* Decorative Blob */}
+      <div
+        className={cn(
+          "absolute -right-10 -top-10 w-32 h-32 rounded-full blur-3xl transition-opacity duration-500 pointer-events-none",
+          // isSelected
+          //   ? "bg-amber-500/20 opacity-100"
+          //   : "bg-amber-500/10 opacity-0 group-hover:opacity-100"
+        )}
+      />
 
       <div className="flex justify-between items-start mb-4 relative z-10">
-        <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-xl  transition-colors">
-          <Folder className="w-6 h-6 text-zinc-400  transition-colors" fill="currentColor" fillOpacity={0.2} />
+        <div
+          className={cn(
+            "p-3 rounded-xl transition-colors",
+            // Change Icon bg color if selected
+            // isSelected
+            //   ? "bg-amber-100 dark:bg-amber-900/30"
+            //   : "bg-zinc-50 dark:bg-zinc-800"
+          )}
+        >
+  
+            <Folder
+              className={cn(
+                "w-6 h-6 transition-colors",
+                isSelected
+                  ? "text-[#fe5e5f]"
+                  : "text-zinc-400"
+              )}
+              fill="currentColor"
+              fillOpacity={isSelected ? 1 : 0.2}
+            />
         </div>
-        
-        {/* Optional: Dropdown for Edit/Delete could go here */}
-        <DropdownMenu>
+
+        {/* Only show menu for actual folders, not the 'All Notes' card */}
+        {!isSpecial && (
+          <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1">
-                    <MoreVertical size={16} />
-                </button>
+              <button className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800">
+                <MoreVertical size={16} />
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={(e) => e.stopPropagation()}>Rename</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-600" onClick={(e) => e.stopPropagation()}>Delete</DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                {t("Rename")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {t("Delete")}
+              </DropdownMenuItem>
             </DropdownMenuContent>
-        </DropdownMenu>
+          </DropdownMenu>
+        )}
       </div>
 
       <div className="relative z-10">
-        <h3 className="font-bold text-zinc-800 dark:text-zinc-100 text-lg truncate mb-1  transition-colors">
+        <h3
+          className={cn(
+            "font-bold text-lg truncate mb-1 transition-colors",
+            isSelected
+              ? "text-amber-700 dark:text-amber-400"
+              : "text-zinc-800 dark:text-zinc-100"
+          )}
+        >
           {folder.name}
         </h3>
-        
+
         <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3">
+          <div className="flex items-center gap-1.5">
+            <FileText size={12} />
+            <span>
+              {folder.count || 0} {t("notes")}
+            </span>
+          </div>
+          {folder.created_at && (
             <div className="flex items-center gap-1.5">
-                <FileText size={12} />
-                <span>{folder.count || 0} {t("notes")}</span>
+              <Calendar size={12} />
+              <span>{new Date(folder.created_at).toLocaleDateString()}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-                <Calendar size={12} />
-                <span>{new Date(folder.created_at).toLocaleDateString()}</span>
-            </div>
+          )}
         </div>
       </div>
     </motion.div>
