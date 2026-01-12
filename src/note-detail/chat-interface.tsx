@@ -131,7 +131,7 @@ const ChatInterface = ({
 
     const userText = inputValue.trim();
 
-    // 1. Add User Message via Store
+    // 1. Add User Message
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
@@ -143,56 +143,81 @@ const ChatInterface = ({
     setIsLoading(true);
     inputRef.current?.focus();
 
-    // 2. Add AI Placeholder via Store
+    // 2. Add AI Placeholder
     const aiMsgId = (Date.now() + 1).toString();
     setStreamingMessageId(aiMsgId);
-    
     addMessage(noteId, { id: aiMsgId, role: "ai", content: "" });
 
-    // Prepare History (using the current store state)
-    // Note: We use the local 'messages' variable + the new userMsg we just created
-    // because Zustand updates might be async in React rendering cycle
     const currentHistory = [...messages, userMsg].map((m) => ({
       role: m.role === "ai" ? "model" : "user",
-      message: m.content,
+      message: m.content, // Note: If history contains raw JSON of previous quiz, model handles it fine as text
     }));
 
+    let accumulatedContent = ""; 
     let lastIndex = 0;
-    let accumulatedContent = ""; // Track content locally for stream updates
+    let isJsonMode = false; // Flag to stop streaming text updates if we detect JSON
 
     try {
       await axiosInstance.post(
-        `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat`,
+        `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat-v2`,
         {
           message: userText,
           history: currentHistory,
         },
         {
           timeout: 120000,
+          // We use onDownloadProgress to catch Streaming Text
           onDownloadProgress: (progressEvent) => {
             const xhr = progressEvent.event.target;
-            const fullResponse = xhr.responseText || "";
-            const newChunk = fullResponse.substring(lastIndex);
+            const contentType = xhr.getResponseHeader("Content-Type");
+            
+            // CRITICAL: If Content-Type is application/json, DO NOT treat as text stream.
+            // Wait for the full promise to resolve.
+            if (contentType && contentType.includes("application/json")) {
+              isJsonMode = true;
+              return; 
+            }
 
-            if (newChunk) {
-              lastIndex = fullResponse.length;
-              accumulatedContent += newChunk;
-              
-              // 3. Update AI Message via Store
-              updateMessageContent(noteId, aiMsgId, accumulatedContent);
+            // Also check buffer start just in case headers aren't ready (rare but safe)
+            const fullResponse = xhr.responseText || "";
+            if (fullResponse.trim().startsWith('{"type":"quiz_ui"')) {
+                isJsonMode = true;
+                return;
+            }
+
+            if (!isJsonMode) {
+              const newChunk = fullResponse.substring(lastIndex);
+              if (newChunk) {
+                lastIndex = fullResponse.length;
+                accumulatedContent += newChunk;
+                updateMessageContent(noteId, aiMsgId, accumulatedContent);
+              }
             }
           },
         }
-      );
+      ).then((response) => {
+        // 3. FINAL RESOLUTION
+        // If the backend sent a JSON object (Quiz), axios parses it into response.data
+        if (response.data && typeof response.data === 'object' && response.data.type === 'quiz_ui') {
+            // We stringify the structured data so it fits into our 'content' string field.
+            // The ChatMessageItem component detects this string structure and renders the UI.
+            const quizString = JSON.stringify(response.data);
+            updateMessageContent(noteId, aiMsgId, quizString);
+        } 
+        // If it was a text stream, accumulatedContent is already accurate, 
+        // but let's ensure the final text is synced exactly.
+        else if (typeof response.data === 'string') {
+             updateMessageContent(noteId, aiMsgId, response.data);
+        }
+      });
+
     } catch (error) {
       console.error("Chat error:", error);
       Sentry.captureException(error);
-
-      // Update with error message via Store
       updateMessageContent(
         noteId, 
         aiMsgId, 
-        accumulatedContent || t("Sorry, I encountered an error. Please try again.") // Keep text if any exists, else show error
+        accumulatedContent || t("Sorry, I encountered an error. Please try again.")
       );
     } finally {
       setIsLoading(false);
