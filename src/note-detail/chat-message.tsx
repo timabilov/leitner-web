@@ -2,27 +2,28 @@ import React, { useMemo } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import CatLogo from "./assets/cat-logo"; // Assuming this exists per your code
-import MarkdownTypewriter from "./markdown-typewriter"; // Assuming this exists per your code
-import type { Message } from "@/store/chatStore";
-import { QuizDisplay } from "@/components/chat/quiz-display"; // Import the new component
-import type { QuizData } from "@/components/chat/quiz-display"; // Import the new component
+import CatLogo from "./assets/cat-logo"; 
+import MarkdownTypewriter from "./markdown-typewriter"; 
+import { QuizDisplay } from "@/components/chat/quiz-display"; 
+import type { QuizData } from "@/components/chat/quiz-display"; 
 
+// 1. CHANGED: Accept primitive types for better Memoization
 interface ChatMessageProps {
-  message: Message;
+  role: "ai" | "user" | "system" | string;
+  content: string;
   isStreaming: boolean;
 }
 
-const ChatMessageItem = ({ message, isStreaming }: ChatMessageProps) => {
-  const isAi = message.role === "ai";
+const ChatMessageItem = ({ role, content, isStreaming }: ChatMessageProps) => {
+  const isAi = role === "ai";
 
-  // --- LOGIC: Detect if content is our Quiz JSON ---
+  // 2. LOGIC: Detect if content is our Quiz JSON
   const quizData = useMemo<QuizData | null>(() => {
-    if (!isAi || !message.content) return null;
+    if (!isAi || !content) return null;
     
-    // Optimization: Only try to parse if it looks like JSON object start
-    // The backend wrapper sends { "type": "quiz_ui", "data": ... }
-    const trimmed = message.content.trim();
+    // Optimization: Quick check before parsing
+    const trimmed = content.trim();
+    // Check for specific signature to avoid parsing normal text
     if (trimmed.startsWith("{") && trimmed.includes("quiz_ui")) {
       try {
         const parsed = JSON.parse(trimmed);
@@ -30,13 +31,11 @@ const ChatMessageItem = ({ message, isStreaming }: ChatMessageProps) => {
           return parsed.data as QuizData;
         }
       } catch (e) {
-        // If parsing fails (e.g. streaming chunks incomplete), return null
-        // We gracefully fall back to text until stream completes or if it's just text.
         return null;
       }
     }
     return null;
-  }, [message.content, isAi]);
+  }, [content, isAi]);
 
   return (
     <div
@@ -68,20 +67,20 @@ const ChatMessageItem = ({ message, isStreaming }: ChatMessageProps) => {
             : "bg-muted text-foreground rounded-tl-sm w-full"
         )}
       >
-        {/* RENDER LOGIC: If we successfully parsed Quiz Data, show Quiz UI. Else Show Text. */}
         {quizData ? (
           <QuizDisplay data={quizData} />
         ) : isAi ? (
+          // Typewriter handles the animation based on isStreaming and content updates
           <MarkdownTypewriter
-            content={message.content}
+            content={content}
             isStreaming={isStreaming}
           />
         ) : (
-          message.content
+          content
         )}
 
-        {/* Loading Indicator */}
-        {isAi && isStreaming && message.content.length === 0 && (
+        {/* Loading Indicator for empty initial state */}
+        {isAi && isStreaming && content.length === 0 && (
            <span className="animate-pulse">...</span>
         )}
       </div>
@@ -89,4 +88,6 @@ const ChatMessageItem = ({ message, isStreaming }: ChatMessageProps) => {
   );
 };
 
+// 3. OPTIMIZATION: React.memo now works perfectly because we pass strings (primitives)
+// Previous messages won't re-render when the store updates the *new* message.
 export const ChatMessage = React.memo(ChatMessageItem);

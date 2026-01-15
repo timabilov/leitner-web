@@ -4,8 +4,8 @@ import { GradientProgress } from "@/components/gradient-progress";
 import { ExternalLink, Loader2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Lottie from "lottie-react";
-import successAnimation from './done.json';
-import sadCat from './sad-cat.jpeg';
+import successAnimation from './assets/done.json';
+import sadCat from './assets/sad-cat.jpeg';
 
 interface NoteCreationToastProps {
   step: string;

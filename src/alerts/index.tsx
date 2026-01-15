@@ -2,22 +2,18 @@ import { useUserStore } from "@/store/userStore";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
-import {
-  Bell,
-  CircleAlert,
-} from "lucide-react";
+import { Bell, CircleAlert } from "lucide-react";
 import Layout from "@/components/layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
-import SortableGrid from "@/notes/sortable-example";
 import CatLogo from "@/note-detail/assets/cat-logo";
-
+import { NoteCard } from "@/notes/note-card";
 
 const Alerts = ({ children }: any) => {
   // 2. Create the Ref
-  const { companyId,  email, userId } = useUserStore();
+  const { companyId, email, userId } = useUserStore();
 
   const { t } = useTranslation(); // Translation hook
 
@@ -47,18 +43,17 @@ const Alerts = ({ children }: any) => {
         <div className="@container/main flex flex-1 flex-col ">
           <div className=" w-full">
             <div className="col-span-12 px-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-              <span className="p-2  rounded-xl">
-                <Bell className="w-6 h-6" />
-              </span>
-              <span> {t("Library")}</span>
-             
-            </h1>
-            <p className="text-muted-foreground">
-              {t("Organize your learning materials into collections.")}
-            </p>
-          </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+                  <span className="p-2  rounded-xl">
+                    <Bell className="w-6 h-6" />
+                  </span>
+                  <span> {t("Library")}</span>
+                </h1>
+                <p className="text-muted-foreground">
+                  {t("Organize your learning materials into collections.")}
+                </p>
+              </div>
 
               <Alert className="flex items-center justify-between mt-2">
                 <Avatar className="rounded-md bg-gray-950 flex items-center">
@@ -86,7 +81,15 @@ const Alerts = ({ children }: any) => {
               "xs:grid-cols-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4"
             }
           >
-            <SortableGrid data={notesQuery?.data?.data?.notes} view={"grid"} />
+            <div
+              className={
+                "w-full p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3"
+              }
+            >
+              {(notesQuery?.data?.data?.notes || []).map((item) => (
+                <NoteCard key={item.id} item={item} view={"grid"} />
+              ))}
+            </div>
           </div>
         </div>
       </div>

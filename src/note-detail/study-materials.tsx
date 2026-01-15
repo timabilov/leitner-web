@@ -7,7 +7,6 @@ import * as Sentry from "@sentry/react";
 import { toast } from "sonner";
 import { 
   ArrowLeft, 
-  Settings, // Replaced CircleAlert/Header icon with something generic or remove
   Sparkles
 } from "lucide-react";
 import typingAnimation from './typing.json';
@@ -25,8 +24,6 @@ import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 
 // Icons
-import AIIcon from "@/note-detail/assets/ai-icon";
-import CatPenIcon from "@/notes/cat-pen-icon";
 import QuizHardPenIcon from "@/note-detail/assets/quiz-hard-pen-icon";
 import FlashcardIcon from "@/note-detail/assets/flashcard-icon";
 
@@ -34,7 +31,7 @@ import FlashcardIcon from "@/note-detail/assets/flashcard-icon";
 import { FlashcardsTab } from "@/note-detail/flashcard-tab";
 import { AIQuizTab } from "@/note-detail/quiz-tab";
 import { GenericAILoading } from "../components/generic-ai-loading";
-import successAnimation from "./../notes/done.json"; 
+import successAnimation from "./../notes/assets/done.json"; 
 import { AiOrbitAnimation } from "./ai-orbit-animation";
 
 export const StudyMaterials = ({ 

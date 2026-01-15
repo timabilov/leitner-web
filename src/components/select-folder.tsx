@@ -112,6 +112,9 @@ const FolderSelect = ({ data }: any) => {
                     }}
                   >
                     {item.name}
+                    <span className="text-muted-foreground">
+                      {`(${item.count})`}
+                    </span>
                     <Check
                       className={cn(
                         "ml-auto h-4 w-4",

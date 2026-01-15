@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import QuizHardPenIcon from "./assets/quiz-hard-pen-icon.tsx";
 import FlashcardIcon from "./assets/flashcard-icon.tsx";
-import CatPenIcon from "@/notes/cat-pen-icon.tsx";
+import CatPenIcon from "@/notes/assets/cat-pen-icon.tsx";
 
 export const AiOrbitAnimation = ({ className }: { className?: string }) => {
   return (

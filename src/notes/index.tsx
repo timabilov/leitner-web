@@ -4,15 +4,7 @@ import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import SortableGrid from "./sortable-example";
-import {
-  Folder,
-  Folders,
-  Layers,
-  Loader2Icon,
-  Search,
-  SearchX,
-} from "lucide-react";
+import { Folder, Folders, Loader2Icon, Search, SearchX } from "lucide-react";
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -26,16 +18,18 @@ import { AIPromptInput } from "./ai-prompt-textarea";
 import Layout from "@/components/layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
-import CatPenIcon from "./cat-pen-icon";
+import CatPenIcon from "./assets/cat-pen-icon";
 import debounce from "lodash.debounce";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { usePostHog } from "posthog-js/react";
 import Lottie from "lottie-react";
-import youtubeAnimation from "./youtube.json";
-import folderAnimation from "./folder.json";
+import youtubeAnimation from "./assets/youtube.json";
+import folderAnimation from "./assets/folder.json";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
+import { NoteCard } from "./note-card";
+import { cn } from "@/lib/utils";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -47,9 +41,10 @@ const isNoteInLoadingState = (note: any) => {
 
 const Notes = ({ children }: any) => {
   const posthog = usePostHog();
-   // 2. Create the Ref
+  // 2. Create the Ref
   const notesListRef = useRef<HTMLDivElement>(null);
-  const { companyId, isLoggedIn, fullName, email, userId, selectedFolder } = useUserStore();
+  const { companyId, isLoggedIn, fullName, email, userId, selectedFolder } =
+    useUserStore();
 
   const [viewMode, setViewMode] = useState<string>("grid");
   const [isPolling, setIsPolling] = useState<boolean>(false);
@@ -60,23 +55,25 @@ const Notes = ({ children }: any) => {
 
   const { t } = useTranslation(); // Translation hook
 
-
-   // 3. Create the Scroll Handler
+  // 3. Create the Scroll Handler
   const scrollToNotes = () => {
     if (notesListRef.current) {
-      notesListRef.current.scrollIntoView({ 
-        behavior: "smooth", 
-        block: "start" 
+      notesListRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
       });
     }
   };
 
   const notesQuery = useQuery({
-    queryKey: ["notes",  selectedFolder?.id],
+    queryKey: ["notes", selectedFolder?.id],
     refetchOnWindowFocus: false,
     queryFn: async () => {
       return axiosInstance.get(
-        API_BASE_URL + `/company/${companyId}/notes/all${selectedFolder ? `?folder_id=${selectedFolder?.id}` : ''}`
+        API_BASE_URL +
+          `/company/${companyId}/notes/all${
+            selectedFolder ? `?folder_id=${selectedFolder?.id}` : ""
+          }`
       );
     },
     enabled: !!userId || isPolling,
@@ -92,7 +89,7 @@ const Notes = ({ children }: any) => {
         setProcessingNoteIds(loadingNotes);
         return 3000; // Poll every 5 seconds if there are loading notes
       } else {
-        setProcessingNotes(0)
+        setProcessingNotes(0);
         setIsPolling(false);
         return false;
       }
@@ -107,7 +104,6 @@ const Notes = ({ children }: any) => {
       return false;
     },
   });
-
 
   const searchNotesQuery = useQuery({
     queryKey: ["searchNotes", searchQuery],
@@ -181,7 +177,7 @@ const Notes = ({ children }: any) => {
       searchValue={searchQuery}
       isSearching={searchNotesQuery.isPending}
       processingNotes={processingNotes}
-      onProcessingClick={scrollToNotes} 
+      onProcessingClick={scrollToNotes}
     >
       <style>
         {`
@@ -238,7 +234,7 @@ const Notes = ({ children }: any) => {
               </div>
             </Alert>
           </div>
-         {/* 2. ACTION CARDS SECTION - 1 col on mobile, 2 col on sm+ */}
+          {/* 2. ACTION CARDS SECTION - 1 col on mobile, 2 col on sm+ */}
           <div className="px-4 grid grid-cols-1 sm:grid-cols-4  md:grid-cols-2 w-full gap-4 max-w-4xl mx-auto md:justify-items-center">
             <CreateYoutubeNote
               refetch={notesQuery.refetch}
@@ -248,7 +244,11 @@ const Notes = ({ children }: any) => {
                   <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/5 blur-3xl group-hover:bg-red-500/10 transition-colors" />
                   <CardHeader className="p-4 sm:p-6 pb-4">
                     <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/50 p-2 shadow-inner transition-transform duration-500 group-hover:scale-110">
-                      <Lottie animationData={youtubeAnimation} loop={true} className="w-6 h-6" />
+                      <Lottie
+                        animationData={youtubeAnimation}
+                        loop={true}
+                        className="w-6 h-6"
+                      />
                     </div>
                     <CardTitle className="text-sm sm:text-md font-bold tracking-tight text-zinc-600">
                       {t("YouTube")}
@@ -268,7 +268,12 @@ const Notes = ({ children }: any) => {
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/5 blur-3xl group-hover:bg-amber-500/10 transition-colors" />
               <CardHeader className="p-4 sm:p-6 pb-4">
                 <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/50 shadow-inner transition-transform duration-500 group-hover:scale-110">
-                  <Lottie animationData={folderAnimation} loop={true} autoplay={true} className="w-6 h-6" />
+                  <Lottie
+                    animationData={folderAnimation}
+                    loop={true}
+                    autoplay={true}
+                    className="w-6 h-6"
+                  />
                 </div>
                 <CardTitle className="text-sm sm:text-md font-bold tracking-tight text-zinc-600">
                   {t("Multi note")}
@@ -279,7 +284,6 @@ const Notes = ({ children }: any) => {
               </CardHeader>
             </Card>
           </div>
-
 
           <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
             <AIPromptInput
@@ -294,14 +298,16 @@ const Notes = ({ children }: any) => {
             />
           </div>
           <div className="sm:flex justify-between p-4 mt-4">
-            <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight flex items-center"  ref={notesListRef} >
-             {
-              selectedFolder ? <Folder className="h-5 w-5 mr-2" /> :  <Folders className="h-5 w-5 mr-2"/>
-             }
-              {
-                selectedFolder ? selectedFolder?.name : t("All notes")
-              }
-
+            <h3
+              className="scroll-m-20 text-2xl font-semibold tracking-tight flex items-center"
+              ref={notesListRef}
+            >
+              {selectedFolder ? (
+                <Folder className="h-5 w-5 mr-2" />
+              ) : (
+                <Folders className="h-5 w-5 mr-2" />
+              )}
+              {selectedFolder ? selectedFolder?.name : t("All notes")}
             </h3>
             <ButtonGroup
               orientation="horizontal"
@@ -413,15 +419,21 @@ const Notes = ({ children }: any) => {
                 </p>
               </div>
             ) : (
-              <SortableGrid
-                data={
-                  searchQuery
-                    ? searchNotesQuery.data || []
-                    : notesQuery?.data?.data?.notes
-                }
-                view={viewMode}
-                // setView={setViewMode}
-              />
+              <div
+                className={cn(
+                  "w-full p-4 grid gap-4",
+                  viewMode === "grid"
+                    ? "sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3"
+                    : "grid-cols-1"
+                )}
+              >
+                {(searchQuery
+                  ? searchNotesQuery?.data || []
+                  : notesQuery?.data?.data?.notes || []
+                ).map((item) => (
+                  <NoteCard key={item.id} item={item} view={viewMode} />
+                ))}
+              </div>
             )}
 
             <input {...getInputProps()} />

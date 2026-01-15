@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
-import CatPenIcon from '@/notes/cat-pen-icon';
+import CatPenIcon from '@/notes/assets/cat-pen-icon';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { axiosInstance } from '@/services/auth';

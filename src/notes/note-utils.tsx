@@ -1,9 +1,9 @@
 import Lottie from "lottie-react";
-import audioAnimation from './recording.json';
-import folderAnimation from './folder.json';
-import imageAnimation from './image.json';
-import pdfAnimation from './pdf.json';
-import youtubeAnimation from './youtube.json';
+import audioAnimation from './assets/recording.json';
+import folderAnimation from './assets/folder.json';
+import imageAnimation from './assets/image.json';
+import pdfAnimation from './assets/pdf.json';
+import youtubeAnimation from './assets/youtube.json';
 import { AudioLines, File, FolderOpen, FolderOpenDot, Image, Layers, School2Icon, Text, Youtube } from "lucide-react";
 import { ISO_TO_LANGUAGE } from "@/services/config";
 

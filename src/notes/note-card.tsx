@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next';
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { SortableItem } from "./sortable";
 import { 
   BellRing, BellOff, TriangleAlert, 
   Folder, Clock, Sparkles 
@@ -76,7 +75,7 @@ export const NoteCard = ({ item, view }) => {
 
   return (
     <div className={cn("relative w-full", view === "grid" ? "h-full min-h-[180px]" : "h-auto")}>
-      <AnimatePresence mode="popLayout">
+      {/* <AnimatePresence mode="popLayout"> */}
         
         {/* === STATE 1: PROCESSING === */}
         {isProcessing ? (
@@ -92,7 +91,7 @@ export const NoteCard = ({ item, view }) => {
         ) : (
           
           /* === STATE 2: FINISHED === */
-          <SortableItem key={item.id} value={item.id} className="h-full w-full">
+          <div key={item.id}  className="h-full w-full">
             <motion.div
               layout
               key="content"
@@ -227,9 +226,9 @@ export const NoteCard = ({ item, view }) => {
                 </Tooltip>
               </div>
             </motion.div>
-          </SortableItem>
+          </div>
         )}
-      </AnimatePresence>
+      {/* </AnimatePresence> */}
     </div>
   );
 };

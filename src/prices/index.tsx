@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import Layout from "@/components/layout";
 import { cn } from "@/lib/utils";
-import CatPenIcon from "@/notes/cat-pen-icon";
+import CatPenIcon from "@/notes/assets/cat-pen-icon";
 import { useUserStore } from "@/store/userStore";
 import { PRICING_TIERS } from "./pricing-data"; // Assuming you put data here
 

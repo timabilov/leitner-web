@@ -25,7 +25,7 @@ import { AIQuizTab } from "@/note-detail/quiz-tab";
 import { GenericAILoading } from "../components/generic-ai-loading";
 import { Switch } from "../components/ui/switch";
 import { Avatar } from "../components/ui/avatar";
-import CatPenIcon from "@/notes/cat-pen-icon";
+import CatPenIcon from "@/notes/assets/cat-pen-icon";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { motion, AnimatePresence } from "framer-motion";
