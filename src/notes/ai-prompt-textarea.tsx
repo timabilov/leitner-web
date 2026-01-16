@@ -189,7 +189,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
   const posthog = usePostHog();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { companyId, userId, email, selectedFolder, folders } = useUserStore();
+  const { companyId,  selectedFolder, folders } = useUserStore();
 
 
   const [prompt, setPrompt] = useState("");

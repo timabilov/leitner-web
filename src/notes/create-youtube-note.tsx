@@ -27,8 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "react-i18next"; // Import the hook
-import * as Sentry from "@sentry/react"; 
-import { usePostHog } from 'posthog-js/react';
+import * as Sentry from "@sentry/react";
+import { usePostHog } from "posthog-js/react";
+import { NoteCreationToast } from "./note-creation-toast";
 
 const CreateYoutubeNote = ({ component, refetch }) => {
   const { t } = useTranslation(); // Initialize the translation hook
@@ -42,7 +43,7 @@ const CreateYoutubeNote = ({ component, refetch }) => {
       ...data,
     })),
   ];
-  const posthog = usePostHog()
+  const posthog = usePostHog();
   const [urlInputValue, setUrlInputValue] = useState("");
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const selectedFolder = useUserStore((store) => store.selectedFolder);
@@ -53,7 +54,7 @@ const CreateYoutubeNote = ({ component, refetch }) => {
   const [noteId, setNoteId] = useState<string | undefined>();
 
   useEffect(() => {
-    posthog.capture('youtube_dialog_toggled', { userId, email, state: isOpen })
+    posthog.capture("youtube_dialog_toggled", { userId, email, state: isOpen });
   }, [isOpen]);
 
   useEffect(() => {
@@ -112,14 +113,28 @@ const CreateYoutubeNote = ({ component, refetch }) => {
         newNote
       ),
     onSuccess: (response) => setNoteId(response.data.id),
-    onError: (error) => {
+    onError: (error: any) => {
       console.log(error?.response?.data);
-       Sentry.captureException(error, { 
-        tags: { action: 'create_youtube_note' },
-        extra: { url: urlInputValue, userId, email, videoId }
+      Sentry.captureException(error, {
+        tags: { action: "create_youtube_note" },
+        extra: { url: urlInputValue, userId, email, videoId },
       });
 
-      alert(t("Failed to create note, please try again."));
+      const isPlanLimit = error?.status === 403;
+      const msg = isPlanLimit
+        ? t("Please upgrade your subscription plan")
+        : t("Failed to create note, please try again.");
+      toast.custom(() => (
+        <NoteCreationToast
+          step={msg}
+          progress={0}
+          status={"error"}
+          noteId={noteId}
+          // name={flowContext.current.name}
+        />
+      ));
+
+      //alert(t("Failed to create note, please try again."));
     },
   });
 
@@ -127,7 +142,11 @@ const CreateYoutubeNote = ({ component, refetch }) => {
     if (!urlInputValue) alert(t("Please add youtube link first."));
     else {
       if (isValid && urlInputValue) {
-         posthog.capture('youtube_create_clicked', { userId, email, url: urlInputValue })
+        posthog.capture("youtube_create_clicked", {
+          userId,
+          email,
+          url: urlInputValue,
+        });
 
         const languageCode =
           ISO_TO_LANGUAGE[selectedLanguage]?.lng_code || "auto";
@@ -162,9 +181,9 @@ const CreateYoutubeNote = ({ component, refetch }) => {
       queryClient.invalidateQueries({ queryKey: ["folders", companyId] });
     },
     onError: (error) => {
-        Sentry.captureException(error, { 
-        tags: { action: 'finalize_youtube_note' },
-        extra: { noteId, email, userId }
+      Sentry.captureException(error, {
+        tags: { action: "finalize_youtube_note" },
+        extra: { noteId, email, userId },
       });
 
       console.log("Mark upload as finished error:", error.response?.data);

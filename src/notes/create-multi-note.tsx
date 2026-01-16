@@ -11,13 +11,12 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Trash, UploadCloud, X, FileText, File, CircleAlert, Volume2, VolumeOff } from "lucide-react";
+import { Plus, Trash, UploadCloud, X, FileText, File, Volume2, VolumeOff } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { AudioRecorderWithVisualizer } from "@/components/audio-recorder-visualiser"; // Adjust path if needed
 import { cn } from "@/lib/utils";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
 

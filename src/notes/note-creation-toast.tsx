@@ -21,11 +21,11 @@ export function NoteCreationToast({ step, progress, status, name, onClick }: Not
     <div 
       className={cn(
         // Layout & Size (Standard Sonner Width)
-        "pointer-events-auto relative flex w-full md:w-[356px] flex-col gap-3 overflow-hidden w-full",
+        "pointer-events-auto relative flex md:w-[356px] flex-col gap-3 overflow-hidden w-full",
         // Visuals (Shadcn Toast Styles)
         "rounded-xl border bg-background p-4 shadow-lg transition-all",
         // Conditional Border Color
-        status === "error" ? "border-destructive/50" : "border-border"
+        "border-border"
       )}
     >
       {/* Header Row */}
