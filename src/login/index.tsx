@@ -431,9 +431,17 @@ const LoginBase = () => {
             ) : (
               <GoogleColoredIcon className="h-7 w-7" />
             )}
-            <div className="absolute inset-0 opacity-0 overflow-hidden">
-               <GoogleLogin shape="square" onSuccess={signIn} />
-            </div>
+           <div className="absolute inset-0 z-10 opacity-0 overflow-hidden flex items-center justify-center">
+              {/* 
+                Google buttons have a max-width. We perform a CSS transform scale 
+                to force the iframe to cover the entire width of your custom button 
+                so there are no 'dead zones' for the touch event.
+              */}
+              <div className="scale-[2.0] w-full h-full flex items-center justify-center">
+                <GoogleLogin shape="square" onSuccess={signIn} />
+              </div>
+          </div>
+
             Continue with Google
           </button>
 
