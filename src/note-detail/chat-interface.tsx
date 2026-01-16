@@ -1,49 +1,39 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
-// --- Services & Store ---
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
-
-// --- Icons & Components ---
-import {
-  Send,
-  Loader2,
-  RotateCcw,
-} from "lucide-react";
+import { Send, Loader2, RotateCcw } from "lucide-react";
 import { ChatMessage } from "./chat-message";
 import { Button } from "@/components/ui/button";
 import type { Message } from "@/components/ui/chat-message";
 import { useChatStore } from "@/store/chatStore"; 
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
+
+interface ChatInterfaceProps {
+  noteName?: string;
+  noteId: string;
+  pendingAction?: { type: 'explain' | 'quiz', text: string } | null;
+  onActionComplete?: () => void;
+}
 
 const ChatInterface = ({
   noteName,
   noteId,
-}: {
-  noteName?: string;
-  noteId: string;
-}) => {
+  pendingAction,
+  onActionComplete
+}: ChatInterfaceProps) => {
   const { t } = useTranslation();
   const { companyId } = useUserStore();
   
-  // --- ZUSTAND INTEGRATION ---
   const chats = useChatStore((state) => state.chats);
   const addMessage = useChatStore((state) => state.addMessage);
   const updateMessageContent = useChatStore((state) => state.updateMessageContent);
   const clearChat = useChatStore((state) => state.clearChat);
 
-  // Get messages for THIS specific note
   const messages = chats[noteId] || [];
-
-  // --- DERIVE STATE FOR SCROLLING ---
-  // Memoize last message check to prevent effect loops
   const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
 
   const [inputValue, setInputValue] = useState("");
@@ -53,56 +43,43 @@ const ChatInterface = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasInitialized = useRef(false);
+  
+  // --- NEW: Action Processing Guard ---
+  // This Ref tracks the last pendingAction object we successfully processed.
+  // We use this to compare references and strictly prevent double-firing.
+  const processedActionRef = useRef<object | null>(null);
 
-  // 0. INIT DEFAULT MESSAGE
+  // --- Init Message ---
   useEffect(() => {
     hasInitialized.current = false;
     const currentMessages = useChatStore.getState().chats[noteId] || [];
-
     if (currentMessages.length === 0 && !hasInitialized.current) {
       const initMsg: Message = {
         id: "init-1",
         role: "ai",
-        content: t(
-          "Hello! I've analyzed your note '{{name}}'. Ask me anything about it!",
-          { name: noteName || "Untitled" }
-        ),
+        content: t("Hello! I've analyzed your note '{{name}}'. Ask me anything about it!", { name: noteName || "Untitled" }),
       };
-      
       addMessage(noteId, initMsg);
       hasInitialized.current = true;
     }
   }, [noteId, addMessage, t, noteName]);
 
-
-  // --- 1. SCROLL LOGIC ---
+  // --- Scroll Logic ---
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     if (scrollRef.current) {
         scrollRef.current.scrollIntoView({ behavior, block: "end" });
     }
   };
 
-  // Effect A: Scroll on new message added
-  useEffect(() => {
-    scrollToBottom("smooth");
-  }, [messages.length, isLoading]);
-
-  // Effect B: Scroll WHILE streaming
-  // Only scroll if the content length changes (efficient)
+  useEffect(() => { scrollToBottom("smooth"); }, [messages.length, isLoading]);
+  
   useEffect(() => {
     if (streamingMessageId && lastMessage?.role === "ai") {
-      scrollToBottom("auto"); // Instant scroll to prevent stutter
+      scrollToBottom("auto"); 
     }
   }, [lastMessage?.content.length, streamingMessageId]);
 
-
-  // Focus logic
-  useEffect(() => {
-    if (!isLoading) {
-      inputRef.current?.focus();
-    }
-  }, [isLoading]);
-
+  useEffect(() => { if (!isLoading) inputRef.current?.focus(); }, [isLoading]);
 
   const handleClearChat = useCallback(() => {
     if (isLoading) return;
@@ -110,36 +87,23 @@ const ChatInterface = ({
     hasInitialized.current = false;
   }, [isLoading, clearChat, noteId]);
 
-  // --- KEYDOWN HANDLER ---
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      handleSendMessage(); 
-      return;
-    }
-    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setInputValue(prev => prev + "\n");
-    }
-  };
-
-  const handleSendMessage = useCallback(async (e?: React.FormEvent) => {
-    e?.preventDefault(); 
-    if (!inputValue.trim() || isLoading) return;
-
-    const userText = inputValue.trim();
+  // --- SEND LOGIC ---
+  const executeSendMessage = useCallback(async (textOverride?: string) => {
+    const textToSend = textOverride || inputValue.trim();
+    
+    if (!textToSend || isLoading) return;
 
     // 1. Add User Message
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: userText,
+      content: textToSend,
     };
     addMessage(noteId, userMsg);
     
-    setInputValue("");
+    if (!textOverride) setInputValue("");
+    
     setIsLoading(true);
-    // Micro-task delay to ensure UI updates before focus
     setTimeout(() => inputRef.current?.focus(), 0);
 
     // 2. Add AI Placeholder
@@ -147,7 +111,9 @@ const ChatInterface = ({
     setStreamingMessageId(aiMsgId);
     addMessage(noteId, { id: aiMsgId, role: "ai", content: "" });
 
-    const currentHistory = [...messages, userMsg].map((m) => ({
+    // Read directly from store to avoid dependency cycles
+    const currentStoreMessages = useChatStore.getState().chats[noteId] || [];
+    const currentHistory = currentStoreMessages.map((m) => ({
       role: m.role === "ai" ? "model" : "user",
       message: m.content,
     }));
@@ -158,24 +124,15 @@ const ChatInterface = ({
 
     try {
       await axiosInstance.post(
-        `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat-v2`,
-        {
-          message: userText,
-          history: currentHistory,
-        },
+        `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat`,
+        { message: textToSend, history: currentHistory },
         {
           timeout: 120000,
           onDownloadProgress: (progressEvent) => {
             const xhr = progressEvent.event.target;
-            const contentType = xhr.getResponseHeader("Content-Type");
-            
-            if (contentType && contentType.includes("application/json")) {
-              isJsonMode = true;
-              return; 
-            }
-
             const fullResponse = xhr.responseText || "";
-            // Check for JSON start pattern in stream
+            
+            // Safe check for Quiz UI start
             if (fullResponse.trim().startsWith('{"type":"quiz_ui"')) {
                 isJsonMode = true;
                 return;
@@ -186,50 +143,89 @@ const ChatInterface = ({
               if (newChunk) {
                 lastIndex = fullResponse.length;
                 accumulatedContent += newChunk;
-                // Store update triggers re-render of ChatInterface
                 updateMessageContent(noteId, aiMsgId, accumulatedContent);
               }
             }
           },
         }
       ).then((response) => {
-        // Handle final response
         if (response.data && typeof response.data === 'object' && response.data.type === 'quiz_ui') {
             const quizString = JSON.stringify(response.data);
             updateMessageContent(noteId, aiMsgId, quizString);
-        } 
-        else if (typeof response.data === 'string') {
+        } else if (typeof response.data === 'string') {
              updateMessageContent(noteId, aiMsgId, response.data);
         }
       });
-
     } catch (error) {
       console.error("Chat error:", error);
       Sentry.captureException(error);
-      updateMessageContent(
-        noteId, 
-        aiMsgId, 
-        accumulatedContent || t("Sorry, I encountered an error. Please try again.")
-      );
+      updateMessageContent(noteId, aiMsgId, accumulatedContent || t("Sorry, I encountered an error. Please try again."));
     } finally {
       setIsLoading(false);
       setStreamingMessageId(null);
       setTimeout(() => scrollToBottom("smooth"), 100);
     }
-  }, [inputValue, isLoading, messages, noteId, companyId, addMessage, updateMessageContent, t]);
+  }, [inputValue, isLoading, noteId, companyId, addMessage, updateMessageContent, t]);
+
+  // --- 3. CRITICAL FIX: STABLE ACTION WATCHER ---
+  useEffect(() => {
+    // 1. If no action, or already loading, do nothing
+    if (!pendingAction || isLoading) return;
+
+    // 2. REF GUARD: If we already processed this EXACT object reference, stop.
+    // This prevents the effect from firing multiple times if the parent 
+    // re-renders but hasn't cleared the prop yet.
+    if (processedActionRef.current === pendingAction) return;
+
+    // 3. Mark as processed IMMEDIATELY
+    processedActionRef.current = pendingAction;
+
+    // 4. Construct prompt
+    let prompt = "";
+    if (pendingAction.type === 'explain') {
+      prompt = `${t("Explain this text")}:\n\n"${pendingAction.text}"`;
+    } else if (pendingAction.type === 'quiz') {
+      prompt = `${t("Generate a quiz based on this text")}:\n\n"${pendingAction.text}"`;
+    }
+
+    // 5. Fire & Notify Parent
+    if (prompt) {
+      // Clear parent state first to minimize race conditions
+      if (onActionComplete) onActionComplete();
+      
+      // Execute logic
+      executeSendMessage(prompt);
+    }
+  }, [pendingAction, isLoading, executeSendMessage, onActionComplete, t]);
+
+
+  // --- Event Handlers ---
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      executeSendMessage(); 
+      return;
+    }
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setInputValue(prev => prev + "\n");
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    executeSendMessage();
+  };
 
   return (
     <div className="flex flex-col h-full w-full max-w-3xl mx-auto overflow-hidden">
-      
-      {/* 1. SCROLLABLE AREA */}
-      <div className="flex-1 w-full overflow-y-auto pr-2 pl-2">
+      <div className="flex-1 w-full overflow-y-auto pr-2 pl-2 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800">
         <div className="flex flex-col gap-4 py-4 px-2">
           {messages.map((message) => (
-            // OPTIMIZED: We pass primitives now so React.memo works
             <ChatMessage
               key={message.id}
-              role={message.role}
               content={message.content}
+              role={message.role}
               isStreaming={message.id === streamingMessageId}
             />
           ))}
@@ -237,12 +233,8 @@ const ChatInterface = ({
         </div>
       </div>
       
-      {/* 2. INPUT AREA */}
       <div className="flex-none pt-4 pb-6 border-t border-zinc-200/50 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm z-10 px-2">
-        <form
-          onSubmit={handleSendMessage}
-          className="relative flex items-center w-full"
-        >
+        <form onSubmit={handleSubmit} className="relative flex items-center w-full">
           <Textarea
             placeholder={t("Ask something about this note...")}
             ref={inputRef}
@@ -256,32 +248,14 @@ const ChatInterface = ({
           <div className="absolute right-1.5 flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  onClick={handleClearChat}
-                  disabled={isLoading || messages.length === 0}
-                  className="rounded-full h-9 w-9 shrink-0"
-                >
+                <Button type="button" size="icon" variant="ghost" onClick={handleClearChat} disabled={isLoading || messages.length === 0} className="rounded-full h-9 w-9 shrink-0">
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                <p>{t("Clear chat history")}</p>
-              </TooltipContent>
+              <TooltipContent><p>{t("Clear chat history")}</p></TooltipContent>
             </Tooltip>
-            <Button
-              type="submit"
-              size="icon"
-              disabled={!inputValue.trim() || isLoading}
-              className="rounded-full h-9 w-9 shrink-0 cursor-pointer"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
+            <Button type="submit" size="icon" disabled={!inputValue.trim() || isLoading} className="rounded-full h-9 w-9 shrink-0 cursor-pointer">
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
         </form>
@@ -289,7 +263,6 @@ const ChatInterface = ({
           {t("AI can make mistakes. Check important info.")}
         </p>
       </div>
-
     </div>
   );
 };
