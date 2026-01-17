@@ -11,6 +11,7 @@ import type { Message } from "@/components/ui/chat-message";
 import { useChatStore } from "@/store/chatStore"; 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
+import { streamWithAuth } from "@/services/streamClient";
 
 interface ChatInterfaceProps {
   noteName?: string;
@@ -43,7 +44,7 @@ const ChatInterface = ({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasInitialized = useRef(false);
-  
+  const abortControllerRef = useRef<AbortController | null>(null);
   // --- NEW: Action Processing Guard ---
   // This Ref tracks the last pendingAction object we successfully processed.
   // We use this to compare references and strictly prevent double-firing.
@@ -90,83 +91,67 @@ const ChatInterface = ({
   // --- SEND LOGIC ---
   const executeSendMessage = useCallback(async (textOverride?: string) => {
     const textToSend = textOverride || inputValue.trim();
-    
     if (!textToSend || isLoading) return;
 
-    // 1. Add User Message
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: textToSend,
-    };
+    // 1. UI Updates (Optimistic)
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: textToSend };
     addMessage(noteId, userMsg);
-    
     if (!textOverride) setInputValue("");
     
     setIsLoading(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
-
-    // 2. Add AI Placeholder
     const aiMsgId = (Date.now() + 1).toString();
     setStreamingMessageId(aiMsgId);
     addMessage(noteId, { id: aiMsgId, role: "ai", content: "" });
 
-    // Read directly from store to avoid dependency cycles
+    // 2. Prepare Data
     const currentStoreMessages = useChatStore.getState().chats[noteId] || [];
     const currentHistory = currentStoreMessages.map((m) => ({
       role: m.role === "ai" ? "model" : "user",
       message: m.content,
     }));
 
-    let accumulatedContent = ""; 
-    let lastIndex = 0;
-    let isJsonMode = false;
+    // 3. Abort Controller
+    if (abortControllerRef.current) abortControllerRef.current.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
-    try {
-      await axiosInstance.post(
-        `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat`,
-        { message: textToSend, history: currentHistory },
-        {
-          timeout: 120000,
-          onDownloadProgress: (progressEvent) => {
-            const xhr = progressEvent.event.target;
-            const fullResponse = xhr.responseText || "";
-            
-            // Safe check for Quiz UI start
-            if (fullResponse.trim().startsWith('{"type":"quiz_ui"')) {
-                isJsonMode = true;
-                return;
-            }
+    let accumulatedText = "";
 
-            if (!isJsonMode) {
-              const newChunk = fullResponse.substring(lastIndex);
-              if (newChunk) {
-                lastIndex = fullResponse.length;
-                accumulatedContent += newChunk;
-                updateMessageContent(noteId, aiMsgId, accumulatedContent);
-              }
-            }
-          },
+    // 4. CALL THE ROBUST STREAMER
+    await streamWithAuth({
+      url: `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat-v4`,
+      body: { message: textToSend, history: currentHistory },
+      signal: abortController.signal,
+      onData: (event, data) => {
+        // data is already JSON object here thanks to the helper
+        
+        if (event === "message" && data.content) {
+          accumulatedText += data.content;
+          updateMessageContent(noteId, aiMsgId, accumulatedText);
+        } 
+        else if (event === "quiz_ui" && data.args) {
+          // Handle quiz block. 
+          // Assuming you parse this JSON string in your ChatMessage component
+          // or you can format it here.
+          const quizBlock = `${data.args}`;
+          accumulatedText += quizBlock;
+          updateMessageContent(noteId, aiMsgId, accumulatedText);
         }
-      ).then((response) => {
-        if (response.data && typeof response.data === 'object' && response.data.type === 'quiz_ui') {
-            const quizString = JSON.stringify(response.data);
-            updateMessageContent(noteId, aiMsgId, quizString);
-        } else if (typeof response.data === 'string') {
-             updateMessageContent(noteId, aiMsgId, response.data);
-        }
-      });
-    } catch (error) {
-      console.error("Chat error:", error);
-      Sentry.captureException(error);
-      updateMessageContent(noteId, aiMsgId, accumulatedContent || t("Sorry, I encountered an error. Please try again."));
-    } finally {
-      setIsLoading(false);
-      setStreamingMessageId(null);
-      setTimeout(() => scrollToBottom("smooth"), 100);
-    }
-  }, [inputValue, isLoading, noteId, companyId, addMessage, updateMessageContent, t]);
+      },
+      onError: (err) => {
+        console.error("Streaming error:", err);
+        Sentry.captureException(err);
+        updateMessageContent(noteId, aiMsgId, accumulatedText + "\n\n" + t("Error: AI service unavailable."));
+      },
+      onDone: () => {
+        setIsLoading(false);
+        setStreamingMessageId(null);
+        abortControllerRef.current = null;
+        setTimeout(() => scrollToBottom("smooth"), 100);
+      }
+    });
 
+  }, [inputValue, isLoading, noteId, companyId, addMessage, updateMessageContent, t, scrollToBottom]);
   // --- 3. CRITICAL FIX: STABLE ACTION WATCHER ---
   useEffect(() => {
     // 1. If no action, or already loading, do nothing
