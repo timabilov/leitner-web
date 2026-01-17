@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useTranslation } from "react-i18next";
 
 // --- Types matching your Backend Strict Structure ---
 export interface QuizOption {
@@ -22,6 +23,7 @@ interface QuizDisplayProps {
 }
 
 const QuizItem = ({ item, index }: { item: QuizOption; index: number }) => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -100,8 +102,9 @@ const QuizItem = ({ item, index }: { item: QuizOption; index: number }) => {
 };
 
 export const QuizDisplay = ({ data }: QuizDisplayProps) => {
+  const { t } = useTranslation();
   if (!data || !data.chat_questions || data.chat_questions.length === 0) {
-    return <div className="text-sm text-red-500">Error: Invalid Quiz Data</div>;
+    return <div className="text-sm text-red-500">{t("Error: Invalid Quiz Data")}</div>;
   }
 
   return (

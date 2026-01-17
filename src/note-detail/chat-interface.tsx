@@ -93,56 +93,118 @@ const ChatInterface = ({
     const textToSend = textOverride || inputValue.trim();
     if (!textToSend || isLoading) return;
 
-    // 1. UI Updates (Optimistic)
-    const userMsg: Message = { id: Date.now().toString(), role: "user", content: textToSend };
+    // 1. Optimistic User Message 
+    // (User messages are always simple text, or you can wrap them too if you want consistency)
+    const userMsg: Message = { 
+        id: Date.now().toString(), 
+        role: "user", 
+        content: JSON.stringify({ type: "message", content: textToSend }) // Consistent wrapping
+    };
     addMessage(noteId, userMsg);
     if (!textOverride) setInputValue("");
     
     setIsLoading(true);
-    const aiMsgId = (Date.now() + 1).toString();
-    setStreamingMessageId(aiMsgId);
-    addMessage(noteId, { id: aiMsgId, role: "ai", content: "" });
 
-    // 2. Prepare Data
-    const currentStoreMessages = useChatStore.getState().chats[noteId] || [];
-    const currentHistory = currentStoreMessages.map((m) => ({
-      role: m.role === "ai" ? "model" : "user",
-      message: m.content,
-    }));
-
-    // 3. Abort Controller
+    // 2. Abort Control
     if (abortControllerRef.current) abortControllerRef.current.abort();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    let accumulatedText = "";
+    // 3. STATE MACHINE VARIABLES (Closure-scoped, High Performance)
+    let activeMsgId: string | null = null;
+    let lastEventType: string | null = null; 
+    
+    // CRITICAL: This buffer holds ONLY the raw data (text or partial quiz json)
+    // We wrap this inside the JSON envelope on every update.
+    let currentRawBuffer = ""; 
 
-    // 4. CALL THE ROBUST STREAMER
+    // 4. Prepare History (Parse back your JSON wrapper if needed for history context)
+    const currentStoreMessages = useChatStore.getState().chats[noteId] || [];
+    const currentHistory = currentStoreMessages.map((m) => {
+        let rawContent = m.content;
+        try {
+            // Attempt to unwrap to get pure text for the AI context
+            const parsed = JSON.parse(m.content);
+            if (parsed.content) rawContent = parsed.content;
+        } catch (e) { /* fallback to raw string */ }
+        
+        return {
+            role: m.role === "ai" ? "model" : "user",
+            message: rawContent, 
+        };
+    });
+
     await streamWithAuth({
       url: `${API_BASE_URL}/company/${companyId}/notes/${noteId}/chat-v4`,
       body: { message: textToSend, history: currentHistory },
       signal: abortController.signal,
+      
       onData: (event, data) => {
-        // data is already JSON object here thanks to the helper
+        // A. Extract pure data chunk
+        let chunk = "";
+        if (event === "message") chunk = data.content || "";
+        else if (event === "quiz_ui") chunk = data.args || ""; 
         
-        if (event === "message" && data.content) {
-          accumulatedText += data.content;
-          updateMessageContent(noteId, aiMsgId, accumulatedText);
-        } 
-        else if (event === "quiz_ui" && data.args) {
-          // Handle quiz block. 
-          // Assuming you parse this JSON string in your ChatMessage component
-          // or you can format it here.
-          const quizBlock = `${data.args}`;
-          accumulatedText += quizBlock;
-          updateMessageContent(noteId, aiMsgId, accumulatedText);
+        if (!chunk) return; 
+
+        // B. SWITCHING LOGIC (Event Type Change = New Bubble)
+        if (event !== lastEventType) {
+          activeMsgId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+          
+          lastEventType = event;
+          currentRawBuffer = ""; // Reset raw buffer
+
+          // Initialize with empty content wrapper
+          const initialPayload = JSON.stringify({ 
+              type: event, 
+              content: "" 
+          });
+          addMessage(noteId, { 
+            id: activeMsgId, 
+            role: "ai", 
+            content: initialPayload
+          });
+          
+          setStreamingMessageId(activeMsgId); 
+          
+        }
+
+        // C. ACCUMULATE & WRAP
+        if (activeMsgId) {
+          // 1. Append new chunk to the raw buffer
+          currentRawBuffer += chunk;
+
+          // 2. Wrap it in the envelope
+          // JSON.stringify is extremely fast in V8, doing this 50x/sec is negligible
+          const safePayload = JSON.stringify({
+              type: event,          // Preserves "message" or "quiz_ui"
+              content: currentRawBuffer // The growing text or growing JSON string
+          });
+
+          // 3. Flush to store
+          updateMessageContent(noteId, activeMsgId, safePayload);
         }
       },
+
       onError: (err) => {
         console.error("Streaming error:", err);
         Sentry.captureException(err);
-        updateMessageContent(noteId, aiMsgId, accumulatedText + "\n\n" + t("Error: AI service unavailable."));
+        
+        const errorMsg = "\n\nError: Connection interrupted.";
+        
+        if (activeMsgId && lastEventType === 'message') {
+            // If we are currently typing text, just append the error
+            currentRawBuffer += errorMsg;
+            const payload = JSON.stringify({ type: 'message', content: currentRawBuffer });
+            updateMessageContent(noteId, activeMsgId, payload);
+        } else {
+            // If we were in a quiz, or nothing started, make a new error bubble
+            const errId = Date.now().toString();
+            const payload = JSON.stringify({ type: 'error', content: errorMsg.trim() });
+            addMessage(noteId, { id: errId, role: "ai", content: payload });
+        }
       },
+
       onDone: () => {
         setIsLoading(false);
         setStreamingMessageId(null);
@@ -151,7 +213,7 @@ const ChatInterface = ({
       }
     });
 
-  }, [inputValue, isLoading, noteId, companyId, addMessage, updateMessageContent, t, scrollToBottom]);
+}, [inputValue, isLoading, noteId, companyId, addMessage, updateMessageContent, scrollToBottom]);
   // --- 3. CRITICAL FIX: STABLE ACTION WATCHER ---
   useEffect(() => {
     // 1. If no action, or already loading, do nothing

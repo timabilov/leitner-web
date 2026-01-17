@@ -6,6 +6,7 @@ import CatLogo from "./assets/cat-logo";
 import MarkdownTypewriter from "./markdown-typewriter"; 
 import { QuizDisplay } from "@/components/chat/quiz-display"; 
 import type { QuizData } from "@/components/chat/quiz-display"; 
+import { useTranslation } from "react-i18next";
 
 // 1. CHANGED: Accept primitive types for better Memoization
 interface ChatMessageProps {
@@ -15,28 +16,35 @@ interface ChatMessageProps {
 }
 
 const ChatMessageItem = ({ role, content, isStreaming }: ChatMessageProps) => {
+  const { t } = useTranslation();
   const isAi = role === "ai";
-
+  const contentJSON = useMemo(() => {
+     try {
+      return JSON.parse(content)
+     } catch {
+      return content
+     }
+  }, [content]);
+  // console.log("contentJSON", contentJSON);
+  
   // 2. LOGIC: Detect if content is our Quiz JSON
   const quizData = useMemo<QuizData | null>(() => {
     if (!isAi || !content) return null;
     
     // Optimization: Quick check before parsing
-    const trimmed = content.trim();
     // Check for specific signature to avoid parsing normal text
-    if (trimmed.startsWith("{") && trimmed.includes("quiz_ui")) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (parsed.type === "quiz_ui" && parsed.data) {
-          return parsed.data as QuizData;
-        }
-      } catch (e) {
-        return null;
+    if (contentJSON.type === "quiz_ui" && contentJSON.content) {
+      try{
+        const parsed = JSON.parse(contentJSON.content);
+        return parsed as QuizData;
+      } catch {
+        return {"error": t("Invalid Quiz"), "chat_questions": []} as unknown as QuizData;
       }
+      
+      
     }
     return null;
   }, [content, isAi]);
-
   return (
     <div
       className={cn(
@@ -67,22 +75,24 @@ const ChatMessageItem = ({ role, content, isStreaming }: ChatMessageProps) => {
             : quizData? "text-foreground rounded-tl-sm w-full": "bg-muted text-foreground rounded-tl-sm w-full"
         )}
       >
+        {/* Loading Indicator for empty initial state */}
+        {isAi && isStreaming && (
+           <span className="animate-pulse">...</span>
+        )}
+
         {quizData ? (
           <QuizDisplay data={quizData} />
         ) : isAi ? (
           // Typewriter handles the animation based on isStreaming and content updates
           <MarkdownTypewriter
-            content={content}
+            content={contentJSON?.content}
             isStreaming={isStreaming}
           />
         ) : (
-          content
+          contentJSON?.content || t('<No content>')
         )}
 
-        {/* Loading Indicator for empty initial state */}
-        {isAi && isStreaming && content.length === 0 && (
-           <span className="animate-pulse">...</span>
-        )}
+        
       </div>
     </div>
   );
