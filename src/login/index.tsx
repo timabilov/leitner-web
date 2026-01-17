@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -14,18 +13,6 @@ import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useMutation } from "@tanstack/react-query";
 import { GoogleLogin, useGoogleLogin } from "@react-oauth/google"; // Changed to Hook for custom button support
-=======
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
-import CatPenIcon from '@/notes/cat-pen-icon';
-import { useTranslation } from 'react-i18next';
-import { useUserStore } from '@/store/userStore';
-import { axiosInstance } from '@/services/auth';
-import { API_BASE_URL } from '@/services/config';
-import { useMutation } from '@tanstack/react-query';
-import { GoogleLogin, useGoogleLogin } from '@react-oauth/google'; // Changed to Hook for custom button support
->>>>>>> Stashed changes
 import * as Sentry from "@sentry/react"; // 1. Import Sentry
 import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
