@@ -378,7 +378,7 @@ const ChatInterface = ({
             />
             <Tooltip>
               <TooltipTrigger>
-                <Button type="button" size="icon" variant="ghost" onClick={handleClearChat} disabled={isLoading || messages.length === 0} className="rounded-full h-9 w-9 shrink-0">
+                <Button type="button" size="icon" variant="ghost" onClick={handleClearChat} disabled={isLoading || messages.length === 0} className="rounded-full bg-white dark:bg-zinc-900rounded-full h-9 w-9 shrink-0">
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>

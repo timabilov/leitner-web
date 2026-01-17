@@ -66,6 +66,7 @@ export const QuizProgressRing: React.FC<QuizProgressRingProps> = ({
       className={cn(
         "relative inline-flex items-center justify-center group",
         "transition-transform duration-300 ease-out hover:scale-105",
+        "rounded-full bg-white dark:bg-zinc-900 shadow-sm",
         className
       )}
       style={{ width: size, height: size }}
