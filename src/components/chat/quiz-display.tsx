@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
+import { useChatStore } from "@/store/chatStore";
 
 // --- Types matching your Backend Strict Structure ---
 export interface QuizOption {
@@ -20,17 +21,33 @@ export interface QuizData {
 
 interface QuizDisplayProps {
   data: QuizData;
+  noteId?: string;
+  messageId?: string;
 }
 
-const QuizItem = ({ item, index }: { item: QuizOption; index: number }) => {
+interface QuizItemProps {
+  item: QuizOption;
+  index: number;
+  noteId?: string;
+  messageId?: string;
+}
+
+const QuizItem = ({ item, index, noteId, messageId }: QuizItemProps) => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const recordQuizAnswer = useChatStore((state) => state.recordQuizAnswer);
 
   const handleSelect = (idx: number) => {
     if (isSubmitted) return;
     setSelected(idx);
     setIsSubmitted(true);
+
+    // Record the answer in store for progress tracking
+    if (noteId && messageId) {
+      const correct = idx === item.answer;
+      recordQuizAnswer(noteId, messageId, index, correct);
+    }
   };
 
   const isCorrect = selected === item.answer;
@@ -101,7 +118,7 @@ const QuizItem = ({ item, index }: { item: QuizOption; index: number }) => {
   );
 };
 
-export const QuizDisplay = ({ data }: QuizDisplayProps) => {
+export const QuizDisplay = ({ data, noteId, messageId }: QuizDisplayProps) => {
   const { t } = useTranslation();
   if (!data || !data.chat_questions || data.chat_questions.length === 0) {
     return <div className="text-sm text-red-500">{t("Error: Invalid Quiz Data")}</div>;
@@ -110,7 +127,7 @@ export const QuizDisplay = ({ data }: QuizDisplayProps) => {
   return (
     <div className="w-full max-w-[95%] mt-2">
       {data.chat_questions.map((q, i) => (
-        <QuizItem key={i} item={q} index={i} />
+        <QuizItem key={i} item={q} index={i} noteId={noteId} messageId={messageId} />
       ))}
     </div>
   );

@@ -8,20 +8,32 @@ export interface Message {
   content: string;
 }
 
+// Quiz answer tracking: noteId -> questionKey -> isCorrect
+// questionKey format: "${messageId}-${questionIndex}"
+export type QuizAnswers = Record<string, Record<string, boolean>>;
+
 interface ChatState {
   // Map noteId to a conversation history
   chats: Record<string, Message[]>;
-  
+
+  // Map noteId -> questionKey -> isCorrect
+  quizAnswers: QuizAnswers;
+
   // Actions
   addMessage: (noteId: string, message: Message) => void;
   updateMessageContent: (noteId: string, messageId: string, newContent: string) => void;
   clearChat: (noteId: string) => void;
+
+  // Quiz answer tracking
+  recordQuizAnswer: (noteId: string, messageId: string, questionIndex: number, isCorrect: boolean) => void;
 }
 
 export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
       chats: {},
+      quizAnswers: {},
+
       addMessage: (noteId, message) =>
         set((state) => {
           const currentMessages = state.chats[noteId] || [];
@@ -57,7 +69,28 @@ export const useChatStore = create<ChatState>()(
         set((state) => {
           const newChats = { ...state.chats };
           delete newChats[noteId];
-          return { chats: newChats };
+          const newQuizAnswers = { ...state.quizAnswers };
+          delete newQuizAnswers[noteId];
+          return { chats: newChats, quizAnswers: newQuizAnswers };
+        }),
+
+      recordQuizAnswer: (noteId, messageId, questionIndex, isCorrect) =>
+        set((state) => {
+          const questionKey = `${messageId}-${questionIndex}`;
+          const noteAnswers = state.quizAnswers[noteId] || {};
+          // Only record if not already answered (prevent re-answering)
+          if (questionKey in noteAnswers) {
+            return state;
+          }
+          return {
+            quizAnswers: {
+              ...state.quizAnswers,
+              [noteId]: {
+                ...noteAnswers,
+                [questionKey]: isCorrect,
+              },
+            },
+          };
         }),
     }),
     {

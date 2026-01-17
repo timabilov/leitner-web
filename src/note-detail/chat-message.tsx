@@ -13,9 +13,11 @@ interface ChatMessageProps {
   role: "ai" | "user" | "system" | string;
   content: string;
   isStreaming: boolean;
+  noteId?: string;
+  messageId?: string;
 }
 
-const ChatMessageItem = ({ role, content, isStreaming }: ChatMessageProps) => {
+const ChatMessageItem = ({ role, content, isStreaming, noteId, messageId }: ChatMessageProps) => {
   const { t } = useTranslation();
   const isAi = role === "ai";
   const contentJSON = useMemo(() => {
@@ -81,7 +83,7 @@ const ChatMessageItem = ({ role, content, isStreaming }: ChatMessageProps) => {
         )}
 
         {quizData ? (
-          <QuizDisplay data={quizData} />
+          <QuizDisplay data={quizData} noteId={noteId} messageId={messageId} />
         ) : isAi ? (
           // Typewriter handles the animation based on isStreaming and content updates
           <MarkdownTypewriter

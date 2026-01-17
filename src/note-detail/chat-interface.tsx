@@ -12,6 +12,7 @@ import { useChatStore } from "@/store/chatStore";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { streamWithAuth } from "@/services/streamClient";
+import { QuizProgressRing } from "@/components/chat/quiz-progress-ring";
 
 interface ChatInterfaceProps {
   noteName?: string;
@@ -33,9 +34,38 @@ const ChatInterface = ({
   const addMessage = useChatStore((state) => state.addMessage);
   const updateMessageContent = useChatStore((state) => state.updateMessageContent);
   const clearChat = useChatStore((state) => state.clearChat);
+  const quizAnswers = useChatStore((state) => state.quizAnswers);
 
   const messages = chats[noteId] || [];
+  const noteQuizAnswers = quizAnswers[noteId] || {};
   const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+
+  // Calculate quiz progress from messages and answers
+  const quizProgress = React.useMemo(() => {
+    let totalQuestions = 0;
+
+    // Count total questions from all quiz messages
+    for (const msg of messages) {
+      if (msg.role !== "ai") continue;
+      try {
+        const parsed = JSON.parse(msg.content);
+        if (parsed.type === "quiz_ui" && parsed.content) {
+          const quizData = JSON.parse(parsed.content);
+          if (quizData.chat_questions?.length) {
+            totalQuestions += quizData.chat_questions.length;
+          }
+        }
+      } catch {
+        // Not a quiz message, ignore
+      }
+    }
+
+    // Count answers from store
+    const answeredKeys = Object.keys(noteQuizAnswers);
+    const correctCount = answeredKeys.filter((key) => noteQuizAnswers[key] === true).length;
+
+    return { correct: correctCount, total: totalQuestions };
+  }, [messages, noteQuizAnswers]);
 
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -277,6 +307,8 @@ const ChatInterface = ({
               content={message.content}
               role={message.role}
               isStreaming={message.id === streamingMessageId}
+              noteId={noteId}
+              messageId={message.id}
             />
           ))}
            {/* just fake try to always add ghost bubble to not rely on internal loading as we can have MULTIPLE messages by AI {isLoading && (
@@ -337,6 +369,13 @@ const ChatInterface = ({
             rows={1}
           />
           <div className="absolute right-1.5 flex items-center gap-1">
+            {/* Quiz Progress Ring - only shows when quizzes exist */}
+            <QuizProgressRing
+              correct={quizProgress.correct}
+              total={quizProgress.total}
+              size={36}
+              strokeWidth={3}
+            />
             <Tooltip>
               <TooltipTrigger>
                 <Button type="button" size="icon" variant="ghost" onClick={handleClearChat} disabled={isLoading || messages.length === 0} className="rounded-full h-9 w-9 shrink-0">
