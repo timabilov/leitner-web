@@ -79,7 +79,19 @@ const ChatMessageItem = ({ role, content, isStreaming, noteId, messageId }: Chat
       >
         {/* Loading Indicator for empty initial state */}
         {isAi && isStreaming && contentJSON?.content === "" && (
-           <span className="animate-pulse">...</span>
+          <div className="flex items-center gap-1.5 mt-1">
+            {[
+              "from-neutral-400/50 to-stone-400/50",
+              "from-stone-400/50 to-neutral-500/50",
+              "from-neutral-500/50 to-neutral-400/50",
+            ].map((gradient, i) => (
+              <span
+                key={i}
+                className={`w-1.5 h-1.5 rounded-full bg-gradient-to-r ${gradient} animate-pulse`}
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
         )}
 
         {quizData ? (
