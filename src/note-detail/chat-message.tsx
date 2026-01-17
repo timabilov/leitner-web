@@ -64,7 +64,7 @@ const ChatMessageItem = ({ role, content, isStreaming }: ChatMessageProps) => {
           "relative max-w-[85%] px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap leading-relaxed",
           !isAi
             ? "bg-primary text-primary-foreground rounded-tr-sm"
-            : "bg-muted text-foreground rounded-tl-sm w-full"
+            : quizData? "text-foreground rounded-tl-sm w-full": "bg-muted text-foreground rounded-tl-sm w-full"
         )}
       >
         {quizData ? (
