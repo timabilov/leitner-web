@@ -58,7 +58,8 @@ const ChatInterface = ({
       const initMsg: Message = {
         id: "init-1",
         role: "ai",
-        content: t("Hello! I've analyzed your note '{{name}}'. Ask me anything about it!", { name: noteName || "Untitled" }),
+        
+        content: JSON.stringify({ type: "message", content: t("Hello! I've analyzed your note '{{name}}'. Ask me anything about it!", { name: noteName || "Untitled" }) }) ,
       };
       addMessage(noteId, initMsg);
       hasInitialized.current = true;
