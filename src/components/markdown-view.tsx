@@ -1,11 +1,7 @@
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-<<<<<<< Updated upstream
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-=======
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, FileQuestion, MoreVertical } from 'lucide-react'; // Icons
->>>>>>> Stashed changes
 import './markdown-view.css';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Button } from './ui/button';
@@ -17,11 +13,7 @@ import CatPenIcon from '@/notes/assets/cat-pen-icon';
 import QuizPenIcon from '@/note-detail/assets/quiz-pen-icon';
 import { useTranslation } from 'react-i18next';
 
-<<<<<<< Updated upstream
-// --- Helper function ---
-=======
 // --- A simple helper function to create a URL-friendly ID ---
->>>>>>> Stashed changes
 export const slugify = (text: string) => {
   return String(text)
     .toLowerCase()
@@ -30,11 +22,6 @@ export const slugify = (text: string) => {
     .replace(/[^\w\-]+/g, '')
     .replace(/\-\-+/g, '-');
 };
-
-<<<<<<< Updated upstream
-=======
-// Types for the selection state
->>>>>>> Stashed changes
 interface SelectionState {
   x: number;
   y: number;
@@ -51,19 +38,6 @@ const MarkdownView = ({
   onExplain?: (text: string) => void, 
   onQuiz?: (text: string) => void 
 }) => {
-<<<<<<< Updated upstream
-   const { t } = useTranslation();
-
-  const [selectionMenu, setSelectionMenu] = useState<SelectionState>({ x: 0, y: 0, show: false, text: '' });
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // --- 1. SELECTION HANDLER ---
-  useEffect(() => {
-    const handleSelectionChange = () => {
-      const selection = window.getSelection();
-      if (!selection || selection.isCollapsed || !containerRef.current?.contains(selection.anchorNode)) {
-        setSelectionMenu(prev => prev.show ? { ...prev, show: false } : prev);
-=======
   
   // --- 1. Selection State ---
   const [selectionMenu, setSelectionMenu] = useState<SelectionState>({ x: 0, y: 0, show: false, text: '' });
@@ -77,7 +51,6 @@ const MarkdownView = ({
       // If no selection or selection is inside our container but empty
       if (!selection || selection.isCollapsed || !containerRef.current?.contains(selection.anchorNode)) {
         setSelectionMenu(prev => ({ ...prev, show: false }));
->>>>>>> Stashed changes
         return;
       }
 
@@ -87,21 +60,6 @@ const MarkdownView = ({
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
-<<<<<<< Updated upstream
-      const x = rect.right; 
-      const y = rect.top;
-
-      setSelectionMenu({ x, y, show: true, text });
-    };
-
-    const handleScroll = () => {
-      setSelectionMenu(prev => prev.show ? { ...prev, show: false } : prev);
-    };
-
-    document.addEventListener('mouseup', handleSelectionChange);
-    document.addEventListener('keyup', handleSelectionChange);
-    document.addEventListener('scroll', handleScroll, true); 
-=======
       // Calculate position relative to viewport, adjusted for scrolling
       // We position it centered above the selection
       const x = rect.left + (rect.width / 2);
@@ -120,25 +78,10 @@ const MarkdownView = ({
     document.addEventListener('keyup', handleSelectionChange);
     // Hide menu on scroll to prevent misalignment
     document.addEventListener('scroll', () => setSelectionMenu(prev => ({ ...prev, show: false })), true);
->>>>>>> Stashed changes
 
     return () => {
       document.removeEventListener('mouseup', handleSelectionChange);
       document.removeEventListener('keyup', handleSelectionChange);
-<<<<<<< Updated upstream
-      document.removeEventListener('scroll', handleScroll, true); 
-    };
-  }, []);
-
-  const handleAction = (action: 'explain' | 'quiz') => {
-    if (action === 'explain' && onExplain) onExplain(selectionMenu.text);
-    if (action === 'quiz' && onQuiz) onQuiz(selectionMenu.text);
-    setSelectionMenu(prev => ({ ...prev, show: false }));
-  };
-
-  // --- 2. MEMOIZE RENDERERS ---
-  const customRenderers = useMemo(() => ({
-=======
       document.removeEventListener('scroll', () => {});
     };
   }, []);
@@ -154,7 +97,6 @@ const MarkdownView = ({
   };
 
   const customRenderers = {
->>>>>>> Stashed changes
     p: ({ node, ...props }: any) => {
       if (
         node.children.length === 1 &&
@@ -188,61 +130,6 @@ const MarkdownView = ({
       const elementId = slugify(textValue);
       return <strong id={elementId} className="markdown-strong text-xl font-bold text-balance" {...props} />;
     }
-<<<<<<< Updated upstream
-  }), []); 
-
-  // --- 3. MEMOIZE CONTENT ---
-  const markdownContent = useMemo(() => (
-    <Markdown remarkPlugins={[remarkGfm]} components={customRenderers}>
-        {children}
-    </Markdown>
-  ), [children, customRenderers]);
-
-  return (
-    <div ref={containerRef} className="markdown-content space-y-6 relative selection:bg-amber-100 selection:text-amber-900 dark:selection:bg-amber-900/30 dark:selection:text-amber-100">
-      {markdownContent}
-
-      {/* --- FLOATING TOOLBOX --- */}
-      {selectionMenu.show && (
-       <div 
-  className="fixed z-50 flex items-center gap-1 p-1 rounded-lg border border-border/50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm shadow-xl transition-all animate-in fade-in zoom-in-95 duration-200"
-  style={{ 
-    left: selectionMenu.x, 
-    top: selectionMenu.y,
-    // Adjusted translate to center it better above selection, modify X as needed for your specific alignment
-    transform: 'translate(0, -100%) translateY(-8px) translateX(-100%)' 
-  }}
-  onMouseDown={(e) => e.preventDefault()}
->
-  {/* Explain Button */}
-  <Button 
-    variant="ghost" 
-    size="sm"
-    onClick={() => handleAction('explain')}
-    className="h-8 px-3 rounded-md cursor-pointer text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
-  >
-    {t("Ask")} 
-    <AIIcon className="w-4 h-4" />
-  </Button>
-
-  {/* Vertical Separator */}
-  <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
-
-  {/* Quiz Button */}
-  <Button 
-    variant="ghost" 
-    size="sm"
-    onClick={() => handleAction('quiz')}
-    className="h-8 cursor-pointer px-3 rounded-md text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
-  >
-    Generate quiz
-    {/* Ensure icon has a size class */}
-    <span className="text-rose-500">
-      <QuizPenIcon className="w-4 h-4" /> 
-    </span>
-  </Button>
-</div>
-=======
   };
 
   return (
@@ -291,7 +178,6 @@ const MarkdownView = ({
           {/* Little arrow at the bottom */}
           <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-zinc-900 rotate-45" />
         </div>
->>>>>>> Stashed changes
       )}
     </div>
   );
