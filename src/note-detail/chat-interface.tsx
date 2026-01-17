@@ -93,45 +93,50 @@ const ChatInterface = ({
     const textToSend = textOverride || inputValue.trim();
     if (!textToSend || isLoading) return;
 
-    // 1. Optimistic User Message 
-    // (User messages are always simple text, or you can wrap them too if you want consistency)
+    // 1. User Message
     const userMsg: Message = { 
         id: Date.now().toString(), 
         role: "user", 
-        content: JSON.stringify({ type: "message", content: textToSend }) // Consistent wrapping
+        content: JSON.stringify({ type: "message", content: textToSend }) 
     };
     addMessage(noteId, userMsg);
     if (!textOverride) setInputValue("");
     
     setIsLoading(true);
 
+    // --- FIX START: Restore Immediate Loading State ---
+    const initialAiId = (Date.now() + 1).toString();
+    setStreamingMessageId(initialAiId); // Shows spinner immediately
+
+    // Pre-create the bubble. 
+    // We default to 'message'. If the stream sends 'quiz_ui' first, 
+    // we will simply overwrite the type in the first update.
+    addMessage(noteId, { 
+        id: initialAiId, 
+        role: "ai", 
+        content: JSON.stringify({ type: "message", content: "" }) 
+    });
+    // --- FIX END ---
+
     // 2. Abort Control
     if (abortControllerRef.current) abortControllerRef.current.abort();
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    // 3. STATE MACHINE VARIABLES (Closure-scoped, High Performance)
-    let activeMsgId: string | null = null;
-    let lastEventType: string | null = null; 
-    
-    // CRITICAL: This buffer holds ONLY the raw data (text or partial quiz json)
-    // We wrap this inside the JSON envelope on every update.
+    // 3. STATE VARIABLES
+    let activeMsgId = initialAiId; // Start pointing to the pre-seeded bubble
+    let lastEventType: string | null = null; // null = "first byte hasn't arrived"
     let currentRawBuffer = ""; 
 
-    // 4. Prepare History (Parse back your JSON wrapper if needed for history context)
+    // 4. Prepare History
     const currentStoreMessages = useChatStore.getState().chats[noteId] || [];
     const currentHistory = currentStoreMessages.map((m) => {
         let rawContent = m.content;
         try {
-            // Attempt to unwrap to get pure text for the AI context
             const parsed = JSON.parse(m.content);
             if (parsed.content) rawContent = parsed.content;
-        } catch (e) { /* fallback to raw string */ }
-        
-        return {
-            role: m.role === "ai" ? "model" : "user",
-            message: rawContent, 
-        };
+        } catch (e) { }
+        return { role: m.role === "ai" ? "model" : "user", message: rawContent };
     });
 
     await streamWithAuth({
@@ -140,48 +145,46 @@ const ChatInterface = ({
       signal: abortController.signal,
       
       onData: (event, data) => {
-        // A. Extract pure data chunk
+        if (event === "done") return; 
         let chunk = "";
         if (event === "message") chunk = data.content || "";
         else if (event === "quiz_ui") chunk = data.args || ""; 
         
         if (!chunk) return; 
 
-        // B. SWITCHING LOGIC (Event Type Change = New Bubble)
-        if (event !== lastEventType) {
-          activeMsgId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-          
-          lastEventType = event;
-          currentRawBuffer = ""; // Reset raw buffer
+        // --- LOGIC UPDATE: Handle Pre-seeded Bubble ---
+        
+        // Case A: First byte ever. Reuse the pre-seeded bubble.
+        if (lastEventType === null) {
+            lastEventType = event;
+        }
+        // Case B: Type switch (Text -> Quiz). Create NEW bubble.
+        else if (event !== lastEventType) {
+            activeMsgId = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            lastEventType = event;
+            currentRawBuffer = ""; 
 
-          // Initialize with empty content wrapper
-          const initialPayload = JSON.stringify({ 
-              type: event, 
-              content: "" 
-          });
-          addMessage(noteId, { 
-            id: activeMsgId, 
-            role: "ai", 
-            content: initialPayload
-          });
-          
-          setStreamingMessageId(activeMsgId); 
-          
+            // Initialize new bubble
+            const newPayload = JSON.stringify({ type: event, content: "" });
+            addMessage(noteId, { 
+                id: activeMsgId, 
+                role: "ai", 
+                content: newPayload 
+            });
+            setStreamingMessageId(activeMsgId); 
         }
 
         // C. ACCUMULATE & WRAP
         if (activeMsgId) {
-          // 1. Append new chunk to the raw buffer
           currentRawBuffer += chunk;
 
-          // 2. Wrap it in the envelope
-          // JSON.stringify is extremely fast in V8, doing this 50x/sec is negligible
+          // Note: This overwrites the initial "type: message" with "type: quiz_ui" 
+          // if the first event was actually a quiz.
           const safePayload = JSON.stringify({
-              type: event,          // Preserves "message" or "quiz_ui"
-              content: currentRawBuffer // The growing text or growing JSON string
+              type: event,          
+              content: currentRawBuffer 
           });
 
-          // 3. Flush to store
           updateMessageContent(noteId, activeMsgId, safePayload);
         }
       },
@@ -192,17 +195,16 @@ const ChatInterface = ({
         
         const errorMsg = "\n\nError: Connection interrupted.";
         
-        if (activeMsgId && lastEventType === 'message') {
-            // If we are currently typing text, just append the error
-            currentRawBuffer += errorMsg;
-            const payload = JSON.stringify({ type: 'message', content: currentRawBuffer });
-            updateMessageContent(noteId, activeMsgId, payload);
-        } else {
-            // If we were in a quiz, or nothing started, make a new error bubble
-            const errId = Date.now().toString();
-            const payload = JSON.stringify({ type: 'error', content: errorMsg.trim() });
-            addMessage(noteId, { id: errId, role: "ai", content: payload });
-        }
+        // If we fail on the very first byte, use the pre-seeded bubble
+        const targetId = activeMsgId || initialAiId; 
+        
+        // If we were typing text, append. Otherwise/If new, hard overwrite or create new.
+        // For simplicity: Just append to whatever was active.
+        const payload = JSON.stringify({ 
+             type: lastEventType || 'message', 
+             content: currentRawBuffer + errorMsg 
+        });
+        updateMessageContent(noteId, targetId, payload);
       },
 
       onDone: () => {
@@ -276,6 +278,16 @@ const ChatInterface = ({
               isStreaming={message.id === streamingMessageId}
             />
           ))}
+           {/* just fake try to always add ghost bubble to not rely on internal loading as we can have MULTIPLE messages by AI {isLoading && (
+              <div className="flex justify-start mb-4 animate-pulse opacity-70">
+                  <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2 text-xs text-gray-500 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+              </div>
+            )}
+          */}
           <div ref={scrollRef} className="h-1 w-full" />
         </div>
       </div>

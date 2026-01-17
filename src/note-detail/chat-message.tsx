@@ -76,7 +76,7 @@ const ChatMessageItem = ({ role, content, isStreaming }: ChatMessageProps) => {
         )}
       >
         {/* Loading Indicator for empty initial state */}
-        {isAi && isStreaming && (
+        {isAi && isStreaming && contentJSON?.content === "" && (
            <span className="animate-pulse">...</span>
         )}
 
