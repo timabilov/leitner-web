@@ -58,10 +58,10 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 font-sans tracking-tight">
+    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 pt-0 font-sans tracking-tight">
       
       {/* 1. HEADER SECTION */}
-      <div className="text-center pt-2">
+      <div className="text-center">
         <h2 className="text-3xl font-bold text-slate-900 tracking-tighter leading-none">
           {t("Study Together")}<br />
           <span className="relative inline-block text-slate-400 font-semibold text-xl mt-2 tracking-tight">
@@ -75,7 +75,7 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative w-full flex flex-col gap-3 px-4 py-6"
+        className="relative w-full flex flex-col gap-3 px-4 py-4"
       >
         {FEEDBACKS.map((f) => (
           <motion.div
@@ -110,7 +110,7 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
 
       {/* 3. FOOTER SECTION */}
       <div className="w-full px-8 text-center pb-2">
-        <div className="flex flex-col gap-2 mb-8">
+        <div className="flex flex-col gap-2 mb-4">
           <div className="flex items-center justify-center gap-2 text-slate-500 font-medium text-[13px] tracking-tight">
             <CheckCircle2 size={15} className="text-slate-900" />{t("Real-time collaborative insights")}
           </div>
@@ -126,7 +126,7 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
           </span>
         </h3>
         
-        <div className="mt-6 flex flex-col items-center gap-3">
+        {/* <div className="mt-6 flex flex-col items-center gap-3">
           <div className="flex -space-x-2">
             {[1,2,3,4].map(i => (
               <Avatar key={i} className="h-7 w-7 border-2 border-white shadow-sm grayscale opacity-40">
@@ -138,7 +138,7 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
             {t("100+ joined today")} 
             <AnimatedUnderline color="#f1f5f9" />
           </span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

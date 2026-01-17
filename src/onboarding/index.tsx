@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, CheckCircle2, Layers, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, CheckCircle2, Layers, Loader2 } from 'lucide-react'; // Added ChevronLeft
 import FirstStepAnimation from './first-step-animation';
 import SecondStepAnimation from './second-step-animation';
 import ThirdStepAnimation from './third-step-animation';
@@ -14,7 +14,14 @@ const OnboardingModal = ({ isOpen, t, onFinish, isFinishing, isSuccess }: any) =
     if (step < TOTAL_STEPS - 1) {
       setStep(prev => prev + 1);
     } else {
-      onFinish(); // This calls handleFinishOnboarding in LoginBase
+      onFinish(); 
+    }
+  };
+
+  // New function to handle going back
+  const prevStep = () => {
+    if (step > 0) {
+      setStep(prev => prev - 1);
     }
   };
 
@@ -37,7 +44,7 @@ const OnboardingModal = ({ isOpen, t, onFinish, isFinishing, isSuccess }: any) =
             className="relative w-full max-w-[500px] bg-white border border-slate-100 rounded-xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col min-h-[580px]"
           >
             
-            {/* Loading/Success Overlay - Organic View */}
+            {/* Loading/Success Overlay */}
             <AnimatePresence mode="wait">
               {(isFinishing || isSuccess) && (
                 <motion.div 
@@ -105,6 +112,7 @@ const OnboardingModal = ({ isOpen, t, onFinish, isFinishing, isSuccess }: any) =
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
+                  transition={{ ease: "easeInOut", duration: 0.3 }}
                   className="w-full h-full"
                 >
                   {step === 0 && <FirstStepAnimation t={t} />}
@@ -115,18 +123,33 @@ const OnboardingModal = ({ isOpen, t, onFinish, isFinishing, isSuccess }: any) =
               )}
             </div>
 
-            {/* Navigation Button */}
-            <div className="px-10 pb-10 flex justify-end">
-              {!isFinishing && !isSuccess && (
+            {/* Navigation Footer */}
+            {!isFinishing && !isSuccess && (
+              <div className="px-10 pb-10 flex items-center justify-between">
+                
+                {/* Back Button */}
+                {/* We use visibility: hidden when disabled to maintain layout spacing if needed, 
+                    though generic rendering works fine with justify-between */}
+                <div className={step === 0 ? "invisible pointer-events-none" : "visible"}>
+                  <button 
+                    onClick={prevStep}
+                    className="h-11 px-4 text-slate-400 hover:text-slate-600 rounded-lg font-medium text-[14px] flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <ChevronLeft size={16} />
+                    {t("Back")}
+                  </button>
+                </div>
+
+                {/* Continue/Finish Button */}
                 <button 
                   onClick={nextStep} 
-                  className="h-11 px-8 bg-slate-900 text-white rounded-lg font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-95"
+                  className="h-11 px-8 bg-slate-900 text-white rounded-lg font-bold text-[14px] flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-95 shadow-lg shadow-slate-200"
                 >
                   {step === TOTAL_STEPS - 1 ? t("Get Started") : t("Continue")}
                   <ChevronRight size={16} />
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </motion.div>
         </div>
       )}

@@ -58,7 +58,7 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
         </h2>
       </div>
 
-      <div className="relative w-full h-72 flex items-center justify-center">
+      <div className="relative w-full h-50 flex items-center justify-center">
         {/* Atmosphere adjusted to brand reddish/pinkish tones */}
         <div 
           className="absolute w-44 h-44 rounded-full blur-3xl" 
@@ -100,7 +100,7 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
       </div>
 
       <div className="w-full text-center">
-        <div className="flex flex-col gap-2.5 mb-8">
+        <div className="flex flex-col gap-2.5 mb-4">
           <div className="flex items-center justify-center gap-2 text-slate-500 font-medium text-[13px] tracking-tight">
             <CheckCircle2 size={15} className="text-slate-900" />{t("Summarize YouTube and Lectures")}
           </div>

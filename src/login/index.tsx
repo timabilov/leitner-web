@@ -1,30 +1,61 @@
+<<<<<<< Updated upstream
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  motion,
+  AnimatePresence,
+  useSpring,
+  useMotionValue,
+} from "framer-motion";
+import CatPenIcon from "@/notes/assets/cat-pen-icon";
+import { useTranslation } from "react-i18next";
+import { useUserStore } from "@/store/userStore";
+import { axiosInstance } from "@/services/auth";
+import { API_BASE_URL } from "@/services/config";
+import { useMutation } from "@tanstack/react-query";
+import { GoogleLogin, useGoogleLogin } from "@react-oauth/google"; // Changed to Hook for custom button support
+=======
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useSpring, useMotionValue } from 'framer-motion';
-import CatPenIcon from '@/notes/assets/cat-pen-icon';
+import CatPenIcon from '@/notes/cat-pen-icon';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '@/store/userStore';
 import { axiosInstance } from '@/services/auth';
 import { API_BASE_URL } from '@/services/config';
 import { useMutation } from '@tanstack/react-query';
 import { GoogleLogin, useGoogleLogin } from '@react-oauth/google'; // Changed to Hook for custom button support
+>>>>>>> Stashed changes
 import * as Sentry from "@sentry/react"; // 1. Import Sentry
-import { toast } from 'sonner';
-import { jwtDecode } from 'jwt-decode';
-import { usePostHog } from 'posthog-js/react'
-import OnboardingModal from '@/onboarding';
-import { AiOrbitAnimation } from '@/note-detail/ai-orbit-animation';
-
-
+import { toast } from "sonner";
+import { jwtDecode } from "jwt-decode";
+import { usePostHog } from "posthog-js/react";
+import OnboardingModal from "@/onboarding";
+import { AiOrbitAnimation } from "@/note-detail/ai-orbit-animation";
 
 // const dummy = {"idToken":"eyJhbGciOiJSUzI1NiIsImtpZCI6IjZhOTA2ZWMxMTlkN2JhNDZhNmE0M2VmMWVhODQyZTM0YThlZTA4YjQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyNDE2ODczNTI5ODUtdW1iMzVlZGNwMTAxMXI2MXRudmVrY2g1c3V1dTZsZGsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyNDE2ODczNTI5ODUtdW1iMzVlZGNwMTAxMXI2MXRudmVrY2g1c3V1dTZsZGsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTQ1NjU1NDQ5MzM1MTY0MTMwNDUiLCJlbWFpbCI6InRhZ2hpemFkZWhrYW1yYW45MkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmJmIjoxNzY2NDkxNTczLCJuYW1lIjoiS2FtcmFuIFRhZ2hpemFkZWgiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSXdERzhUQlA5elFQMVlLM0h0bGNzdzhMZHJ4TlJacG1NblBHUk5ILVBoM1JzRUJiRT1zOTYtYyIsImdpdmVuX25hbWUiOiJLYW1yYW4iLCJmYW1pbHlfbmFtZSI6IlRhZ2hpemFkZWgiLCJpYXQiOjE3NjY0OTE4NzMsImV4cCI6MTc2NjQ5NTQ3MywianRpIjoiOWYxNjVmMDk5ZDRmYjljODJhM2IwNjhhODcxMjg2YzNmMGQ1ZmYzOSJ9.LshYlaNJ1zb_sycbgT4IlfQCVIXceOiG7_sgRtzuZi_tXxDIyy3JIT1pL6Kqh_JeKOnqTiuEU_P-fFdb1Ozc6sLa6IZxOqg98jO4a_sQXejUGmhTRTuNhbpm5B-r4FMpHE2LaRmLD_KQEWMOUU2XDUr52gCegvCSykWB2WIpAn_7Wz7hQxTinaBcdVpvMcpX8dzcoWiqfXyoWsHXuFiWHMNPAyjnxOAIQPsI0GOJ0QwqkynRM7FEo7RwOIZsgqPqQcfZQQOqAsFVMkoh9wLb_s2AwELCtQHRzsGn0AODAWzgmwbersWv-baXZldjD5DE3WQuNjIqBDGyaUppbgWDYQ","user":{"id":"114565544933516413045","name":"Kamran Taghizadeh","email":"taghizadehkamran92@gmail.com","photo":"https://lh3.googleusercontent.com/a/ACg8ocIwDG8TBP9zQP1YK3Htlcsw8LdrxNRZpmMnPGRNH-Ph3RsEBbE=s96-c"},"platform":"web"}
 
 // --- 1. SVG Components (Unchanged) ---
 export const SparkleHot = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4.9084 10.4408C5.12969 10.5895 5.39479 10.6692 5.66661 10.669C5.93843 10.6688 6.20337 10.5885 6.42436 10.4395C6.64527 10.284 6.81317 10.0713 6.90749 9.82725L7.39911 8.404C7.51704 8.06868 7.71653 7.76393 7.9817 7.51405C8.24686 7.26417 8.57036 7.07606 8.92641 6.96473L10.465 6.49387C10.7231 6.40673 10.9455 6.24545 11.1009 6.03283C11.2562 5.82021 11.3367 5.56699 11.3309 5.30896C11.3251 5.05093 11.2334 4.80114 11.0686 4.59489C10.9038 4.38863 10.6743 4.23635 10.4126 4.15956L8.89807 3.69804C8.54165 3.58719 8.21768 3.39945 7.95202 3.14979C7.68635 2.90013 7.48634 2.59547 7.36794 2.26011L6.86782 0.814171C6.77705 0.575395 6.60994 0.368958 6.38947 0.223252C6.169 0.0775459 5.906 -0.000272414 5.63663 0.000499399C5.36341 -0.000595284 5.09673 0.0791723 4.87427 0.22853C4.65182 0.377888 4.48485 0.589285 4.39694 0.832846L3.89256 2.28678C3.77412 2.6122 3.57904 2.90818 3.32191 3.15258C3.06478 3.39697 2.75227 3.58344 2.40777 3.69804L0.871975 4.16623C0.615405 4.2516 0.393512 4.41019 0.237216 4.61991C0.0809205 4.82964 -0.00199089 5.08004 3.63063e-05 5.33623C0.0020635 5.59242 0.0889282 5.84163 0.248525 6.04914C0.408122 6.25665 0.632501 6.41211 0.890393 6.49387L2.40211 6.95673C2.75901 7.06899 3.08324 7.25799 3.34908 7.50874C3.61492 7.75949 3.81507 8.06509 3.93365 8.40133L4.43236 9.84193C4.52162 10.082 4.6888 10.2914 4.90982 10.4395M12.0929 15.8031C12.2849 15.9316 12.5147 16.0006 12.7503 16.0005C12.9882 15.9982 13.2195 15.9264 13.4121 15.795C13.6048 15.6636 13.7493 15.479 13.8257 15.2668L14.177 14.2504C14.2521 14.0397 14.3796 13.8463 14.5454 13.6889C14.7112 13.5315 14.9166 13.4127 15.1404 13.3434L16.2342 13.0072C16.4604 12.9342 16.6563 12.7957 16.7938 12.6115C16.9314 12.4273 17.0035 12.2068 16.9999 11.9817C16.9963 11.7566 16.9171 11.5383 16.7737 11.3581C16.6303 11.1778 16.4301 11.045 16.2016 10.9784L15.1192 10.6463C14.8954 10.5757 14.692 10.4573 14.5248 10.3004C14.3577 10.1435 14.2314 9.95237 14.1558 9.74188L13.7987 8.70945C13.7219 8.49743 13.5762 8.31354 13.3822 8.18385C13.1882 8.05415 12.9557 7.98523 12.7178 7.98686C12.4798 7.98848 12.2485 8.06056 12.0565 8.19289C11.8645 8.32522 11.7216 8.51108 11.6481 8.72413L11.2981 9.74055C11.2259 9.94951 11.1035 10.14 10.9403 10.2971C10.7771 10.4542 10.5776 10.5737 10.3574 10.6463L9.25794 10.9837C9.09152 11.0382 8.94088 11.1285 8.81798 11.2473C8.69508 11.3662 8.60331 11.5104 8.54995 11.6685C8.49659 11.8266 8.48311 11.9942 8.51059 12.1581C8.53806 12.3219 8.60573 12.4775 8.70822 12.6124C8.84849 12.7992 9.04684 12.9392 9.27494 13.0126L10.3559 13.342C10.5805 13.4133 10.7844 13.5327 10.9516 13.6908C11.1188 13.8489 11.2447 14.0414 11.3194 14.2531L11.6778 15.2855C11.7554 15.4942 11.9 15.6751 12.0915 15.8031" fill="url(#paint0_linear_44_1599)"/>
+  <svg
+    className={className}
+    viewBox="0 0 17 16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M4.9084 10.4408C5.12969 10.5895 5.39479 10.6692 5.66661 10.669C5.93843 10.6688 6.20337 10.5885 6.42436 10.4395C6.64527 10.284 6.81317 10.0713 6.90749 9.82725L7.39911 8.404C7.51704 8.06868 7.71653 7.76393 7.9817 7.51405C8.24686 7.26417 8.57036 7.07606 8.92641 6.96473L10.465 6.49387C10.7231 6.40673 10.9455 6.24545 11.1009 6.03283C11.2562 5.82021 11.3367 5.56699 11.3309 5.30896C11.3251 5.05093 11.2334 4.80114 11.0686 4.59489C10.9038 4.38863 10.6743 4.23635 10.4126 4.15956L8.89807 3.69804C8.54165 3.58719 8.21768 3.39945 7.95202 3.14979C7.68635 2.90013 7.48634 2.59547 7.36794 2.26011L6.86782 0.814171C6.77705 0.575395 6.60994 0.368958 6.38947 0.223252C6.169 0.0775459 5.906 -0.000272414 5.63663 0.000499399C5.36341 -0.000595284 5.09673 0.0791723 4.87427 0.22853C4.65182 0.377888 4.48485 0.589285 4.39694 0.832846L3.89256 2.28678C3.77412 2.6122 3.57904 2.90818 3.32191 3.15258C3.06478 3.39697 2.75227 3.58344 2.40777 3.69804L0.871975 4.16623C0.615405 4.2516 0.393512 4.41019 0.237216 4.61991C0.0809205 4.82964 -0.00199089 5.08004 3.63063e-05 5.33623C0.0020635 5.59242 0.0889282 5.84163 0.248525 6.04914C0.408122 6.25665 0.632501 6.41211 0.890393 6.49387L2.40211 6.95673C2.75901 7.06899 3.08324 7.25799 3.34908 7.50874C3.61492 7.75949 3.81507 8.06509 3.93365 8.40133L4.43236 9.84193C4.52162 10.082 4.6888 10.2914 4.90982 10.4395M12.0929 15.8031C12.2849 15.9316 12.5147 16.0006 12.7503 16.0005C12.9882 15.9982 13.2195 15.9264 13.4121 15.795C13.6048 15.6636 13.7493 15.479 13.8257 15.2668L14.177 14.2504C14.2521 14.0397 14.3796 13.8463 14.5454 13.6889C14.7112 13.5315 14.9166 13.4127 15.1404 13.3434L16.2342 13.0072C16.4604 12.9342 16.6563 12.7957 16.7938 12.6115C16.9314 12.4273 17.0035 12.2068 16.9999 11.9817C16.9963 11.7566 16.9171 11.5383 16.7737 11.3581C16.6303 11.1778 16.4301 11.045 16.2016 10.9784L15.1192 10.6463C14.8954 10.5757 14.692 10.4573 14.5248 10.3004C14.3577 10.1435 14.2314 9.95237 14.1558 9.74188L13.7987 8.70945C13.7219 8.49743 13.5762 8.31354 13.3822 8.18385C13.1882 8.05415 12.9557 7.98523 12.7178 7.98686C12.4798 7.98848 12.2485 8.06056 12.0565 8.19289C11.8645 8.32522 11.7216 8.51108 11.6481 8.72413L11.2981 9.74055C11.2259 9.94951 11.1035 10.14 10.9403 10.2971C10.7771 10.4542 10.5776 10.5737 10.3574 10.6463L9.25794 10.9837C9.09152 11.0382 8.94088 11.1285 8.81798 11.2473C8.69508 11.3662 8.60331 11.5104 8.54995 11.6685C8.49659 11.8266 8.48311 11.9942 8.51059 12.1581C8.53806 12.3219 8.60573 12.4775 8.70822 12.6124C8.84849 12.7992 9.04684 12.9392 9.27494 13.0126L10.3559 13.342C10.5805 13.4133 10.7844 13.5327 10.9516 13.6908C11.1188 13.8489 11.2447 14.0414 11.3194 14.2531L11.6778 15.2855C11.7554 15.4942 11.9 15.6751 12.0915 15.8031"
+      fill="url(#paint0_linear_44_1599)"
+    />
     <defs>
-      <linearGradient id="paint0_linear_44_1599" x1="-8.50141" y1="7.99975" x2="21.2511" y2="7.99975" gradientUnits="userSpaceOnUse">
+      <linearGradient
+        id="paint0_linear_44_1599"
+        x1="-8.50141"
+        y1="7.99975"
+        x2="21.2511"
+        y2="7.99975"
+        gradientUnits="userSpaceOnUse"
+      >
         <stop stopColor="#813ADC" />
         <stop offset="1" stopColor="#FF5151" />
       </linearGradient>
@@ -51,7 +82,7 @@ export const AnimatedGrid = React.memo(() => {
         col: Math.floor(Math.random() * cols),
         row: Math.floor(Math.random() * rows),
         delay: Math.random() * 5,
-        duration: 2 + Math.random() * 3
+        duration: 2 + Math.random() * 3,
       });
     }
     return squares;
@@ -61,8 +92,24 @@ export const AnimatedGrid = React.memo(() => {
     <div className="absolute inset-0 -z-20 overflow-hidden ">
       <svg className="absolute inset-0 h-full w-full [mask-image:radial-gradient(100%_100%_at_top_center,white,transparent)]">
         <defs>
-          <pattern id="grid-pattern" width={squareSize} height={squareSize} x="0" y="0" patternUnits="userSpaceOnUse">
-            <rect x={offset} y={offset} width={rectSize} height={rectSize} rx={radius} fill="none" stroke={strokeColor} strokeWidth="1" />
+          <pattern
+            id="grid-pattern"
+            width={squareSize}
+            height={squareSize}
+            x="0"
+            y="0"
+            patternUnits="userSpaceOnUse"
+          >
+            <rect
+              x={offset}
+              y={offset}
+              width={rectSize}
+              height={rectSize}
+              rx={radius}
+              fill="none"
+              stroke={strokeColor}
+              strokeWidth="1"
+            />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid-pattern)" />
@@ -78,7 +125,12 @@ export const AnimatedGrid = React.memo(() => {
               fill={activeColor}
               initial={{ opacity: 0 }}
               animate={{ opacity: [0, 0.6, 0] }}
-              transition={{ duration: sq.duration, repeat: Infinity, delay: sq.delay, ease: "easeInOut" }}
+              transition={{
+                duration: sq.duration,
+                repeat: Infinity,
+                delay: sq.delay,
+                ease: "easeInOut",
+              }}
             />
           ))}
         </svg>
@@ -88,11 +140,33 @@ export const AnimatedGrid = React.memo(() => {
   );
 });
 
-const FatSparkle = ({ className, style }: { className?: string, style?: React.CSSProperties }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2C13.5 2 15 7.5 19 9.5C23 11.5 23 12.5 19 14.5C15 16.5 13.5 22 12 22C10.5 22 9 16.5 5 14.5C1 12.5 1 11.5 5 9.5C9 7.5 10.5 2 12 2Z" fill="url(#fat_sparkle_gradient)" />
+const FatSparkle = ({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) => (
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+    style={style}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      d="M12 2C13.5 2 15 7.5 19 9.5C23 11.5 23 12.5 19 14.5C15 16.5 13.5 22 12 22C10.5 22 9 16.5 5 14.5C1 12.5 1 11.5 5 9.5C9 7.5 10.5 2 12 2Z"
+      fill="url(#fat_sparkle_gradient)"
+    />
     <defs>
-      <linearGradient id="fat_sparkle_gradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+      <linearGradient
+        id="fat_sparkle_gradient"
+        x1="2"
+        y1="2"
+        x2="22"
+        y2="22"
+        gradientUnits="userSpaceOnUse"
+      >
         <stop offset="0%" stopColor="#A855F7" />
         <stop offset="100%" stopColor="#EC4899" />
       </linearGradient>
@@ -106,7 +180,7 @@ export const RisingBubbles = React.memo(() => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      const relativeX = (e.clientX - window.innerWidth / 2);
+      const relativeX = e.clientX - window.innerWidth / 2;
       mouseX.set(relativeX * 0.5);
     };
     window.addEventListener("mousemove", handleMouseMove);
@@ -135,7 +209,7 @@ export const RisingBubbles = React.memo(() => {
             height: bubble.size,
             bottom: -100,
             opacity: 0.6,
-            x: springX, 
+            x: springX,
           }}
           animate={{
             y: [0, -window.innerHeight - 200],
@@ -143,9 +217,24 @@ export const RisingBubbles = React.memo(() => {
             opacity: [0.6, 0.6, 0],
           }}
           transition={{
-            y: { duration: bubble.duration, repeat: Infinity, ease: "linear", delay: bubble.delay },
-            rotate: { duration: bubble.duration, repeat: Infinity, ease: "linear", delay: bubble.delay },
-            opacity: { duration: bubble.duration, repeat: Infinity, ease: "linear", delay: bubble.delay }
+            y: {
+              duration: bubble.duration,
+              repeat: Infinity,
+              ease: "linear",
+              delay: bubble.delay,
+            },
+            rotate: {
+              duration: bubble.duration,
+              repeat: Infinity,
+              ease: "linear",
+              delay: bubble.delay,
+            },
+            opacity: {
+              duration: bubble.duration,
+              repeat: Infinity,
+              ease: "linear",
+              delay: bubble.delay,
+            },
           }}
         >
           <FatSparkle className="w-full h-full" />
@@ -187,29 +276,49 @@ export const FloatingBlobs = React.memo(() => {
   }, []);
 
   return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div
+      ref={containerRef}
+      className="absolute inset-0 overflow-hidden pointer-events-none"
+    >
       {Array.from({ length: blobCount }).map((_, i) => (
         <div
           key={i}
           ref={(el) => (blobRefs.current[i] = el)}
-          className={`absolute w-80 h-80 md:w-96 md:h-96 rounded-full opacity-40 mix-blend-multiply blur-[100px] ${colors[i % colors.length]}`}
-          style={{ top: 0, left: 0, willChange: 'transform' }}
+          className={`absolute w-80 h-80 md:w-96 md:h-96 rounded-full opacity-40 mix-blend-multiply blur-[100px] ${
+            colors[i % colors.length]
+          }`}
+          style={{ top: 0, left: 0, willChange: "transform" }}
         />
       ))}
     </div>
   );
 });
 
-
 // --- Helper SVGs ---
 
 function GoogleColoredIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} xmlns="http://www.w3.org/2000/svg">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
+      />
     </svg>
   );
 }
@@ -222,39 +331,50 @@ function AppleLogo({ className }: { className?: string }) {
   );
 }
 
-
 // --- 2. Main Login Component ---
 
 const LoginBase = () => {
-  const { t } = useTranslation(); 
+  const { t } = useTranslation();
   const posthog = usePostHog();
   const navigate = useNavigate();
-  
-  const setAccessToken = useUserStore(state => state.setAccessToken);
-  const setRefreshToken = useUserStore(state => state.setRefreshToken);
-  const setUserData = useUserStore(state => state.setUserData);
+
+  const setAccessToken = useUserStore((state) => state.setAccessToken);
+  const setRefreshToken = useUserStore((state) => state.setRefreshToken);
+  const setUserData = useUserStore((state) => state.setUserData);
 
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  
+
   const [sessionData, setSessionData] = useState<any>(null);
 
   const googleVerifyMutation = useMutation({
     mutationFn: (newUser: any) => {
-      return axiosInstance.post(API_BASE_URL + '/auth/google/v2?verify=true', newUser);
+      return axiosInstance.post(
+        API_BASE_URL + "/auth/google/v2?verify=true",
+        newUser
+      );
     },
     onSuccess: async (response, variables) => {
       const data = response.data;
-      
+
       // Essential: Set tokens immediately so the /finish call is authorized
       setAccessToken(data.access_token);
       setRefreshToken(data.refresh_token);
-      localStorage.setItem('user-store', JSON.stringify({
-        state: { accessToken: data.access_token, refreshToken: data.refresh_token }
-      }));
-      posthog.identify(data.id, { email: variables.user.email, new_user: true });
+      localStorage.setItem(
+        "user-store",
+        JSON.stringify({
+          state: {
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+          },
+        })
+      );
+      posthog.identify(data.id, {
+        email: variables.user.email,
+        new_user: true,
+      });
       if (data?.new) {
         setSessionData({
           id: data.id,
@@ -267,65 +387,80 @@ const LoginBase = () => {
           companyName: data?.company?.name,
           trialDate: data?.company?.trial_started_date,
           trialDays: data?.company?.trial_days,
-          fullAdmin: data?.company?.full_admin_access || false
+          fullAdmin: data?.company?.full_admin_access || false,
         });
         setShowOnboarding(true);
+        posthog.identify(data.id, { email: variables.user.email, new_user: true });
       } else {
         // Existing user flow
-        setUserData(data.id, data?.name, variables?.user?.email, data.company_id, data?.company?.subscription, data.company.name, data?.company?.trial_started_date && new Date(data.company.trial_started_date), data?.company?.trial_days, variables?.user?.photo, data?.company?.full_admin_access || false);
-        navigate('/notes', { replace: true });
+        setUserData(
+          data.id,
+          data?.name,
+          variables?.user?.email,
+          data.company_id,
+          data?.company?.subscription,
+          data.company.name,
+          data?.company?.trial_started_date &&
+            new Date(data.company.trial_started_date),
+          data?.company?.trial_days,
+          variables?.user?.photo,
+          data?.company?.full_admin_access || false
+        );
+        navigate("/notes", { replace: true });
       }
       setIsGoogleLoading(false);
     },
     onError: (error: any) => {
       Sentry.captureException(error);
-      toast.error(t('An error occurred during sign-in.'));
+      toast.error(t("An error occurred during sign-in."));
       setIsGoogleLoading(false);
     },
   });
 
   const handleFinishOnboarding = async () => {
     if (!sessionData) return;
-    
+
     setIsFinishing(true);
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    
+
     try {
       // 1. Call the finish endpoint
-      const response = await axiosInstance.post(API_BASE_URL + "/auth/apple/finish", {
-        platform: 'web',
-        idToken: sessionData.idToken,
-        email: sessionData.email,
-        name: sessionData.name,
-        photo: sessionData.photo,
-        utm_source: 'web_onboarding',
-        time_zone: userTimeZone
-      });
+      const response = await axiosInstance.post(
+        API_BASE_URL + "/auth/apple/finish",
+        {
+          platform: "web",
+          idToken: sessionData.idToken,
+          email: sessionData.email,
+          name: sessionData.name,
+          photo: sessionData.photo,
+          utm_source: "web_onboarding",
+          time_zone: userTimeZone,
+        }
+      );
 
       // 2. Show success visual in modal
       setIsSuccess(true);
       setIsFinishing(false);
 
       // 3. Update the global store (Wait for visual satisfaction)
-      
-        // console.log()
-        setUserData(
-          response?.data?.id, 
-          sessionData.name, 
-          sessionData.email, 
-          response?.data?.company_id,
-          sessionData.subscription, 
-          sessionData.companyName,
-          sessionData.trialDate && new Date(sessionData.trialDate),
-          sessionData.trialDays, 
-          sessionData.photo, 
-          sessionData.fullAdmin
-        );
-        setTimeout(() => {
-        // 4. Force the redirect
-        navigate('/notes', { replace: true });
-      }, 1800); // Give user time to see the "Success" state
 
+      // console.log()
+      setUserData(
+        response?.data?.id,
+        sessionData.name,
+        sessionData.email,
+        response?.data?.company_id,
+        sessionData.subscription,
+        sessionData.companyName,
+        sessionData.trialDate && new Date(sessionData.trialDate),
+        sessionData.trialDays,
+        sessionData.photo,
+        sessionData.fullAdmin
+      );
+      setTimeout(() => {
+        // 4. Force the redirect
+        navigate("/notes", { replace: true });
+      }, 1800); // Give user time to see the "Success" state
     } catch (error) {
       console.error("Error finishing onboarding:", error);
       setIsFinishing(false);
@@ -333,27 +468,33 @@ const LoginBase = () => {
     }
   };
 
-
   const signIn = async (credentialResponse: any) => {
     const idToken = credentialResponse.credential;
     const decodedToken: any = jwtDecode(idToken);
     setIsGoogleLoading(true);
     googleVerifyMutation.mutate({
       idToken,
-      user: { id: decodedToken.sub, name: decodedToken.name, email: decodedToken.email, photo: decodedToken.picture },
-      platform: 'web',
+      user: {
+        id: decodedToken.sub,
+        name: decodedToken.name,
+        email: decodedToken.email,
+        photo: decodedToken.picture,
+      },
+      platform: "web",
     });
   };
 
-
   const [index, setIndex] = useState(0);
-  
-   // 1. Define messages here so the useEffect can find it
-  const messages = useMemo(() => [
-    "Record, edit and learn smart",
-    "Create quizzes from your notes",
-    "Flashcards for better memory"
-  ], []);
+
+  // 1. Define messages here so the useEffect can find it
+  const messages = useMemo(
+    () => [
+      "Record, edit and learn smart",
+      "Create quizzes from your notes",
+      "Flashcards for better memory",
+    ],
+    []
+  );
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -365,8 +506,7 @@ const LoginBase = () => {
   return (
     <div className="relative min-h-screen w-full text-slate-900 selection:bg-purple-100 font-sans overflow-hidden">
       <style>
-        {
-          `
+        {`
            @keyframes slow-bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
@@ -375,16 +515,15 @@ const LoginBase = () => {
             /* 3s duration = Slow speed */
             /* ease-in-out = Smooth "floating" feeling */
             animation: slow-bounce 3s ease-in-out infinite;
-          }`
-        }
+          }`}
       </style>
       <AnimatedGrid />
-       <OnboardingModal 
-        isOpen={showOnboarding} 
-        t={t} 
+      <OnboardingModal
+        isOpen={showOnboarding}
+        t={t}
         isFinishing={isFinishing}
         isSuccess={isSuccess}
-        onFinish={handleFinishOnboarding} 
+        onFinish={handleFinishOnboarding}
       />
 
       <FloatingBlobs />
@@ -400,19 +539,24 @@ const LoginBase = () => {
       <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
         <div className="mb-2 flex flex-col items-center gap-2">
           <div className="flex items-center justify-center text-white ">
-            <CatPenIcon className="h-30 w-30 animate-slow-bounce" strokeWidth={2.5} />
+            <CatPenIcon
+              className="h-30 w-30 animate-slow-bounce"
+              strokeWidth={2.5}
+            />
             {/* <AiOrbitAnimation /> */}
           </div>
-          <h3 className="text-4xl font-bold  text-slate-700  tracking-tighter  dark:text-zinc-50">Leitner AI</h3>
+          <h3 className="text-4xl font-bold  text-slate-700  tracking-tighter  dark:text-zinc-50">
+            Leitner AI
+          </h3>
         </div>
 
         <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.h1
               key={index}
-              initial={{ y: 20, opacity: 0, filter: 'blur(10px)' }}
-              animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-              exit={{ y: -20, opacity: 0, filter: 'blur(10px)' }}
+              initial={{ y: 20, opacity: 0, filter: "blur(10px)" }}
+              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+              exit={{ y: -20, opacity: 0, filter: "blur(10px)" }}
               transition={{ duration: 0.5, ease: "easeOut" }}
               className="text-4xl font-bold tracking-tight text-slate-700 md:text-4xl leading-[1.1] max-w-3xl mx-auto"
             >
@@ -425,13 +569,17 @@ const LoginBase = () => {
         </div>
 
         <div className="w-full max-w-sm space-y-4 flex flex-col items-center">
-          <button disabled={isGoogleLoading} onClick={() => {}} className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
+          <button
+            disabled={isGoogleLoading}
+            onClick={() => {}}
+            className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300"
+          >
             {isGoogleLoading ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900"></div>
             ) : (
               <GoogleColoredIcon className="h-7 w-7" />
             )}
-           <div className="absolute inset-0 z-10 opacity-0 overflow-hidden flex items-center justify-center">
+            <div className="absolute inset-0 z-10 opacity-0 overflow-hidden flex items-center justify-center">
               {/* 
                 Google buttons have a max-width. We perform a CSS transform scale 
                 to force the iframe to cover the entire width of your custom button 
@@ -440,8 +588,7 @@ const LoginBase = () => {
               <div className="scale-[2.0] w-full h-full flex items-center justify-center">
                 <GoogleLogin shape="square" onSuccess={signIn} />
               </div>
-          </div>
-
+            </div>
             Continue with Google
           </button>
 
@@ -453,9 +600,19 @@ const LoginBase = () => {
 
         <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
           By signing in, you agree to our{" "}
-          <Link to="/terms" className="underline decoration-slate-300 underline-offset-2 text-slate-900">Term of Use</Link>
-          {" "}and{" "}
-          <Link to="/privacy" className="underline decoration-slate-300 underline-offset-2 text-slate-900">Privacy Policy</Link>
+          <Link
+            to="/terms"
+            className="underline decoration-slate-300 underline-offset-2 text-slate-900"
+          >
+            Term of Use
+          </Link>{" "}
+          and{" "}
+          <Link
+            to="/privacy"
+            className="underline decoration-slate-300 underline-offset-2 text-slate-900"
+          >
+            Privacy Policy
+          </Link>
         </p>
       </main>
     </div>
@@ -465,9 +622,12 @@ const LoginBase = () => {
 // 3. Export with Sentry Wrappers
 const Login = Sentry.withProfiler(
   Sentry.withErrorBoundary(LoginBase, {
-    fallback: <div className="flex h-screen w-full items-center justify-center">Error loading login. Please refresh.</div>
+    fallback: (
+      <div className="flex h-screen w-full items-center justify-center">
+        Error loading login. Please refresh.
+      </div>
+    ),
   })
 );
-
 
 export default Login;

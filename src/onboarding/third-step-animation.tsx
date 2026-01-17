@@ -28,7 +28,7 @@ const ThirdStepAnimation = ({ t }: { t: any }) => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 font-sans tracking-tight">
+    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 pt-0 font-sans tracking-tight">
       
       {/* HEADER SECTION */}
       <div className="text-center px-4">
@@ -41,7 +41,7 @@ const ThirdStepAnimation = ({ t }: { t: any }) => {
       </div>
 
       {/* VISUAL ANIMATION: ONE-TIME MEMORY RESTORE */}
-      <div className="relative w-full h-64 flex items-center justify-center">
+      <div className="relative w-full h-50 flex items-center justify-center">
         
         {/* The "Knowledge Cards" - Snappy snap-to-focus */}
         <div className="relative w-full flex flex-col items-center gap-2">
