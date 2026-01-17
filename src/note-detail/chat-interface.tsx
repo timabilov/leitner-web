@@ -294,6 +294,65 @@ const ChatInterface = ({
       </div>
       
       <div className="flex-none pt-4 pb-6 border-t border-zinc-200/50 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm z-10 px-2">
+        {/* Quick Action Prefills */}
+        {!isLoading && (
+          <div className="flex flex-wrap gap-2 mb-3 justify-center">
+            <button
+              type="button"
+              onClick={() => executeSendMessage(t("Study guide"))}
+              disabled={isLoading}
+              className="px-4 py-1.5 text-xs font-medium rounded-full
+                bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-fuchsia-500/10
+                dark:from-violet-500/20 dark:via-purple-500/20 dark:to-fuchsia-500/20
+                border border-violet-300/30 dark:border-violet-500/30
+                text-violet-700 dark:text-violet-300
+                hover:from-violet-500/20 hover:via-purple-500/20 hover:to-fuchsia-500/20
+                dark:hover:from-violet-500/30 dark:hover:via-purple-500/30 dark:hover:to-fuchsia-500/30
+                hover:border-violet-400/50 dark:hover:border-violet-400/50
+                hover:shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)]
+                transition-all duration-300
+                disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t("Study guide")}
+            </button>
+            <button
+              type="button"
+              onClick={() => executeSendMessage(t("Simplify it"))}
+              disabled={isLoading}
+              className="px-4 py-1.5 text-xs font-medium rounded-full
+                bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10
+                dark:from-cyan-500/20 dark:via-blue-500/20 dark:to-indigo-500/20
+                border border-blue-300/30 dark:border-blue-500/30
+                text-blue-700 dark:text-blue-300
+                hover:from-cyan-500/20 hover:via-blue-500/20 hover:to-indigo-500/20
+                dark:hover:from-cyan-500/30 dark:hover:via-blue-500/30 dark:hover:to-indigo-500/30
+                hover:border-blue-400/50 dark:hover:border-blue-400/50
+                hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]
+                transition-all duration-300
+                disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t("Simplify it")}
+            </button>
+            <button
+              type="button"
+              onClick={() => executeSendMessage(t("Hard quiz"))}
+              disabled={isLoading}
+              className="px-4 py-1.5 text-xs font-medium rounded-full
+                bg-gradient-to-r from-rose-500/10 via-orange-500/10 to-amber-500/10
+                dark:from-rose-500/20 dark:via-orange-500/20 dark:to-amber-500/20
+                border border-orange-300/30 dark:border-orange-500/30
+                text-orange-700 dark:text-orange-300
+                hover:from-rose-500/20 hover:via-orange-500/20 hover:to-amber-500/20
+                dark:hover:from-rose-500/30 dark:hover:via-orange-500/30 dark:hover:to-amber-500/30
+                hover:border-orange-400/50 dark:hover:border-orange-400/50
+                hover:shadow-[0_0_20px_-5px_rgba(249,115,22,0.3)]
+                transition-all duration-300
+                disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t("Hard quiz")}
+            </button>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="relative flex items-center w-full">
           <Textarea
             placeholder={t("Ask something about this note...")}
