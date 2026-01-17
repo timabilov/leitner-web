@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/react";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
-import { Send, Loader2, RotateCcw } from "lucide-react";
+import { Send, Loader2, RotateCcw, MessageCircle } from "lucide-react";
 import { ChatMessage } from "./chat-message";
 import { Button } from "@/components/ui/button";
 import type { Message } from "@/components/ui/chat-message";
@@ -300,14 +300,14 @@ const ChatInterface = ({
             {[
               t("Can you create a study guide?"),
               t("Can you explain like i'm 5?"),
-              t("Can you quiz me on this?"),
+              t("Can you generate hard quiz for me?"),
             ].map((prompt) => (
               <button
                 key={prompt}
                 type="button"
                 onClick={() => executeSendMessage(prompt)}
                 disabled={isLoading}
-                className="group px-3.5 py-1.5 text-[13px] rounded-2xl
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] rounded-2xl
                   bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10
                   dark:from-cyan-500/20 dark:via-blue-500/20 dark:to-indigo-500/20
                   border border-blue-200/50 dark:border-blue-500/30
@@ -319,9 +319,8 @@ const ChatInterface = ({
                   transition-all duration-300
                   disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="opacity-40 mr-0.5">"</span>
+                <MessageCircle className="h-3 w-3 opacity-50" />
                 {prompt}
-                <span className="opacity-40 ml-0.5">"</span>
               </button>
             ))}
           </div>
