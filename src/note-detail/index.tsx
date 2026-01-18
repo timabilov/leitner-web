@@ -76,13 +76,14 @@ const StudioTabTrigger = ({ value, icon, label, active }: any) => (
   <TabsTrigger
     value={value}
     className={cn(
-      "relative h-9 px-4 gap-2 rounded-md transition-all font-medium text-sm tracking-tight",
+      "relative h-9 px-3 sm:px-4 gap-2 rounded-md transition-all font-medium text-sm tracking-tight",
       "data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-950 data-[state=active]:text-zinc-950 dark:data-[state=active]:text-zinc-50 data-[state=active]:shadow-sm",
       "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
     )}
+    title={label}
   >
     {icon}
-    {label}
+    <span className="hidden sm:inline">{label}</span>
   </TabsTrigger>
 );
 
@@ -412,7 +413,7 @@ const NoteDetailBase = () => {
                 {!note?.processing_error_message && (
                   <>
                     <StudioTabTrigger value="chat" icon={<MessageSquare size={14} />} label={t("AI Chat")} active={activeTab === "chat"} />
-                    <StudioTabTrigger value="ai" icon={<AIIcon size={30} className="w-28 h-28" />} label={t("AI Tools")} active={activeTab === "ai"} />
+                    <StudioTabTrigger value="ai" icon={<AIIcon size={31} className="w-31 h-31" />} label={t("AI Tools")} active={activeTab === "ai"} />
                   </>
                 )}
               </TabsList>
