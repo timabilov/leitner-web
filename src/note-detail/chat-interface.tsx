@@ -315,7 +315,7 @@ const ChatInterface = ({
     <div className="flex flex-col h-full w-full max-w-3xl mx-auto overflow-hidden">
       <div className="flex-1 w-full overflow-y-auto pr-2 pl-2 scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-800">
         <div className="flex flex-col gap-4 py-4 px-2">
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <ChatMessage
               key={message.id}
               content={message.content}
@@ -323,6 +323,8 @@ const ChatInterface = ({
               isStreaming={message.id === streamingMessageId}
               noteId={noteId}
               messageId={message.id}
+              isLastMessage={index === messages.length - 1}
+              onRetry={message.role === "ai" ? () => executeSendMessage(t("Please continue with my previous request.")) : undefined}
             />
           ))}
            {/* just fake try to always add ghost bubble to not rely on internal loading as we can have MULTIPLE messages by AI {isLoading && (

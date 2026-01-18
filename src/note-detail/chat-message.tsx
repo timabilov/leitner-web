@@ -1,11 +1,11 @@
 import React, { useMemo } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User } from "lucide-react";
+import { User, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import CatLogo from "./assets/cat-logo"; 
-import MarkdownTypewriter from "./markdown-typewriter"; 
-import { QuizDisplay } from "@/components/chat/quiz-display"; 
-import type { QuizData } from "@/components/chat/quiz-display"; 
+import CatLogo from "./assets/cat-logo";
+import MarkdownTypewriter from "./markdown-typewriter";
+import { QuizDisplay } from "@/components/chat/quiz-display";
+import type { QuizData } from "@/components/chat/quiz-display";
 import { useTranslation } from "react-i18next";
 
 // 1. CHANGED: Accept primitive types for better Memoization
@@ -15,11 +15,23 @@ interface ChatMessageProps {
   isStreaming: boolean;
   noteId?: string;
   messageId?: string;
+  onRetry?: () => void;
+  isLastMessage?: boolean;
 }
 
-const ChatMessageItem = ({ role, content, isStreaming, noteId, messageId }: ChatMessageProps) => {
+const ChatMessageItem = ({ role, content, isStreaming, noteId, messageId, onRetry, isLastMessage }: ChatMessageProps) => {
   const { t } = useTranslation();
   const isAi = role === "ai";
+
+  // Detect empty AI message (not streaming = final state)
+  const isEmptyAiMessage = isAi && !isStreaming && (!content || content === "" || (() => {
+    try {
+      const parsed = JSON.parse(content);
+      return !parsed.content || parsed.content.trim() === "";
+    } catch {
+      return !content.trim();
+    }
+  })());
   const contentJSON = useMemo(() => {
      try {
       return JSON.parse(content)
@@ -94,10 +106,24 @@ const ChatMessageItem = ({ role, content, isStreaming, noteId, messageId }: Chat
           </div>
         )}
 
-        {quizData ? (
+        {isEmptyAiMessage ? (
+          <div className="flex items-center gap-2">
+            <span className="text-amber-600 dark:text-amber-400">
+              {t("Oops! Something went wrong. Let's try again.")}
+            </span>
+            {onRetry && isLastMessage && (
+              <button
+                onClick={onRetry}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+              >
+                <RefreshCw className="h-3 w-3" />
+                {t("Retry")}
+              </button>
+            )}
+          </div>
+        ) : quizData ? (
           <QuizDisplay data={quizData} noteId={noteId} messageId={messageId} />
         ) : isAi ? (
-          // Typewriter handles the animation based on isStreaming and content updates
           <MarkdownTypewriter
             content={contentJSON?.content}
             isStreaming={isStreaming}
