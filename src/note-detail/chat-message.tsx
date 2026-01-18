@@ -57,7 +57,7 @@ const ChatMessageItem = ({ role, content, isStreaming, noteId, messageId }: Chat
       <Avatar
         className={cn(
           "h-10 w-10 border",
-          isAi ? "bg-black" : "bg-muted"
+          isAi ? "bg-black hidden sm:flex" : "bg-muted"
         )}
       >
         {isAi ? (
@@ -71,10 +71,10 @@ const ChatMessageItem = ({ role, content, isStreaming, noteId, messageId }: Chat
 
       <div
         className={cn(
-          "relative max-w-[85%] px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap leading-relaxed",
+          "relative px-4 py-3 text-sm rounded-2xl whitespace-pre-wrap leading-relaxed",
           !isAi
-            ? "bg-primary text-primary-foreground rounded-tr-sm"
-            : quizData? "text-foreground rounded-tl-sm w-full": "bg-muted text-foreground rounded-tl-sm w-full"
+            ? "max-w-[85%] bg-primary text-primary-foreground rounded-tr-sm"
+            : quizData? "max-w-full sm:max-w-[85%] text-foreground rounded-tl-sm w-full": "max-w-full sm:max-w-[85%] bg-muted text-foreground rounded-tl-sm w-full"
         )}
       >
         {/* Loading Indicator for empty initial state */}
