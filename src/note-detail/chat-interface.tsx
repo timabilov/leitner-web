@@ -330,19 +330,15 @@ const ChatInterface = ({
         {!isLoading && (
           <div className="flex flex-nowrap gap-1.5 mb-3 justify-center">
             {[
-              t("Can you create a study guide?"),
-              t("Can you explain like i'm 5?"),
-              t("Can you generate hard quiz for me?"),
-            ].map((prompt, index) => (
+              { short: t("Study guide"), full: t("Can you create a study guide?") },
+              { short: t("Explain like i'm 5"), full: t("Can you explain like i'm 5?") },
+              { short: t("Quiz me"), full: t("Can you generate hard quiz for me?") },
+            ].map(({ short, full }, index) => (
               <button
-                key={prompt}
+                key={full}
                 type="button"
-                onClick={() => executeSendMessage(prompt)}
+                onClick={() => executeSendMessage(full)}
                 disabled={isLoading}
-                // 1. Logic for Visibility:
-                // Index 0: Hidden on phone (default), appears on sm (tablet) and up.
-                // Index 1: Always visible (inline-flex).
-                // Index 2: Hidden on phone/tablet, appears on md (laptop) and up (Optional, prevents overcrowding).
                 className={`
                   items-center gap-1.5 px-3.5 py-1.5 text-[13px] rounded-2xl
                   bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10
@@ -356,13 +352,12 @@ const ChatInterface = ({
                   transition-all duration-300
                   disabled:opacity-50 disabled:cursor-not-allowed
                   min-w-0 shrink
-                  ${index === 0 ? "hidden sm:inline-flex" : ""} 
-                  // ${index === 1 ? "inline-flex" : ""}
-                  ${index === 2 ? "inline-flex" : ""} 
+                  ${index === 0 ? "hidden sm:inline-flex" : "inline-flex"}
                 `}
               >
                 <MessageCircle className="h-3 w-3 opacity-50 shrink-0" />
-                <span className="truncate">{prompt}</span>
+                <span className="truncate sm:hidden">{short}</span>
+                <span className="truncate hidden sm:inline">{full}</span>
               </button>
             ))}
           </div>
