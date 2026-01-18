@@ -328,18 +328,23 @@ const ChatInterface = ({
       <div className="flex-none pt-4 pb-6 border-t border-zinc-200/50 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm z-10 px-2">
         {/* Quick Action Prefills */}
         {!isLoading && (
-          <div className="flex flex-wrap gap-1.5 mb-3 justify-center">
+          <div className="flex flex-nowrap gap-1.5 mb-3 justify-center">
             {[
               t("Can you create a study guide?"),
               t("Can you explain like i'm 5?"),
               t("Can you generate hard quiz for me?"),
-            ].map((prompt) => (
+            ].map((prompt, index) => (
               <button
                 key={prompt}
                 type="button"
                 onClick={() => executeSendMessage(prompt)}
                 disabled={isLoading}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-[13px] rounded-2xl
+                // 1. Logic for Visibility:
+                // Index 0: Hidden on phone (default), appears on sm (tablet) and up.
+                // Index 1: Always visible (inline-flex).
+                // Index 2: Hidden on phone/tablet, appears on md (laptop) and up (Optional, prevents overcrowding).
+                className={`
+                  items-center gap-1.5 px-3.5 py-1.5 text-[13px] rounded-2xl
                   bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10
                   dark:from-cyan-500/20 dark:via-blue-500/20 dark:to-indigo-500/20
                   border border-blue-200/50 dark:border-blue-500/30
@@ -349,10 +354,15 @@ const ChatInterface = ({
                   hover:border-blue-300/70 dark:hover:border-blue-400/50
                   hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]
                   transition-all duration-300
-                  disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  min-w-0 shrink
+                  ${index === 0 ? "hidden sm:inline-flex" : ""} 
+                  // ${index === 1 ? "inline-flex" : ""}
+                  ${index === 2 ? "inline-flex" : ""} 
+                `}
               >
-                <MessageCircle className="h-3 w-3 opacity-50" />
-                {prompt}
+                <MessageCircle className="h-3 w-3 opacity-50 shrink-0" />
+                <span className="truncate">{prompt}</span>
               </button>
             ))}
           </div>
