@@ -97,13 +97,27 @@ const ChatInterface = ({
   }, [noteId, addMessage, t, noteName]);
 
   // --- Scroll Logic ---
+  const isInitialMount = useRef(true);
+
+  // Reset on noteId change (tab switch)
+  useEffect(() => {
+    isInitialMount.current = true;
+  }, [noteId]);
+
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     if (scrollRef.current) {
         scrollRef.current.scrollIntoView({ behavior, block: "end" });
     }
   };
 
-  useEffect(() => { scrollToBottom("smooth"); }, [messages.length, isLoading]);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      scrollToBottom("instant");
+      isInitialMount.current = false;
+    } else {
+      scrollToBottom("smooth");
+    }
+  }, [messages.length, isLoading]);
   
   useEffect(() => {
     if (streamingMessageId && lastMessage?.role === "ai") {
