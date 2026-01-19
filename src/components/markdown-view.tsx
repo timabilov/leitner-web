@@ -2,13 +2,8 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './markdown-view.css';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Button } from './ui/button';
 import AIIcon from '@/note-detail/assets/ai-icon';
-import { CatIcon } from 'lucide-react';
-import CatLogo from '@/note-detail/assets/cat-logo';
-import AIPenIcon from '@/note-detail/assets/ai-pen-icon';
-import CatPenIcon from '@/notes/assets/cat-pen-icon';
 import QuizPenIcon from '@/note-detail/assets/quiz-pen-icon';
 import { useTranslation } from 'react-i18next';
 
@@ -38,43 +33,70 @@ const MarkdownView = ({
   onExplain?: (text: string) => void, 
   onQuiz?: (text: string) => void 
 }) => {
-   const { t } = useTranslation();
+  const { t } = useTranslation();
 
   const [selectionMenu, setSelectionMenu] = useState<SelectionState>({ x: 0, y: 0, show: false, text: '' });
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Ref to track when the menu was last opened to prevent immediate closing by inertia scroll
+  const lastOpenTime = useRef<number>(0);
 
   // --- 1. SELECTION HANDLER ---
   useEffect(() => {
-    const handleSelectionChange = () => {
+    const handleSelectionChange = (e: Event) => {
       const selection = window.getSelection();
+      // Basic checks: ensure selection exists and is inside this container
       if (!selection || selection.isCollapsed || !containerRef.current?.contains(selection.anchorNode)) {
-        setSelectionMenu(prev => prev.show ? { ...prev, show: false } : prev);
-        return;
+        // Only hide if we aren't currently "ignoring" scrolls (though mouseup usually implies intention)
+        // We handle hiding logic mostly in handleScroll/mousedown
+        return; 
       }
 
       const text = selection.toString().trim();
       if (!text) return;
+      let x = 0;
+      let y = 0;
 
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      
-      const x = rect.right; 
-      const y = rect.top;
+      if (e instanceof MouseEvent) {
+        x = e.clientX;
+        y = e.clientY - 50;
+      } else {
+        // Fallback for keyboard selection
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        console.log("rect.top", rect.top);
+        x = rect.right; 
+        y = rect.top;
+      }
 
-      setSelectionMenu({ x, y, show: true, text });
+      // Show the menu and record the timestamp
+      setSelectionMenu({ x , y , show: true, text });
+      lastOpenTime.current = Date.now();
     };
 
     const handleScroll = () => {
+      // 1. If menu is not shown, do nothing.
+      // 2. CRITICAL FIX: If the menu was opened less than 500ms ago, ignore the scroll.
+      //    This prevents trackpad inertia or browser auto-scroll from closing the menu immediately after mouseup.
+      if (Date.now() - lastOpenTime.current < 1000) return;
+
       setSelectionMenu(prev => prev.show ? { ...prev, show: false } : prev);
     };
 
-    document.addEventListener('mouseup', handleSelectionChange);
-    document.addEventListener('keyup', handleSelectionChange);
+    // Close menu when clicking elsewhere to start a new selection
+    const handleMouseDown = () => {
+       setSelectionMenu(prev => prev.show ? { ...prev, show: false } : prev);
+    };
+
+    document.addEventListener('mouseup', handleSelectionChange as EventListener);
+    document.addEventListener('keyup', handleSelectionChange as EventListener);
+    document.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('scroll', handleScroll, true); 
 
     return () => {
-      document.removeEventListener('mouseup', handleSelectionChange);
-      document.removeEventListener('keyup', handleSelectionChange);
+      document.removeEventListener('mouseup', handleSelectionChange as EventListener);
+      document.removeEventListener('keyup', handleSelectionChange as EventListener);
+      document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('scroll', handleScroll, true); 
     };
   }, []);
@@ -136,43 +158,38 @@ const MarkdownView = ({
       {/* --- FLOATING TOOLBOX --- */}
       {selectionMenu.show && (
        <div 
-  className="fixed z-50 flex items-center gap-1 p-1 rounded-lg border border-border/50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm shadow-xl transition-all animate-in fade-in zoom-in-95 duration-200"
-  style={{ 
-    left: selectionMenu.x, 
-    top: selectionMenu.y,
-    // Adjusted translate to center it better above selection, modify X as needed for your specific alignment
-    transform: 'translate(0, -100%) translateY(-8px) translateX(-100%)' 
-  }}
-  onMouseDown={(e) => e.preventDefault()}
->
-  {/* Explain Button */}
-  <Button 
-    variant="ghost" 
-    size="sm"
-    onClick={() => handleAction('explain')}
-    className="h-8 px-3 rounded-md cursor-pointer text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
-  >
-    {t("Ask")} 
-    <AIIcon className="w-4 h-4" />
-  </Button>
+          className="fixed z-50 flex items-center gap-1 p-1 rounded-lg border border-border/50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm shadow-xl transition-all animate-in fade-in zoom-in-95 duration-200"
+          style={{ 
+            left: selectionMenu.x, 
+            top: selectionMenu.y,
+            transform: 'translate(10px, 10px)' 
+          }}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => handleAction('explain')}
+            className="h-8 px-3 rounded-md cursor-pointer text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
+          >
+            {t("Ask")} 
+            <AIIcon className="w-4 h-4" />
+          </Button>
 
-  {/* Vertical Separator */}
-  <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
+          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
 
-  {/* Quiz Button */}
-  <Button 
-    variant="ghost" 
-    size="sm"
-    onClick={() => handleAction('quiz')}
-    className="h-8 cursor-pointer px-3 rounded-md text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
-  >
-    Generate quiz
-    {/* Ensure icon has a size class */}
-    <span className="text-rose-500">
-      <QuizPenIcon className="w-4 h-4" /> 
-    </span>
-  </Button>
-</div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => handleAction('quiz')}
+            className="h-8 cursor-pointer px-3 rounded-md text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
+          >
+            Generate quiz
+            <span className="text-rose-500">
+              <QuizPenIcon className="w-4 h-4" /> 
+            </span>
+          </Button>
+        </div>
       )}
     </div>
   );
