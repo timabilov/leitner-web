@@ -6,10 +6,18 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import JSZip from "jszip";
 import Zoom from "react-medium-image-zoom";
 
+// --- RESIZABLE PANELS ---
+import {
+  Panel,
+  PanelGroup,
+  PanelResizeHandle,
+} from "react-resizable-panels";
+
 // --- Services & Store ---
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
+
 // --- Components ---
 import Layout from "@/components/layout";
 import MarkdownView from "@/components/markdown-view";
@@ -41,6 +49,7 @@ import {
   CornerDownLeft,
   Loader2,
   FileText,
+  GripHorizontal, 
 } from "lucide-react";
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
 import AIIcon from "./assets/ai-icon";
@@ -127,7 +136,7 @@ const NoteDetailBase = () => {
   const [textContent, setTextContent] = useState<string>("");
   const [isProcessingFiles, setProcessingFiles] = useState(false);
   
-  // --- 1. STATE FOR PENDING AI ACTION (Explain/Quiz) ---
+  // Pending Action
   const [pendingAiAction, setPendingAiAction] = useState<{
     type: "explain" | "quiz";
     text: string;
@@ -146,10 +155,8 @@ const NoteDetailBase = () => {
     );
   };
 
-  // --- 2. HANDLER FOR MARKDOWN ACTIONS ---
   const handleMarkdownAction = (text: string, type: "explain" | "quiz") => {
     setPendingAiAction({ type, text });
-    // Switch to Chat Tab
     setSearchParams(
       (prev) => {
         prev.set("tab", "chat");
@@ -292,10 +299,13 @@ const NoteDetailBase = () => {
     pdfPaths.length +
     (textContent ? 1 : 0);
 
+  const hasMedia = attachmentCount > 0 || note?.youtube_url;
+
   return (
     <Layout title={note?.name} noGap>
       <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden bg-transparent">
-        {/* Top Section */}
+        
+        {/* --- FIXED HEADER --- */}
         <div className="flex-none bg-white dark:bg-zinc-950 z-40 border-b border-zinc-200/50">
           <div className="px-6 py-4">
             <div className="mx-auto">
@@ -348,14 +358,16 @@ const NoteDetailBase = () => {
                 {note?.youtube_url && (
                   <Tooltip>
                     <TooltipTrigger>
-                      <button className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900 text-zinc-500 cursor-pointer" onClick={() => setIsMediaExpanded(!isMediaExpanded)}>
+                      <button className={cn("h-8 w-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors", isMediaExpanded ? "text-primary" : "text-zinc-500")} onClick={() => setIsMediaExpanded(!isMediaExpanded)}>
                         <MoreVertical size={16} />
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent><p className="text-background">{t("Attached youtube video")}</p></TooltipContent>
+                    <TooltipContent><p className="text-background">{t("Toggle Media Tray")}</p></TooltipContent>
                   </Tooltip>
                 )}
               </div>
+
+              {/* Meta Stats Row */}
               <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar">
                 <MetaItem icon={<Calendar size={12} />} label={t("Created")} value={new Date(note?.created_at).toLocaleDateString()} />
                 <MetaItem icon={<Globe size={12} />} label={t("Language")} value={getNoteLanguageIso(note?.language)} />
@@ -373,133 +385,162 @@ const NoteDetailBase = () => {
               </div>
             </div>
           </div>
-
-          <AnimatePresence>
-            {(isMediaExpanded && (attachmentCount > 0 || note?.youtube_url)) && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/20">
-                <div className="w-full mx-auto relative px-6 py-4">
-                  {note?.youtube_url && (
-                    <div className="w-full max-w-3xl mx-auto aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black relative mb-4">
-                      <iframe className="w-full h-full absolute top-0 left-0" src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`} allowFullScreen title="YouTube Video" />
-                    </div>
-                  )}
-                  {imagePaths.length > 0 && (
-                    <div className="grid grid-cols-3 gap-2 bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 mb-2">
-                      {imagePaths.map((img, i) => <Zoom key={i}><img src={img.url} className="aspect-square object-cover rounded-md border border-zinc-200" /></Zoom>)}
-                    </div>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    {audioPaths.map((aud, i) => <div key={i} className="min-w-[200px]"><AudioPlayer audio={aud} /></div>)}
-                    {pdfPaths.map((pdf, i) => (
-                        <button key={i} onClick={() => setPreviewFile(pdf)} className="flex items-center gap-3 p-2 rounded-xl border border-zinc-200 bg-white hover:border-zinc-400 transition-all">
-                        <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600"><ScrollText size={16} /></div>
-                        <span className="text-sm font-semibold truncate max-w-[150px]">{pdf.name}</span>
-                        </button>
-                    ))}
-                  </div>
-                  {textContent && (
-                    <div className="mt-2 p-3 bg-zinc-50 border rounded-lg max-h-[100px] overflow-y-auto"><pre className="text-xs whitespace-pre-wrap">{textContent}</pre></div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <div className="px-6 pb-2 w-full">
-            <Tabs value={activeTab} onValueChange={handleTabChange} asChild={false}>
-              <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 w-full justify-start overflow-x-auto no-scrollbar">
-                <StudioTabTrigger value="overview" icon={<NotepadText size={14} />} label={t("Overview")} active={activeTab === "overview"} />
-                <StudioTabTrigger value="transcript" icon={<ScrollText size={14} />} label={t("Transcript")} active={activeTab === "transcript"} />
-                {!note?.processing_error_message && (
-                  <>
-                    <StudioTabTrigger value="chat" icon={<MessageSquare size={14} />} label={t("AI Chat")} active={activeTab === "chat"} />
-                    <StudioTabTrigger value="ai" icon={<AIIcon size={31} className="w-31 h-31" />} label={t("AI Tools")} active={activeTab === "ai"} />
-                  </>
-                )}
-              </TabsList>
-            </Tabs>
-          </div>
         </div>
 
-        <div className="flex-1 min-h-0 relative bg-transparent">
-          <Tabs value={activeTab} className="h-full flex flex-col">
-            {isNoteProcessing ? (
-              <div className="flex flex-col mt-20 h-full overflow-y-auto">
-                <div className="mx-auto my-10 flex flex-col items-center">
-                  <AIIcon hideStar className="h-10 w-10 animate-spin-slow " />
-                  <p className="text-xl mt-5" style={{ backgroundImage: "linear-gradient(to right, #71717a, #e4e4e7, #71717a)", backgroundSize: "200% auto", backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent", animation: "gradient-flow 4s linear infinite" }}>Processing</p>
-                </div>
-              </div>
-            ) : (
+        {/* --- RESIZABLE PANEL GROUP --- */}
+        <div className="flex-1 min-h-0 flex flex-col">
+          <PanelGroup direction="vertical">
+            
+            {/* PANEL 1: MEDIA TRAY */}
+            {isMediaExpanded && hasMedia && (
               <>
-                <TabsContent value="overview" className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0">
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="prose prose-zinc dark:prose-invert max-w-none pb-20">
-                    {note?.processing_error_message ? (
-                      <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 font-medium">{note.processing_error_message}</div>
-                    ) : (
-                      // 3. PASS HANDLERS TO MARKDOWN VIEW
-                      <MarkdownView
-                        onExplain={(text) => handleMarkdownAction(text, 'explain')}
-                        onQuiz={(text) => handleMarkdownAction(text, 'quiz')}
-                      >
-                        {sanitizeMarkdown(note?.md_summary_ai)}
-                      </MarkdownView>
-                    )}
-                  </motion.div>
-                </TabsContent>
+                <Panel 
+                  defaultSize={40} 
+                  minSize={15} 
+                  maxSize={80} 
+                  order={1}
+                  className="bg-zinc-50/50 dark:bg-zinc-900/20 border-b border-zinc-200/50"
+                >
+                  <div className="w-full h-full flex flex-col px-6 py-4">
+                    {/* The Video Area */}
+                    <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
+                      <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
+                        
+                        {/* 
+                           UPDATED CSS for YOUTUBE VIDEO:
+                           We use 'h-full', 'w-auto' and 'max-w-full' along with aspect-video.
+                           This ensures that as the panel gets taller (drag down), the video height increases,
+                           and the width scales accordingly.
+                        */}
+                        {note?.youtube_url && (
+                          <div className="flex-1 min-h-0 flex items-center justify-center">
+                             <div className="relative h-full w-auto max-w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black mx-auto">
+                                <iframe 
+                                  className="w-full h-full" 
+                                  src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`} 
+                                  allowFullScreen 
+                                  title="YouTube Video" 
+                                />
+                             </div>
+                          </div>
+                        )}
 
-                <TabsContent value="transcript" className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0">
-                  <div className="bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800 pb-20">
-                    {/* 3. PASS HANDLERS HERE TOO */}
-                    <MarkdownView
-                        onExplain={(text) => handleMarkdownAction(text, 'explain')}
-                        onQuiz={(text) => handleMarkdownAction(text, 'quiz')}
-                    >
-                        {note?.transcript}
-                    </MarkdownView>
+                        {/* Attachments at bottom of tray (fixed height) */}
+                        {(imagePaths.length > 0 || audioPaths.length > 0 || pdfPaths.length > 0 || textContent) && (
+                           <div className="shrink-0 max-h-[120px] overflow-y-auto space-y-2 pr-2 pt-2 border-t border-zinc-200/50">
+                              {imagePaths.length > 0 && (
+                                <div className="grid grid-cols-3 gap-2 bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                                  {imagePaths.map((img, i) => <Zoom key={i}><img src={img.url} className="aspect-square object-cover rounded-md border border-zinc-200" /></Zoom>)}
+                                </div>
+                              )}
+                              <div className="flex flex-wrap gap-2">
+                                {audioPaths.map((aud, i) => <div key={i} className="min-w-[200px]"><AudioPlayer audio={aud} /></div>)}
+                                {pdfPaths.map((pdf, i) => (
+                                    <button key={i} onClick={() => setPreviewFile(pdf)} className="flex items-center gap-3 p-2 rounded-xl border border-zinc-200 bg-white hover:border-zinc-400 transition-all">
+                                    <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600"><ScrollText size={16} /></div>
+                                    <span className="text-sm font-semibold truncate max-w-[150px]">{pdf.name}</span>
+                                    </button>
+                                ))}
+                              </div>
+                              {textContent && (
+                                <div className="mt-2 p-3 bg-zinc-50 border rounded-lg"><pre className="text-xs whitespace-pre-wrap">{textContent}</pre></div>
+                              )}
+                           </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </TabsContent>
-
-                <TabsContent value="chat" className="h-full flex flex-col mt-0 p-0 focus-visible:ring-0 overflow-hidden">
-                  {/* 4. PASS PENDING ACTION TO CHAT */}
-                  <ChatInterface 
-                    noteName={note?.name}
-                    noteId={noteId!}
-                    pendingAction={pendingAiAction}
-                    onActionComplete={() => setPendingAiAction(null)}
-                  />
-                </TabsContent>
-
-                <TabsContent value="ai" className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0">
-                  <div className="pb-20">
-                    <StudyMaterials noteId={noteId!} noteQuery={noteQueryResponse} setIsPolling={setIsPolling} />
-                  </div>
-                </TabsContent>
+                </Panel>
+                
+                {/* DRAG HANDLE */}
+                <PanelResizeHandle className="h-4 bg-zinc-100/50 dark:bg-zinc-800/50 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors flex items-center justify-center border-t border-zinc-200/20 cursor-row-resize">
+                   <GripHorizontal className="h-3 w-3 text-zinc-400" />
+                </PanelResizeHandle>
               </>
             )}
-          </Tabs>
+
+            {/* PANEL 2: TABS & CONTENT */}
+            <Panel defaultSize={60} minSize={30} order={2}>
+              <div className="flex flex-col h-full bg-transparent">
+                
+                {/* Tabs Header */}
+                <div className="px-6 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950">
+                  <Tabs value={activeTab} onValueChange={handleTabChange} asChild={false}>
+                    <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 w-full justify-start overflow-x-auto no-scrollbar">
+                      <StudioTabTrigger value="overview" icon={<NotepadText size={14} />} label={t("Overview")} active={activeTab === "overview"} />
+                      <StudioTabTrigger value="transcript" icon={<ScrollText size={14} />} label={t("Transcript")} active={activeTab === "transcript"} />
+                      {!note?.processing_error_message && (
+                        <>
+                          <StudioTabTrigger value="chat" icon={<MessageSquare size={14} />} label={t("AI Chat")} active={activeTab === "chat"} />
+                          <StudioTabTrigger value="ai" icon={<AIIcon size={31} className="w-31 h-31" />} label={t("AI Tools")} active={activeTab === "ai"} />
+                        </>
+                      )}
+                    </TabsList>
+                  </Tabs>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-h-0 overflow-hidden relative">
+                  <Tabs value={activeTab} className="h-full flex flex-col">
+                    {isNoteProcessing ? (
+                      <div className="flex flex-col mt-20 h-full overflow-y-auto">
+                        <div className="mx-auto my-10 flex flex-col items-center">
+                          <AIIcon hideStar className="h-10 w-10 animate-spin-slow " />
+                          <p className="text-xl mt-5" style={{ backgroundImage: "linear-gradient(to right, #71717a, #e4e4e7, #71717a)", backgroundSize: "200% auto", backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent", animation: "gradient-flow 4s linear infinite" }}>Processing</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <TabsContent value="overview" className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0">
+                          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="prose prose-zinc dark:prose-invert max-w-none pb-20">
+                            {note?.processing_error_message ? (
+                              <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 font-medium">{note.processing_error_message}</div>
+                            ) : (
+                              <MarkdownView onExplain={(text) => handleMarkdownAction(text, 'explain')} onQuiz={(text) => handleMarkdownAction(text, 'quiz')}>
+                                {sanitizeMarkdown(note?.md_summary_ai)}
+                              </MarkdownView>
+                            )}
+                          </motion.div>
+                        </TabsContent>
+
+                        <TabsContent value="transcript" className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0">
+                          <div className="bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800 pb-20">
+                            <MarkdownView onExplain={(text) => handleMarkdownAction(text, 'explain')} onQuiz={(text) => handleMarkdownAction(text, 'quiz')}>
+                                {note?.transcript}
+                            </MarkdownView>
+                          </div>
+                        </TabsContent>
+
+                        <TabsContent value="chat" className="h-full flex flex-col mt-0 p-0 focus-visible:ring-0 overflow-hidden">
+                          <ChatInterface 
+                            noteName={note?.name}
+                            noteId={noteId!}
+                            pendingAction={pendingAiAction}
+                            onActionComplete={() => setPendingAiAction(null)}
+                          />
+                        </TabsContent>
+
+                        <TabsContent value="ai" className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0">
+                          <div className="pb-20">
+                            <StudyMaterials noteId={noteId!} noteQuery={noteQueryResponse} setIsPolling={setIsPolling} />
+                          </div>
+                        </TabsContent>
+                      </>
+                    )}
+                  </Tabs>
+                </div>
+
+              </div>
+            </Panel>
+
+          </PanelGroup>
         </div>
       </div>
 
       {previewFile && (
-        <FilePreviewDialog
-          renderAsBlobUrl
-          url={previewFile.url}
-          name={previewFile.name}
-          onClose={() => setPreviewFile(null)}
-        />
+        <FilePreviewDialog renderAsBlobUrl url={previewFile.url} name={previewFile.name} onClose={() => setPreviewFile(null)} />
       )}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        .perspective-1000 { perspective: 1000px; }
-        .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-        .animate-spin-slow { animation: spin 2s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-         @keyframes gradient-flow { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-      `,
-        }}
-      />
+      <style dangerouslySetInnerHTML={{ __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `}} />
     </Layout>
   );
 };
