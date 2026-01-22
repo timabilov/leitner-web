@@ -1,18 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Folder, Loader2, ChevronRight } from "lucide-react";
+import { Folder, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
-import { axiosInstance } from "@/services/auth";
-import { API_BASE_URL } from "@/services/config";
 import { useMemo } from "react";
 import { useFolders } from "@/hooks/use-folders";
 
 export function FoldersPanel() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { setSelectedFolder, folders, selectedFolder } = useUserStore();
+  const { setSelectedFolder, selectedFolder } = useUserStore();
  const { data } = useFolders(); // Uses cached data if available
 
 
@@ -41,7 +38,7 @@ export function FoldersPanel() {
             onClick={() => navigate("/folders")}
             className="text-[10px] font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors cursor-pointer"
           >
-            {t("View all")}{' '} {`(${folders?.length})`}
+            {t("View all")}{' '} {`(${recentFolders?.length})`}
           </button>
         </div>
 

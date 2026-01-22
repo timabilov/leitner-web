@@ -31,6 +31,7 @@ import {
 import { NoteCreationToast } from "./note-creation-toast";
 import { useNavigate } from "react-router";
 import FolderSelect from "@/components/select-folder";
+import { useFolders } from "@/hooks/use-folders";
 
 // Import your custom toast component
 
@@ -189,8 +190,8 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
   const posthog = usePostHog();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { companyId,  selectedFolder, folders } = useUserStore();
-
+  const { companyId,  selectedFolder } = useUserStore();
+  const { data } = useFolders(); // Uses cached data if available
 
   const [prompt, setPrompt] = useState("");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
@@ -518,7 +519,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                 </DropdownMenu>
 
                 <div className="ml-2">
-                  <FolderSelect data={folders || []} /*loading={isLoadingFolders}*/ />
+                  <FolderSelect data={data?.folders || []} /*loading={isLoadingFolders}*/ />
                 </div>
 
                 {recorder.isBlocked && <p className="text-xs text-red-500 ml-2">{t("Mic blocked")}</p>}
