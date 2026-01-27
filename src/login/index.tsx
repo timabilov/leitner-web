@@ -12,13 +12,12 @@ import { useUserStore } from "@/store/userStore";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useMutation } from "@tanstack/react-query";
-import { GoogleLogin, useGoogleLogin } from "@react-oauth/google"; // Changed to Hook for custom button support
+import { GoogleLogin } from "@react-oauth/google"; // Changed to Hook for custom button support
 import * as Sentry from "@sentry/react"; // 1. Import Sentry
 import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
 import { usePostHog } from "posthog-js/react";
 import OnboardingModal from "@/onboarding";
-import { AiOrbitAnimation } from "@/note-detail/ai-orbit-animation";
 
 // const dummy = {"idToken":"eyJhbGciOiJSUzI1NiIsImtpZCI6IjZhOTA2ZWMxMTlkN2JhNDZhNmE0M2VmMWVhODQyZTM0YThlZTA4YjQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyNDE2ODczNTI5ODUtdW1iMzVlZGNwMTAxMXI2MXRudmVrY2g1c3V1dTZsZGsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyNDE2ODczNTI5ODUtdW1iMzVlZGNwMTAxMXI2MXRudmVrY2g1c3V1dTZsZGsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTQ1NjU1NDQ5MzM1MTY0MTMwNDUiLCJlbWFpbCI6InRhZ2hpemFkZWhrYW1yYW45MkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmJmIjoxNzY2NDkxNTczLCJuYW1lIjoiS2FtcmFuIFRhZ2hpemFkZWgiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSXdERzhUQlA5elFQMVlLM0h0bGNzdzhMZHJ4TlJacG1NblBHUk5ILVBoM1JzRUJiRT1zOTYtYyIsImdpdmVuX25hbWUiOiJLYW1yYW4iLCJmYW1pbHlfbmFtZSI6IlRhZ2hpemFkZWgiLCJpYXQiOjE3NjY0OTE4NzMsImV4cCI6MTc2NjQ5NTQ3MywianRpIjoiOWYxNjVmMDk5ZDRmYjljODJhM2IwNjhhODcxMjg2YzNmMGQ1ZmYzOSJ9.LshYlaNJ1zb_sycbgT4IlfQCVIXceOiG7_sgRtzuZi_tXxDIyy3JIT1pL6Kqh_JeKOnqTiuEU_P-fFdb1Ozc6sLa6IZxOqg98jO4a_sQXejUGmhTRTuNhbpm5B-r4FMpHE2LaRmLD_KQEWMOUU2XDUr52gCegvCSykWB2WIpAn_7Wz7hQxTinaBcdVpvMcpX8dzcoWiqfXyoWsHXuFiWHMNPAyjnxOAIQPsI0GOJ0QwqkynRM7FEo7RwOIZsgqPqQcfZQQOqAsFVMkoh9wLb_s2AwELCtQHRzsGn0AODAWzgmwbersWv-baXZldjD5DE3WQuNjIqBDGyaUppbgWDYQ","user":{"id":"114565544933516413045","name":"Kamran Taghizadeh","email":"taghizadehkamran92@gmail.com","photo":"https://lh3.googleusercontent.com/a/ACg8ocIwDG8TBP9zQP1YK3Htlcsw8LdrxNRZpmMnPGRNH-Ph3RsEBbE=s96-c"},"platform":"web"}
 
@@ -533,7 +532,7 @@ const LoginBase = () => {
             {/* <AiOrbitAnimation /> */}
           </div>
           <h3 className="text-4xl font-bold  text-slate-700  tracking-tighter  dark:text-zinc-50">
-            Leitner AI
+            Bycat AI
           </h3>
         </div>
 
@@ -576,29 +575,29 @@ const LoginBase = () => {
                 <GoogleLogin shape="square" onSuccess={signIn} />
               </div>
             </div>
-            Continue with Google
+            {t("Continue with Google")}
           </button>
 
           <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
             <AppleLogo className="h-7 w-7 text-foreground" />
-            Continue with Apple
+            {t("Continue with Apple")}
           </button>
         </div>
 
         <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
-          By signing in, you agree to our{" "}
+          {t("By signing in, you agree to our")}{" "}
           <Link
             to="/terms"
             className="underline decoration-slate-300 underline-offset-2 text-slate-900"
           >
-            Term of Use
+            {t("Term of Use")}
           </Link>{" "}
-          and{" "}
+          {t("and")}{" "}
           <Link
             to="/privacy"
             className="underline decoration-slate-300 underline-offset-2 text-slate-900"
           >
-            Privacy Policy
+            {t("Privacy Policy")}
           </Link>
         </p>
       </main>
