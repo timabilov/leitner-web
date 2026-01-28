@@ -40,13 +40,13 @@ const Alerts = ({ children }: any) => {
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col ">
           <div className=" w-full">
-            <div className="col-span-12 px-4">
+            <div className="col-span-12 mb-8">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
                   <span className="p-2  rounded-xl">
                     <Bell className="w-6 h-6" />
                   </span>
-                  <span> {t("Library")}</span>
+                  <span> {t("Alerts")}</span>
                 </h1>
                 <p className="text-muted-foreground">
                   {t("Organize your learning materials into collections.")}
@@ -81,7 +81,7 @@ const Alerts = ({ children }: any) => {
           >
             <div
               className={
-                "w-full p-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3"
+                "w-full py-4  grid gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3"
               }
             >
               {(notesQuery?.data?.data?.notes || []).map((item) => (

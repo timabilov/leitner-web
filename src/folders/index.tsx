@@ -26,7 +26,6 @@ import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 
 // --- Components ---
-import Layout from "@/components/layout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,7 +42,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
 import folderAnimation from "./../notes/assets/folder.json";
 import { useFolders } from "@/hooks/use-folders";
 
@@ -107,7 +105,7 @@ export default function Folders() {
 
   return (
     <>
-      <div className="min-h-screen bg-transparent px-6 py-8 w-full max-w-7xl mx-auto">
+      <div className="min-h-screen bg-transparent w-full max-w-7xl mx-auto">
         {/* --- HEADER --- */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -160,11 +158,9 @@ export default function Folders() {
             </Button>
           </div>
         ) : (
-          <motion.div
-            layout 
+          <div
             className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           >
-            <AnimatePresence mode="popLayout">
               {/* All Folders Card */}
               {!searchQuery && (
                 <FolderCard
@@ -195,15 +191,13 @@ export default function Folders() {
                   skipAnimation={hasSearched}
                 />
               ))}
-            </AnimatePresence>
-          </motion.div>
+          </div>
         )}
       </div>
 
       {/* --- CREATE DIALOG --- */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-md">
-           {/* ... existing dialog code ... */}
            <DialogHeader>
             <DialogTitle>{t("Create New Folder")}</DialogTitle>
             <DialogDescription>
@@ -250,33 +244,21 @@ const FolderCard = ({ folder, index, onClick, isSelected, isSpecial, skipAnimati
   const { t } = useTranslation();
 
   return (
-    <motion.div
-      layout // Added layout here so cards slide smoothly when others are filtered
-      // 4. Conditionally set initial/animate based on skipAnimation prop
-      initial={skipAnimation ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={
-        skipAnimation 
-          ? { duration: 0 } // Instant appearance during search
-          : { delay: index * 0.05 } // Staggered delay on initial load
-      }
+    <div
       onClick={onClick}
       className={cn(
         "group relative rounded-2xl p-5 cursor-pointer transition-all duration-300 overflow-hidden border",
-        "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 hover:-translate-y-1",
+        "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
         isSelected &&
           "border-[#fe5e5f]/30 ring-1 ring-[#fe5e5f] dark:bg-[#fe5e5f]/10 dark:shadow-none"
       )}
     >
       {isSelected && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
+        <div
           className="absolute top-4 right-4 text-[#fe5e5f] z-20"
         >
           <CheckCircle2 className="w-5 h-5 fill-[#fe5e5f] text-white dark:text-zinc-900" />
-        </motion.div>
+        </div>
       )}
 
       {/* Decorative Blob */}
@@ -349,6 +331,6 @@ const FolderCard = ({ folder, index, onClick, isSelected, isSpecial, skipAnimati
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

@@ -12,6 +12,7 @@ import {
 import { getTypeIcon, getNoteLanguageIso } from "./note-utils";
 import ProcessingNoteCard from './processing-note-card';
 import { GradientProgress } from '@/components/gradient-progress';
+import { useFolders } from '@/hooks/use-folders';
 
 // --- HELPER: Track Previous State ---
 function usePrevious(value) {
@@ -58,14 +59,14 @@ const AiParticleBurst = () => {
 };
 
 export const NoteCard = ({ item, view }) => {
-  const { folders } = useUserStore();
+  const { data = [] } = useFolders(); // Uses cached data if available
   const navigate = useNavigate();
   const { t } = useTranslation();
 
   const isProcessing = item?.status !== "failed" && item?.status !== "transcribed" && item?.status !== "draft";
   const hasError = !!item?.processing_error_message;
   const progress = item?.note_progress || 0;
-  const folderName = item.folder_id ? folders?.find(f => f.id === item.folder_id)?.name : t("All notes");
+  const folderName = item.folder_id ? data?.folders?.find(f => f.id === item.folder_id)?.name : t("All notes");
 
   // Track state transition
   const wasProcessing = usePrevious(isProcessing);

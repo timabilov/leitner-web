@@ -120,7 +120,7 @@ const LiveActivityFeed2 = () => {
   }, []);
 
   return (
-    <div className="absolute top-6 right-6 z-50 pointer-events-none w-auto hidden md:block">
+    <div className="absolute top-2 right-2 z-50 pointer-events-none w-auto hidden md:block">
       <AnimatePresence mode="wait">
         {currentActivity && (
           <SystemMessagePill item={currentActivity} />

@@ -1,17 +1,44 @@
 import { useEffect, useState } from "react";
-import { Check, Loader2, Star, Wallet } from "lucide-react";
+import { Check, Loader2, Star, ShieldCheck, Zap, Users, Globe, Wallet } from "lucide-react";
 import { initializePaddle } from "@paddle/paddle-js";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import * as Sentry from "@sentry/react";
 import { motion } from "framer-motion";
-import Layout from "@/components/layout";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
 import { PRICING_TIERS } from "./pricing-data";
 import LiveActivityFeed2 from "./live-activity-feed2";
 import CountdownTimer from "@/components/countdown-timer";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
+import { useSearchParams } from "react-router-dom";
+
+// --- COMPONENT: Trust & Organic Data (Bottom Section) ---
+const TrustStats = () => {
+  const { t } = useTranslation();
+  
+  const stats = [
+    { icon: ShieldCheck, text: "Bank-level security", sub: "256-bit encryption" },
+    { icon: Zap, text: "Cancel anytime", sub: "No hidden fees" },
+    { icon: Globe, text: "Global community", sub: "Learners from 120+ countries" },
+  ];
+
+  return (
+    <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+      {stats.map((stat, i) => (
+        <div key={i} className="flex items-center gap-3 bg-zinc-100/50 p-3 rounded-xl border border-border/30 backdrop-blur-sm">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-600 dark:text-zinc-300 group-hover:scale-105 transition-transform duration-300">
+            <stat.icon className="h-5 w-5" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-foreground">{t(stat.text)}</span>
+            <span className="text-[11px] text-muted-foreground">{t(stat.sub)}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 // --- COMPONENT: Social Proof (Centered Bottom) ---
 const SocialProof = () => (
@@ -209,6 +236,9 @@ export default function PricingSection() {
   const [selectedId, setSelectedId] = useState<string>("pro_monthly");
   const [prices, setPrices] = useState<Record<string, string>>({});
  const { targetDate } = useOfferCountdown();
+ const [searchParams] = useSearchParams();
+ const isPromoLink = searchParams.get("sale") === "true";
+
 
   useEffect(() => {
     const init = async () => {
@@ -309,7 +339,7 @@ export default function PricingSection() {
 
       <div className="relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground">
          <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 w-full">
-          <div className="flex justify-start w-full flex-col  px-6 pt-8 ">
+          <div className="flex justify-start w-full flex-col ">
 
               <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
                 <span className="p-2 rounded-xl">
@@ -325,27 +355,31 @@ export default function PricingSection() {
           </div>
         </div>
         {/* --- HEADER --- */}
-        <div className="relative w-full px-6 pb-6 flex flex-col items-center text-center z-10">
+        <div className="relative w-full px-6  flex flex-col items-center text-center z-10">
           {/* --- SPINNING BORDER OFFER --- */}
-          <div className="mx-auto flex justify-center mt-2 mb-6">
-            <div className="group relative inline-flex overflow-hidden rounded-xl p-[2px] shadow-lg shadow-pink-500/10">
-              <span className="relative inline-flex h-full w-full items-center justify-center rounded-xl bg-background px-4 py-2 text-sm font-medium text-foreground backdrop-blur-3xl">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1.5 rounded-full bg-pink-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pink-500 ring-1 ring-inset ring-pink-500/20">
-                    🔥 Sale
+          {
+            isPromoLink && (
+              <div className="mx-auto flex justify-center mt-2">
+                <div className="group relative inline-flex overflow-hidden rounded-xl p-[2px] shadow-lg shadow-pink-500/10">
+                  <span className="relative inline-flex h-full w-full items-center justify-center rounded-xl bg-background px-4 py-2 text-sm font-medium text-foreground backdrop-blur-3xl">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1.5 rounded-full bg-pink-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pink-500 ring-1 ring-inset ring-pink-500/20">
+                        🔥 Sale
+                      </span>
+                      <span className="font-bold text-xs sm:text-sm">Claim offer</span>
+                      <span className="h-4 w-px bg-border/60 mx-1" />
+                      {
+                        targetDate &&  <CountdownTimer 
+                          targetDate={targetDate} 
+                          size="xs" 
+                        /> 
+                      }
+                    </div>
                   </span>
-                  <span className="font-bold text-xs sm:text-sm">Claim offer</span>
-                  <span className="h-4 w-px bg-border/60 mx-1" />
-                  {
-                    targetDate &&  <CountdownTimer 
-                      targetDate={targetDate} 
-                      size="xs" 
-                    /> 
-                  }
                 </div>
-              </span>
-            </div>
-          </div>
+              </div>
+            )
+          }
           <SocialProof />
         </div>
         {/* --- PRICING GRID --- */}
@@ -362,11 +396,12 @@ export default function PricingSection() {
             />
           ))}
         </div>
-
-        {/* --- BOTTOM SECTION: SOCIAL PROOF --- */}
-        {/* <div className="w-full flex justify-center mt-8 z-10 px-4">
-          <SocialProof />
-        </div> */}
+           <div className="w-full max-w-4xl px-4 mt-10 flex flex-col gap-8 z-10">
+          
+          {/* 1. Trust Indicators (Organic Data) */}
+          <TrustStats />
+          </div>
+  
 
       </div>
       </>

@@ -4,7 +4,7 @@ import { AppSidebar } from "./app-sidebar";
 import Header from "./header";
 import { SidebarInset, SidebarProvider } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
-import { Outlet } from "react-router";
+import { Outlet, useLocation } from "react-router";
 
 // Define outside component to prevent re-renders or wrap in React.memo
 const ArchitecturalBackground = () => (
@@ -45,8 +45,14 @@ const ArchitecturalBackground = () => (
   </div>
 );
 
-const Layout = ({  title, containerRef, noGap, processingNotes, onProcessingClick }) => {
-  const { photo, fullName, email } = useUserStore();
+const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) => {
+  const { photo, fullName, email,
+     processingNotesCount, triggerFocusNotes 
+   } = useUserStore();
+  // 2. Handle "noGap" logic dynamically based on URL
+  const location = useLocation();
+  // Add paths here that need full width/no padding
+  const noGap = location.pathname.includes("/notes/"); 
 
   return (
     <SidebarProvider
@@ -57,13 +63,13 @@ const Layout = ({  title, containerRef, noGap, processingNotes, onProcessingClic
       <AppSidebar photo={photo} fullName={fullName} email={email} />
       
       <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
-        <Header processingNotes={processingNotes} onProcessingClick={onProcessingClick} />
+        <Header processingNotes={processingNotesCount} onProcessingClick={triggerFocusNotes} />
         
         <main 
           ref={containerRef}
           className={cn(
             "flex-1 flex flex-col relative overflow-y-auto isolate w-full",
-            noGap ? "p-0" : "p-4 sm:p-6 md:p-8 lg:p-10"
+            noGap ? "p-0" : "p-4 sm:p-6"
           )}
         >
           <ArchitecturalBackground />

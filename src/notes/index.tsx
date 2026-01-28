@@ -2,7 +2,7 @@ import { useUserStore } from "@/store/userStore";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Folder, Folders, Loader2Icon, Search, SearchX } from "lucide-react";
 import { Grid3X3, List } from "lucide-react";
@@ -43,7 +43,10 @@ const Notes = ({ children }: any) => {
   const posthog = usePostHog();
   // 2. Create the Ref
   const notesListRef = useRef<HTMLDivElement>(null);
-  const { companyId, isLoggedIn, fullName, email, userId, selectedFolder } =
+  const { companyId, isLoggedIn, fullName, email, userId, selectedFolder, 
+     setProcessingNotesCount, // Use this setter
+    focusNotesTrigger        // Listen to this
+   } =
     useUserStore();
 
   const [viewMode, setViewMode] = useState<string>("grid");
@@ -78,21 +81,21 @@ const Notes = ({ children }: any) => {
     },
     enabled: !!userId || isPolling,
     refetchInterval: (query) => {
-      const notes = query.state?.data?.data.notes;
-      if (!notes || !Array.isArray(notes) || notes.length === 0) {
-        return false;
-      }
-      const loadingNotes = notes.filter(isNoteInLoadingState) || []; // TODO fix later in be, some notes never change status
-      const loadingNotesCount = loadingNotes?.length;
-      if (loadingNotesCount > 0) {
-        setProcessingNotes(loadingNotesCount);
-        setProcessingNoteIds(loadingNotes);
-        return 3000; // Poll every 5 seconds if there are loading notes
-      } else {
-        setProcessingNotes(0);
-        setIsPolling(false);
-        return false;
-      }
+      const notes = query.state?.data?.data?.notes;
+      if (!notes || !Array.isArray(notes)) return false;
+
+      // Just check if we need to poll, DO NOT set state here
+      const hasLoadingNotes = notes.some(isNoteInLoadingState);
+      
+      return hasLoadingNotes ? 3000 : false;
+    },
+    throwOnError: (error) => {
+      console.error("Get notes error:", error);
+      Sentry.captureException(error, {
+        tags: { query: "fetch_all_notes" },
+        extra: { companyId, email, userId },
+      });
+      return false;
     },
     throwOnError: (error) => {
       console.error("Get notes error:", error);
@@ -104,6 +107,26 @@ const Notes = ({ children }: any) => {
       return false;
     },
   });
+
+  // 2. Add a useEffect to handle the Side Effects (Updating Store)
+  useEffect(() => {
+    const notes = notesQuery.data?.data?.notes;
+    
+    if (notes && Array.isArray(notes)) {
+      const loadingNotes = notes.filter(isNoteInLoadingState);
+      const count = loadingNotes.length;
+
+      // Only update if the count implies we have work to do, 
+      // or if we need to clear a previous count.
+      // (React state setters are stable, so adding them to deps is safe)
+      setProcessingNotesCount(count);
+      setProcessingNoteIds(loadingNotes);
+      
+      if (count === 0) {
+        setIsPolling(false);
+      }
+    }
+  }, [notesQuery.data, setProcessingNotesCount, setProcessingNoteIds]);
 
   const searchNotesQuery = useQuery({
     queryKey: ["searchNotes", searchQuery],
@@ -212,7 +235,7 @@ const Notes = ({ children }: any) => {
 
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className=" w-full max-w-2xl m-auto mt-8">
+          <div className=" w-full max-w-2xl mx-auto">
             <Alert className="flex items-center justify-between border-none bg-transparent">
               <Avatar className="h-18 w-18 rounded-full  flex items-center mr-2 animate-slow-bounce">
                 <CatPenIcon size={58} />
@@ -235,7 +258,7 @@ const Notes = ({ children }: any) => {
               component={
                 <Card className="sm:col-span-full md:max-w-[330px] md:col-span-1 md:justify-self-end bg-white z-40 hover:shadow-lg transition-all duration-300 hover:border-black w-full cursor-pointer relative overflow-hidden group">
                   <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-red-500/5 blur-3xl group-hover:bg-red-500/10 transition-colors" />
-                  <CardHeader className="p-4 sm:p-6 pb-4">
+                  <CardHeader className="">
                     <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/50 p-2 shadow-inner transition-transform duration-500 group-hover:scale-110">
                       <Lottie
                         animationData={youtubeAnimation}
@@ -259,7 +282,7 @@ const Notes = ({ children }: any) => {
               className="sm:col-span-full md:max-w-[330px] md:col-span-1 md:justify-self-start bg-white z-40 hover:shadow-lg transition-all duration-300 hover:border-black w-full cursor-pointer relative overflow-hidden group"
             >
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/5 blur-3xl group-hover:bg-amber-500/10 transition-colors" />
-              <CardHeader className="p-4 sm:p-6 pb-4">
+              <CardHeader className="">
                 <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/50 shadow-inner transition-transform duration-500 group-hover:scale-110">
                   <Lottie
                     animationData={folderAnimation}

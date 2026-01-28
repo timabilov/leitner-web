@@ -27,6 +27,10 @@ interface UserStore {
   fullAdminAccess?: boolean; // Optional parameter for full admin access
   countryCode?: string;
   totalNotesCount?: number | 0;
+  focusNotesTrigger: number; 
+  triggerFocusNotes: () => void;
+  processingNotesCount: number;
+  setProcessingNotesCount: (count: number) => void;
   isLoggedIn: () => boolean,
   setEmail: (email: string) => void;
   setFullName: (name: string) => void;
@@ -81,6 +85,10 @@ export const useUserStore = create<UserStore>()(
       companyTrialDays: undefined,
       companyName: undefined,
       subscriptionLastCheckedDate: undefined,
+      processingNotesCount: 0,
+      setProcessingNotesCount: (count) => set({ processingNotesCount: count }),
+      focusNotesTrigger: 0,
+      triggerFocusNotes: () => set((state) => ({ focusNotesTrigger: state.focusNotesTrigger + 1 })),
       isLoggedIn: () => get().userId !== undefined && get().userId !== '',
       setCountryCode: (countryCode) => set({countryCode}),
       setEmail: (email) => set({ email }),
