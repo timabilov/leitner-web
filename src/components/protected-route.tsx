@@ -1,31 +1,34 @@
-import { Navigate, Outlet } from 'react-router-dom'; // Note: 'react-router' usually implies 'react-router-dom'
-import { useUserStore } from '../store/userStore';
+import { Navigate, Outlet } from "react-router-dom"; // Note: 'react-router' usually implies 'react-router-dom'
+import { useUserStore } from "../store/userStore";
 
 export const ProtectedRoute = () => {
   const { userId, accessToken } = useUserStore();
-  // If we have an access token but no userId yet, 
+  // If we have an access token but no userId yet,
   // it might be mid-update. We can show a simple loader.
   if (!userId && accessToken) {
-    return <div className="h-screen w-full flex items-center justify-center bg-white">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
-    </div>;
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900"></div>
+      </div>
+    );
   }
 
   if (!userId) {
     return <Navigate to="/" replace />;
   }
 
-  return <Outlet />;
+  return (
+      <Outlet />
+  );
 };
 
-
 export const PublicRoute = () => {
-    const { userId } = useUserStore();
-  
-    // If already logged in, redirect to Dashboard/Notes
-    if (userId) {
-      return <Navigate to="/notes" replace />;
-    }
-  
-    return <Outlet />;
+  const { userId } = useUserStore();
+
+  // If already logged in, redirect to Dashboard/Notes
+  if (userId) {
+    return <Navigate to="/notes" replace />;
+  }
+
+  return <Outlet />;
 };

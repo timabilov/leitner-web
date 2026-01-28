@@ -30,21 +30,25 @@ import { motion } from "framer-motion";
 import CatLogo from "@/note-detail/assets/cat-logo";
 import { FoldersPanel } from "./folders-panel";
 import AIIcon from "@/note-detail/assets/ai-icon";
+import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 
 // --- UPDATED SIDEBAR SALE CARD ---
 const SidebarSaleCard = () => {
   const navigate = useNavigate();
   const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
+  const { targetDate } = useOfferCountdown(); 
 
-  useEffect(() => {
+useEffect(() => {
     setMounted(true);
-    const targetDate = new Date("2026-01-30T23:59:59").getTime();
-    const interval = setInterval(() => {
+    if (!targetDate) return;
+
+    const calculateTime = () => {
+      const formattedTargetDate = new Date(targetDate).getTime();
       const now = new Date().getTime();
-      const distance = targetDate - now;
+      const distance = formattedTargetDate - now;
+
       if (distance < 0) {
-        clearInterval(interval);
         setTimeLeft({ d: 0, h: 0, m: 0, s: 0 });
       } else {
         setTimeLeft({
@@ -54,9 +58,15 @@ const SidebarSaleCard = () => {
           s: Math.floor((distance % (1000 * 60)) / 1000),
         });
       }
-    }, 1000);
+    };
+
+    calculateTime(); // Initial calc
+    const interval = setInterval(calculateTime, 1000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [targetDate]);
+
+  if (!targetDate) return null;
 
   return (
     <>
@@ -99,20 +109,8 @@ const SidebarSaleCard = () => {
       `}</style>
 
       <div onClick={() => navigate('/price-page')} className="group-data-[collapsible=icon]:hidden cursor-pointer pt-[2px] pb-[2px]">
-        
-        {/* 
-            OUTER WRAPPER: Handles the Pulse Animation
-            Moved 'animate-pulse-card' here so it doesn't conflict with gradient animation inside.
-        */}
         <div className="group relative w-full overflow-hidden rounded-lg box-border animate-pulse-card">
           
-          {/* BORDER BEAM */}
-          {/* <span 
-            className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite]"
-            style={{
-              background: "conic-gradient(from 90deg at 50% 50%, #0000 0%, #0000 50%, #fb7185 100%)"
-            }}
-          /> */}
 
           {/* 
               INNER CARD: Handles the Gradient Flow Animation 

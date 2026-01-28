@@ -9,13 +9,6 @@ const MobileApp = () => {
     "https://apps.apple.com/us/app/leitner-ai-note-quiz-alerts/id6747087851";
 
   return (
-    <Layout
-      title={t("Mobile App")}
-      containerRef={null}
-      noGap={false}
-      processingNotes={null}
-      onProcessingClick={null}
-    >
       <div className="flex flex-1 flex-col items-center justify-center p-8">
         <div className="w-full max-w-2xl">
           {/* Header Section */}
@@ -98,7 +91,6 @@ const MobileApp = () => {
           </div>
         </div>
       </div>
-    </Layout>
   );
 };
 

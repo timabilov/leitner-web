@@ -302,7 +302,7 @@ const NoteDetailBase = () => {
   const hasMedia = attachmentCount > 0 || note?.youtube_url;
 
   return (
-    <Layout title={note?.name} noGap>
+      <>
       <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden bg-transparent">
         
         {/* --- FIXED HEADER --- */}
@@ -541,7 +541,7 @@ const NoteDetailBase = () => {
         <FilePreviewDialog renderAsBlobUrl url={previewFile.url} name={previewFile.name} onClose={() => setPreviewFile(null)} />
       )}
       <style dangerouslySetInnerHTML={{ __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `}} />
-    </Layout>
+      </>
   );
 };
 

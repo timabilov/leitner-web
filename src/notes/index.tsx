@@ -171,14 +171,7 @@ const Notes = ({ children }: any) => {
     accept: { "image/*": [], "application/pdf": [], "audio/*": [] },
   });
 
-  return (
-    <Layout
-      search={debouncedSearch}
-      searchValue={searchQuery}
-      isSearching={searchNotesQuery.isPending}
-      processingNotes={processingNotes}
-      onProcessingClick={scrollToNotes}
-    >
+  return (<>
       <style>
         {`
           @keyframes gradient-flow {
@@ -440,7 +433,7 @@ const Notes = ({ children }: any) => {
           </div>
         </div>
       </div>
-    </Layout>
+  </>
   );
 };
 

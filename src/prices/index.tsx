@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Loader2, Star } from "lucide-react";
+import { Check, Loader2, Star, Wallet } from "lucide-react";
 import { initializePaddle } from "@paddle/paddle-js";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { useUserStore } from "@/store/userStore";
 import { PRICING_TIERS } from "./pricing-data";
 import LiveActivityFeed2 from "./live-activity-feed2";
 import CountdownTimer from "@/components/countdown-timer";
+import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 
 // --- COMPONENT: Social Proof (Centered Bottom) ---
 const SocialProof = () => (
@@ -207,6 +208,7 @@ export default function PricingSection() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>("pro_monthly");
   const [prices, setPrices] = useState<Record<string, string>>({});
+ const { targetDate } = useOfferCountdown();
 
   useEffect(() => {
     const init = async () => {
@@ -282,7 +284,7 @@ export default function PricingSection() {
   };
 
   return (
-    <Layout noGap>
+    <>
       <style>
         {`
           @keyframes gradient-flow {
@@ -306,43 +308,24 @@ export default function PricingSection() {
       <LiveActivityFeed2 />
 
       <div className="relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground">
-        
-        {/* --- HEADER --- */}
-        <div className="relative w-full px-6 pt-12 pb-6 flex flex-col items-center text-center z-10">
-          <div className="relative w-full max-w-5xl flex flex-col md:flex-row items-center justify-center mb-3">
-            {/* <h1 className="max-w-4xl text-3xl md:text-5xl font-bold tracking-tight z-10">
-              <span className="relative inline-block">
-                <span className="relative z-10 text-transparent bg-clip-text bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700">
-                  {t("Select plan")}
-                </span>
-                <svg
-                  className="absolute -bottom-2 left-0 -z-10 w-full"
-                  height="12"
-                  viewBox="0 0 200 9"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  preserveAspectRatio="none"
-                >
-                  <defs>
-                    <linearGradient id="underline-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#4338ca" />
-                      <stop offset="50%" stopColor="#7e22ce" />
-                      <stop offset="100%" stopColor="#be185d" />
-                    </linearGradient>
-                  </defs>
-                  <path
-                    d="M2.00025 6.99997C25.3336 4.00003 172.999 -1.49997 197.999 2.00003"
-                    stroke="url(#underline-gradient)"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    className="animate-draw"
-                    pathLength="1"
-                  />
-                </svg>
-              </span>
-            </h1> */}
-          </div>
+         <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 w-full">
+          <div className="flex justify-start w-full flex-col  px-6 pt-8 ">
 
+              <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+                <span className="p-2 rounded-xl">
+                  <Wallet className="text-zinc-800 dark:text-zinc-100" />
+                </span>
+                <span>{t("Select plan")}</span>
+              </h1>
+              <p className="text-muted-foreground">
+                {t("Capture everything in one note! Seamlessly combine PDFs, voice recordings, multiple images, and text.")}
+              </p>
+
+
+          </div>
+        </div>
+        {/* --- HEADER --- */}
+        <div className="relative w-full px-6 pb-6 flex flex-col items-center text-center z-10">
           {/* --- SPINNING BORDER OFFER --- */}
           <div className="mx-auto flex justify-center mt-2 mb-6">
             <div className="group relative inline-flex overflow-hidden rounded-xl p-[2px] shadow-lg shadow-pink-500/10">
@@ -353,19 +336,19 @@ export default function PricingSection() {
                   </span>
                   <span className="font-bold text-xs sm:text-sm">Claim offer</span>
                   <span className="h-4 w-px bg-border/60 mx-1" />
-                  <CountdownTimer targetDate={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)} size="xs" />
+                  {
+                    targetDate &&  <CountdownTimer 
+                      targetDate={targetDate} 
+                      size="xs" 
+                    /> 
+                  }
                 </div>
               </span>
             </div>
           </div>
-             <SocialProof />
-          {/* <p className="max-w-2xl text-sm sm:text-base text-muted-foreground leading-relaxed px-4">
-            {t("Capture everything in one note! Seamlessly combine PDFs, voice recordings, multiple images, and text.")}
-          </p> */}
+          <SocialProof />
         </div>
-
         {/* --- PRICING GRID --- */}
-        {/* CHANGED: Tighter max-w (4xl) and gap (gap-4) for a compact layout */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3 w-full max-w-4xl px-4 z-20 justify-items-center items-stretch">
           {PRICING_TIERS.map((tier) => (
             <PricingCard
@@ -386,6 +369,6 @@ export default function PricingSection() {
         </div> */}
 
       </div>
-    </Layout>
+      </>
   );
 }

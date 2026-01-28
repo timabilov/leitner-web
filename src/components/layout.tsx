@@ -4,6 +4,7 @@ import { AppSidebar } from "./app-sidebar";
 import Header from "./header";
 import { SidebarInset, SidebarProvider } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
+import { Outlet } from "react-router";
 
 // Define outside component to prevent re-renders or wrap in React.memo
 const ArchitecturalBackground = () => (
@@ -44,7 +45,7 @@ const ArchitecturalBackground = () => (
   </div>
 );
 
-const Layout = ({ children, title, containerRef, noGap, processingNotes, onProcessingClick }) => {
+const Layout = ({  title, containerRef, noGap, processingNotes, onProcessingClick }) => {
   const { photo, fullName, email } = useUserStore();
 
   return (
@@ -67,7 +68,7 @@ const Layout = ({ children, title, containerRef, noGap, processingNotes, onProce
         >
           <ArchitecturalBackground />
           <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-1 flex-col">
-            {children}
+            <Outlet />
           </div>
         </main>
       </SidebarInset>

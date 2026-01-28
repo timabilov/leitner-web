@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { Bell, CircleAlert } from "lucide-react";
-import Layout from "@/components/layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
@@ -38,7 +37,6 @@ const Alerts = ({ children }: any) => {
   });
 
   return (
-    <Layout>
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col ">
           <div className=" w-full">
@@ -93,7 +91,6 @@ const Alerts = ({ children }: any) => {
           </div>
         </div>
       </div>
-    </Layout>
   );
 };
 

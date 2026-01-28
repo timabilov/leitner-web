@@ -12,6 +12,7 @@ import { ProtectedRoute, PublicRoute } from "./components/protected-route";
 import Alerts from "./alerts";
 import Folders from "./folders";
 import MobileApp from "./mobileapp";
+import Layout from "./components/layout";
 
 
 
@@ -35,12 +36,14 @@ function App() {
 
               {/* --- PROTECTED ROUTES (Only accessible if logged in) --- */}
               <Route element={<ProtectedRoute />}>
-                <Route path="/notes" element={<Notes />} />
-                <Route path="/notes/:noteId" element={<NoteDetail />} />
-                <Route path="/price-page" element={<PricingPage />} />
-                <Route path="/alerts" element={<Alerts />} />
-                 <Route path="/folders" element={<Folders />} />
-                <Route path="/app" element={<MobileApp />} />
+               <Route element={<Layout />}>
+                  <Route path="/notes" element={<Notes />} />
+                  <Route path="/notes/:noteId" element={<NoteDetail />} />
+                  <Route path="/price-page" element={<PricingPage />} />
+                  <Route path="/alerts" element={<Alerts />} />
+                  <Route path="/folders" element={<Folders />} />
+                  <Route path="/app" element={<MobileApp />} />
+               </Route>
               </Route>
 
               {/* --- CATCH ALL (404) --- */}

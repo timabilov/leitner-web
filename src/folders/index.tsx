@@ -106,7 +106,7 @@ export default function Folders() {
   };
 
   return (
-    <Layout title={t("Folders")} noGap>
+    <>
       <div className="min-h-screen bg-transparent px-6 py-8 w-full max-w-7xl mx-auto">
         {/* --- HEADER --- */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -241,7 +241,7 @@ export default function Folders() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </Layout>
+    </>
   );
 }
 
