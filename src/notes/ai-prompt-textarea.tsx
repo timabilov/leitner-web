@@ -256,7 +256,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
     console.error(error);
     
     const isPlanLimit = error?.status === 403;
-    const msg = isPlanLimit ? "Please upgrade your subscription plan" : "Failed to prepare note";
+    const msg = isPlanLimit ? t("Please upgrade your subscription plan") : t("Failed to prepare note");
 
     updateToast(msg, 0, "error");
     
@@ -343,10 +343,10 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
           
           markUploadAsFinishedMutation.mutate(noteId!);
       } catch (e) {
-          handleError(e, "Upload failed");
+          handleError(e, t("Upload failed"));
       }
     },
-    onError: (e: any) => handleError(e, "Upload link generation")
+    onError: (e: any) => handleError(e, t("Upload link generation"))
   });
 
   const markUploadAsFinishedMutation = useMutation({
@@ -357,7 +357,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
     onSuccess: (_, noteId) => {
       stopProgress();
       // Show Success State with Lottie
-      updateToast("Please wait a bit...", 100, "success", noteId );
+      updateToast(t("Please wait a bit..."), 100, "success", noteId );
       refetch();
       // Invalidate folders query to update folder counts
       queryClient.invalidateQueries({ queryKey: ["folders", companyId] });
@@ -369,7 +369,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
           flowContext.current = { toastId: null, progressInterval: null, zipData: null, noteId: null, name: null };
       }, 1000);
     },
-    onError: (e: any) => handleError(e, "Finalization")
+    onError: (e: any) => handleError(e, t("Finalization"))
   });
 
   // --- TRIGGER ---
@@ -391,7 +391,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
       
       stopProgress();
       
-      if (!zip) throw new Error("Compression failed");
+      if (!zip) throw new Error(t("Compression failed"));
       
       flowContext.current.zipData = zip;
       
@@ -407,7 +407,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
       });
       
     } catch (e) { 
-        handleError(e, "Preparation"); 
+        handleError(e, t("Preparation")); 
     }
   };
 
@@ -519,7 +519,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                 </DropdownMenu>
 
                 <div className="ml-2">
-                  <FolderSelect data={data?.folders || []} /*loading={isLoadingFolders}*/ />
+                  <FolderSelect data={data?.folders || []} />
                 </div>
 
                 {recorder.isBlocked && <p className="text-xs text-red-500 ml-2">{t("Mic blocked")}</p>}

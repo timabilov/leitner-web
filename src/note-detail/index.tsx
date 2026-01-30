@@ -17,9 +17,6 @@ import {
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
-
-// --- Components ---
-import Layout from "@/components/layout";
 import MarkdownView from "@/components/markdown-view";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -48,7 +45,6 @@ import {
   Pencil,
   CornerDownLeft,
   Loader2,
-  FileText,
   GripHorizontal, 
 } from "lucide-react";
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
@@ -81,7 +77,7 @@ const MetaItem = ({ icon, label, value, onClick, active, iconEnd }: any) => (
   </div>
 );
 
-const StudioTabTrigger = ({ value, icon, label, active }: any) => (
+const StudioTabTrigger = ({ value, icon, label }: any) => (
   <TabsTrigger
     value={value}
     className={cn(
@@ -123,7 +119,7 @@ const NoteDetailBase = () => {
   const { companyId } = useUserStore();
 
   // Local UI State
-  const [isMediaExpanded, setIsMediaExpanded] = useState(false);
+  const [isMediaExpanded, setIsMediaExpanded] = useState(true);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [noteName, setNoteName] = useState<string>("");
@@ -187,6 +183,12 @@ const NoteDetailBase = () => {
     },
   });
 
+   useEffect(() => {
+    if (isPolling) {
+      refetch();
+    }
+  }, [isPolling, refetch]);
+
   const isNoteProcessing = useMemo(() => {
     if (
       noteQueryResponse?.data?.status !== "failed" &&
@@ -195,11 +197,11 @@ const NoteDetailBase = () => {
     ) {
       setIsPolling(true);
       return true;
-    } else {
+    } else if (!isPolling) {
       setIsPolling(false);
       return false;
     }
-  }, [noteQueryResponse]);
+  }, [noteQueryResponse, isPolling]);
 
   const note = useMemo(() => {
     if (noteQueryResponse?.data?.name)
@@ -341,7 +343,7 @@ const NoteDetailBase = () => {
                     )}
                     {!isNoteProcessing && (
                       <Tooltip delayDuration={300}>
-                        <TooltipContent>{editNameMode ? "Save (Enter)" : "Edit name"}</TooltipContent>
+                        <TooltipContent>{editNameMode ? t("Save (Enter)") : t("Edit name")}</TooltipContent>
                         <TooltipTrigger>
                           <button onClick={() => editNameMode ? handleSaveName() : toggleEditNameMode(true)} disabled={saveNameMutation.isPending} className="relative flex items-center justify-center h-8 w-8 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50">
                             <AnimatePresence mode="wait" initial={false}>
@@ -378,7 +380,7 @@ const NoteDetailBase = () => {
                   <TooltipTrigger>
                     <div className={cn("flex items-center gap-2 px-3 py-1 rounded-full border transition-all shrink-0", note?.quiz_alerts_enabled ? "bg-zinc-900 border-zinc-900 text-white" : "bg-white border-zinc-200 text-zinc-400")}>
                       {note?.quiz_alerts_enabled ? <BellRing size={12} strokeWidth={3} /> : <BellOff size={12} />}
-                      <span className="text-[10px] font-black uppercase tracking-widest">{note?.quiz_alerts_enabled ? "Alerts On" : "Alerts Off"}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">{note?.quiz_alerts_enabled ? t("Alerts On") : t("Alerts Off")}</span>
                     </div>
                   </TooltipTrigger>
                 </Tooltip>
@@ -486,7 +488,7 @@ const NoteDetailBase = () => {
                       <div className="flex flex-col mt-20 h-full overflow-y-auto">
                         <div className="mx-auto my-10 flex flex-col items-center">
                           <AIIcon hideStar className="h-10 w-10 animate-spin-slow " />
-                          <p className="text-xl mt-5" style={{ backgroundImage: "linear-gradient(to right, #71717a, #e4e4e7, #71717a)", backgroundSize: "200% auto", backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent", animation: "gradient-flow 4s linear infinite" }}>Processing</p>
+                          <p className="text-xl mt-5" style={{ backgroundImage: "linear-gradient(to right, #71717a, #e4e4e7, #71717a)", backgroundSize: "200% auto", backgroundClip: "text", WebkitBackgroundClip: "text", color: "transparent", animation: "gradient-flow 4s linear infinite" }}>{t("Processing")}</p>
                         </div>
                       </div>
                     ) : (
@@ -538,7 +540,7 @@ const NoteDetailBase = () => {
       </div>
 
       {previewFile && (
-        <FilePreviewDialog renderAsBlobUrl url={previewFile.url} name={previewFile.name} onClose={() => setPreviewFile(null)} />
+        <FilePreviewDialog renderAsBlobUrl url={previewFile.url} name={previewFile?.name || ""} onClose={() => setPreviewFile(null)} />
       )}
       <style dangerouslySetInnerHTML={{ __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `}} />
       </>

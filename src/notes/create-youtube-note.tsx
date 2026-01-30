@@ -15,7 +15,6 @@ import { API_BASE_URL, ISO_TO_LANGUAGE } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
@@ -76,7 +75,7 @@ const CreateYoutubeNote = ({ component, refetch }) => {
   const getYouTubeVideoId = (url: string) => {
     const isShorts = url.includes("youtube.com/shorts/");
     if (isShorts) {
-      alert(t("Shorts aren't supported"));
+      toast.error(t("Shorts aren't supported"));
     }
     const regex =
       /^(?:https?:\/\/)?(?:www\.|m\.)?(?:(?:youtube\.com\/(?:watch\?v=|v\/|embed\/|live\/))|(?:youtu\.be|y2u\.be)\/)([a-zA-Z0-9_-]{11})(?:[?&].*)?$/i;

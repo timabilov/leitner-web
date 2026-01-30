@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Loader2, Star, ShieldCheck, Zap, Users, Globe, Wallet } from "lucide-react";
+import { Check, Loader2, Star, ShieldCheck, Zap, Globe, Wallet } from "lucide-react";
 import { initializePaddle } from "@paddle/paddle-js";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -7,11 +7,12 @@ import * as Sentry from "@sentry/react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
-import { PRICING_TIERS } from "./pricing-data";
+import { PRICING_TIERS } from "./assets/pricing-data";
 import LiveActivityFeed2 from "./live-activity-feed2";
 import CountdownTimer from "@/components/countdown-timer";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 import { useSearchParams } from "react-router-dom";
+import { Trans } from "react-i18next"; 
 
 // --- COMPONENT: Trust & Organic Data (Bottom Section) ---
 const TrustStats = () => {
@@ -71,8 +72,14 @@ const SocialProof = () => (
           ))}
         </div>
         <span className="text-[11px] font-medium text-muted-foreground">
-          Trusted by <span className="text-foreground font-bold">20k+</span> students
-        </span>
+              <Trans
+                i18nKey="trusted_by_students"
+                defaults="Trusted by <bold>20k+</bold> students"
+                components={{
+                  bold: <span className="text-foreground font-bold" />, // Applies styles to <bold> content
+                }}
+              />
+            </span>
       </div>
     </div>
   </div>
@@ -364,9 +371,9 @@ export default function PricingSection() {
                   <span className="relative inline-flex h-full w-full items-center justify-center rounded-xl bg-background px-4 py-2 text-sm font-medium text-foreground backdrop-blur-3xl">
                     <div className="flex items-center gap-3">
                       <span className="flex items-center gap-1.5 rounded-full bg-pink-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pink-500 ring-1 ring-inset ring-pink-500/20">
-                        🔥 Sale
+                        🔥 {t("Sale")}
                       </span>
-                      <span className="font-bold text-xs sm:text-sm">Claim offer</span>
+                      <span className="font-bold text-xs sm:text-sm">{t("Claim offer")}</span>
                       <span className="h-4 w-px bg-border/60 mx-1" />
                       {
                         targetDate &&  <CountdownTimer 

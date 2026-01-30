@@ -13,18 +13,21 @@ import Alerts from "./alerts";
 import Folders from "./folders";
 import MobileApp from "./mobileapp";
 import Layout from "./components/layout";
+import { useTranslation } from "react-i18next";
 
 
 
 
 function App() {
+    const { t } = useTranslation();
+
   return (
       <TooltipProvider>
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
           <Suspense
             fallback={
               <div className="flex h-screen items-center justify-center">
-                Loading...
+                {t("Loading")}...
               </div>
             }
           >

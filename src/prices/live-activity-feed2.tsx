@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
-import { Zap, Crown, Sparkles, Star, ArrowUpCircle, Check } from "lucide-react";
+import { Zap, Crown, ArrowUpCircle, Check } from "lucide-react";
 
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";

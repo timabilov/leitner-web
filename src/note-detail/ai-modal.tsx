@@ -28,12 +28,11 @@ import { Avatar } from "../components/ui/avatar";
 import CatPenIcon from "@/notes/assets/cat-pen-icon";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // Lottie Imports
 import Lottie from "lottie-react";
 import successAnimation from "./../notes/done.json"; // Make sure path is correct
-import { AiOrbitAnimation } from "./ai-orbit-animation";
 
 const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQuiz }) => {
   const { t } = useTranslation();

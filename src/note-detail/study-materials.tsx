@@ -9,7 +9,7 @@ import {
   ArrowLeft, 
   Sparkles
 } from "lucide-react";
-import typingAnimation from './typing.json';
+import typingAnimation from './assets/typing.json';
 import { TypeAnimation } from 'react-type-animation';
 
 import { Button } from "@/components/ui/button";
@@ -58,18 +58,20 @@ export const StudyMaterials = ({
 
   // --- MUTATIONS ---
   const generateStudyMaterialNoteMutation = useMutation({
-    mutationFn: () => {
-      return axiosInstance.put(
+    mutationFn: async () => {
+      return await axiosInstance.put(
         `${API_BASE_URL}/company/${companyId}/notes/${noteId}/generate-for-study`
       );
     },
     onSuccess: () => {
-      console.log("setIsPolling", setIsPolling);
-      if (setIsPolling) setIsPolling(true);
+      if (setIsPolling) {
+        setIsPolling(true);
+      }
       setErrorMessage(null);
       // Optimistic update
       queryClient.setQueryData<any>([`notes-${noteId}`], old => {
         if (old) {
+          console.log("now will be",  { ...old, data: { ...old.data, quiz_status: "in_progress" } })
           return { ...old, data: { ...old.data, quiz_status: "in_progress" } };
         }
         return old;
@@ -122,7 +124,7 @@ export const StudyMaterials = ({
 
     if (prevStatus === 'in_progress' && currentStatus === 'generated') {
       setShowSuccess(true);
-      if (setIsPolling) setIsPolling(false);
+     if (setIsPolling) setIsPolling(false);
       const timer = setTimeout(() => setShowSuccess(false), 2500);
       return () => clearTimeout(timer);
     }
@@ -180,7 +182,6 @@ export const StudyMaterials = ({
     );
   };
 
-  {console.log("isGenerated", isGenerated, " noteQuery.data?.data?.quiz_status", noteQuery.data?.quiz_status)}
   return (
     <div className="w-full max-w-4xl mx-auto p-1 md:p-6 min-h-[500px]">
       {renderHeader()}
@@ -193,9 +194,9 @@ export const StudyMaterials = ({
             subtitle={(
               <TypeAnimation
                 sequence={[
-                  'Generating study materials', // Types this
+                  t('Generating study materials'), // Types this
                   2000,                         // Waits 2s
-                  'Generating quizzes and flashcards',     // Deletes previous, types this
+                  t('Generating quizzes and flashcards'),     // Deletes previous, types this
                   2000                      // Waits 2s
 
                 ]}

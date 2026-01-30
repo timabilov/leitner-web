@@ -605,13 +605,23 @@ const LoginBase = () => {
   );
 };
 
+
+const LoginErrorFallback = () => {
+  const { t } = useTranslation();
+  
+  return (
+    <div className="flex h-screen w-full items-center justify-center">
+      {t("Error loading login. Please refresh")}.
+    </div>
+  );
+};
+
+
 // 3. Export with Sentry Wrappers
 const Login = Sentry.withProfiler(
   Sentry.withErrorBoundary(LoginBase, {
     fallback: (
-      <div className="flex h-screen w-full items-center justify-center">
-        Error loading login. Please refresh.
-      </div>
+       <LoginErrorFallback />
     ),
   })
 );

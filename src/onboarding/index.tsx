@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, CheckCircle2, Layers, Loader2 } from 'lucide-react'; // Added ChevronLeft
-import FirstStepAnimation from './first-step-animation';
-import SecondStepAnimation from './second-step-animation';
+import FirstStepAnimation from './assets/first-step-animation';
+import SecondStepAnimation from './assets/second-step-animation';
 import ThirdStepAnimation from './third-step-animation';
-import FinalStepAnimation from './final-step-animation';
+import FinalStepAnimation from './assets/final-step-animation';
 
 const OnboardingModal = ({ isOpen, t, onFinish, isFinishing, isSuccess }: any) => {
   const [step, setStep] = useState(0);

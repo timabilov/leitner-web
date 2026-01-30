@@ -19,7 +19,8 @@ import { cn } from "@/lib/utils";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import Zoom from 'react-medium-image-zoom'
 import 'react-medium-image-zoom/dist/styles.css'
-
+import { useTranslation } from "react-i18next";
+import { Trans } from "react-i18next"; // Import this
 
 
 // --- Type Definitions ---
@@ -32,6 +33,7 @@ type Recording = {
 
 // --- Main Component ---
 const CreateMultiNote = () => {
+    const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   
   // --- State Management ---
@@ -70,7 +72,6 @@ const CreateMultiNote = () => {
       attachedFiles: attachedFiles,
       liveRecordings: recordings.filter(rec => rec.audioBlob),
     };
-    console.log("Saving Note:", finalNote);
     handleClose();
   };
   
@@ -101,30 +102,38 @@ const CreateMultiNote = () => {
         </DialogTrigger>
 
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Create a New Note</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("Create a New Note")}</DialogTitle></DialogHeader>
 
           <div className="grid gap-8 py-4">
             {/* Textarea Section */}
             <div className="grid gap-2">
-              <Label htmlFor="note-text" className="font-semibold">Note Content</Label>
-              <Textarea id="note-text" placeholder="Type your notes here..." value={noteText} onChange={(e) => setNoteText(e.target.value)} rows={4} disabled={isAnyRecordingActive} />
+              <Label htmlFor="note-text" className="font-semibold">{t("Note Content")}</Label>
+              <Textarea id="note-text" placeholder={t("Type your notes here...")} value={noteText} onChange={(e) => setNoteText(e.target.value)} rows={4} disabled={isAnyRecordingActive} />
             </div>
 
             {/* File Attachment Section */}
             <div className="grid gap-2">
-              <Label className="font-semibold">Attach Files</Label>
+              <Label className="font-semibold">{t("Attach Files")}</Label>
               <div
                 className={cn("flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors", isDragging ? "border-primary bg-primary/10" : "border-border hover:bg-muted/50")}
                 onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop} onClick={() => fileInputRef.current?.click()}
               >
                 <UploadCloud className="w-8 h-8 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground"><span className="font-semibold">Click to upload</span> or drag and drop</p>
-                <p className="text-xs text-muted-foreground">Images, Audio, or PDF files</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  <Trans i18nKey="upload_prompt">
+                    {/* The <0> in JSON maps to this first child element */}
+                    <span className="font-semibold">Click to upload</span> 
+                    {/* The rest of the text follows */}
+                    or drag and drop
+                  </Trans>
+                </p>
+
+                <p className="text-xs text-muted-foreground">{t("Images, Audio, or PDF files")}</p>
                 <input ref={fileInputRef} type="file" className="hidden" accept="image/*,.pdf,audio/*" multiple onChange={handleFileSelect} />
               </div>
               {attachedFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  <h4 className="font-medium text-sm">Attached files:</h4>
+                  <h4 className="font-medium text-sm">{t("Attached files")}:</h4>
                   <ul className="grid gap-3">
                     {attachedFiles.map((file, index) => (
                       <FilePreview 
@@ -141,12 +150,12 @@ const CreateMultiNote = () => {
             
             {/* Live Recorders Section */}
             <div className="grid gap-2">
-              <Label className="font-semibold">Live Recordings</Label>
+              <Label className="font-semibold">{t("Live Recordings")}</Label>
               {
                 recordings.find(recording => recording.status === 'recording') && (
                     <Alert className='border-sky-700/10 bg-sky-600/10 text-sky-600 dark:bg-sky-400/10 dark:text-sky-400'>
                     <Volume2 />
-                    <AlertTitle>Hey, can you speak up a bit?  We’ll ping you if we miss anything!</AlertTitle>
+                    <AlertTitle>{t("Hey, can you speak up a bit?  We’ll ping you if we miss anything")}!</AlertTitle>
                     </Alert>
                 )
               }
@@ -154,11 +163,11 @@ const CreateMultiNote = () => {
               {isAnyRecorderSilent && (
                 <Alert className='border-red-700/10 bg-red-600/10 text-red-600 dark:bg-red-400/10 dark:text-red-400'>
                 <VolumeOff />
-                  <AlertTitle>No Audio Detected.  Your microphone may not be picking up any sound. Please check your audio input.</AlertTitle>
+                  <AlertTitle>{t("No Audio Detected.  Your microphone may not be picking up any sound. Please check your audio input.")}</AlertTitle>
                 </Alert>
               )}
 
-              {recordings.map((rec, index) => (
+              {recordings.map((rec) => (
                 <div key={rec.id} className="flex items-center gap-4 p-4 border rounded-lg">
                   <div className="flex-grow">
                     <AudioRecorderWithVisualizer
@@ -174,21 +183,21 @@ const CreateMultiNote = () => {
                           <Trash className="h-4 w-4 text-destructive" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent><p>Remove recorder</p></TooltipContent>
+                      <TooltipContent><p>{t("Remove recorder")}</p></TooltipContent>
                     </Tooltip>
                   )}
                 </div>
               ))}
               <Button variant="outline" onClick={addRecorder} className="mt-4" disabled={isAnyRecordingActive}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Another Record
+                {t("Add Another Record")}
               </Button>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleSave} disabled={!canSave}>Save Note</Button>
+            <Button variant="outline" onClick={handleClose}>{t("Cancel")}</Button>
+            <Button onClick={handleSave} disabled={!canSave}>{t("Save Note")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -206,7 +215,8 @@ const FilePreview = ({ file, onRemove, onPreview }: { file: File; onRemove: () =
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const isPdf = file.type === "application/pdf";
   const isImage = file.type.startsWith("image/");
-  
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (isImage || file.type.startsWith("audio/")) {
       const url = URL.createObjectURL(file);
@@ -256,7 +266,7 @@ const FilePreview = ({ file, onRemove, onPreview }: { file: File; onRemove: () =
             <X className="h-4 w-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent><p>Remove file</p></TooltipContent>
+        <TooltipContent><p>{t("Remove file")}</p></TooltipContent>
       </Tooltip>
     </li>
   );

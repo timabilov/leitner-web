@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import CreateYoutubeNote from "./create-youtube-note";
 import { AIPromptInput } from "./ai-prompt-textarea";
-import Layout from "@/components/layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import CatPenIcon from "./assets/cat-pen-icon";
@@ -43,9 +42,8 @@ const Notes = ({ children }: any) => {
   const posthog = usePostHog();
   // 2. Create the Ref
   const notesListRef = useRef<HTMLDivElement>(null);
-  const { companyId, isLoggedIn, fullName, email, userId, selectedFolder, 
-     setProcessingNotesCount, // Use this setter
-    focusNotesTrigger        // Listen to this
+  const { companyId, fullName, email, userId, selectedFolder, 
+     setProcessingNotesCount,
    } =
     useUserStore();
 
@@ -53,7 +51,6 @@ const Notes = ({ children }: any) => {
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [files, setFiles] = useState<any[]>([]);
-  const [processingNotes, setProcessingNotes] = useState(0);
   const [loadingNoteIds, setProcessingNoteIds] = useState<number[]>([]);
 
   const { t } = useTranslation(); // Translation hook
@@ -88,14 +85,6 @@ const Notes = ({ children }: any) => {
       const hasLoadingNotes = notes.some(isNoteInLoadingState);
       
       return hasLoadingNotes ? 3000 : false;
-    },
-    throwOnError: (error) => {
-      console.error("Get notes error:", error);
-      Sentry.captureException(error, {
-        tags: { query: "fetch_all_notes" },
-        extra: { companyId, email, userId },
-      });
-      return false;
     },
     throwOnError: (error) => {
       console.error("Get notes error:", error);

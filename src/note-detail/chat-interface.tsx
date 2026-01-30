@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
-import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 import { Send, Loader2, RotateCcw, MessageCircle } from "lucide-react";
@@ -238,7 +237,7 @@ const ChatInterface = ({
         console.error("Streaming error:", err);
         Sentry.captureException(err);
         
-        const errorMsg = "\n\nError: Connection interrupted.";
+        const errorMsg = "\n\n" + t("Error: Connection interrupted") + ".";
         
         // If we fail on the very first byte, use the pre-seeded bubble
         const targetId = activeMsgId || initialAiId; 

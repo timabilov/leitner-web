@@ -1,9 +1,10 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 const ProcessingNoteCard = ({ view, id }) => {
+   const { t } = useTranslation(); 
   // Use semantic tokens: border-border, bg-background
   const cardBase = "group relative bg-background border border-border overflow-hidden rounded-xl h-full cursor-pointer hover:border-foreground/30 ";
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const ProcessingNoteCard = ({ view, id }) => {
             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-foreground"></span>
           </div>
           <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.15em]">
-            Processing
+            {t("Processing")}
           </span>
         </div>
       </div>

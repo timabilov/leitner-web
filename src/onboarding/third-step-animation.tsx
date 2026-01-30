@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Brain, CheckCircle2, Sparkles } from 'lucide-react';
+import { Bell, CheckCircle2, Sparkles } from 'lucide-react';
 
 /**
  * Shadcn-style Animated Underline

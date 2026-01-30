@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { motion, AnimatePresence } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
