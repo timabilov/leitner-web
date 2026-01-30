@@ -132,8 +132,7 @@ export const StudyMaterials = ({
   }, [noteQuery.data?.quiz_status, setIsPolling]);
 
   // --- RENDER HELPERS ---
-  const isLoading =
-    (noteQuery.data?.quiz_status === "in_progress" || generateStudyMaterialNoteMutation.isPending) && 
+  const isLoading =  (noteQuery.data?.quiz_status === "in_progress" || generateStudyMaterialNoteMutation.isPending) && 
     !showSuccess;
 
   const alertEnabled = noteQuery.data?.quiz_alerts_enabled;
@@ -188,7 +187,7 @@ export const StudyMaterials = ({
 
       {/* --- STATE 1: LOADING --- */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center justify-start">
           <GenericAILoading
             mainTitle={noteQuery?.data?.name || t("Note name")}
             subtitle={(

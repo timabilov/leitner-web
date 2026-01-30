@@ -397,7 +397,7 @@ const NoteDetailBase = () => {
             {isMediaExpanded && hasMedia && (
               <>
                 <Panel 
-                  defaultSize={40} 
+                  defaultSize={ note?.youtube_url ?  40 : 15} 
                   minSize={15} 
                   maxSize={80} 
                   order={1}
