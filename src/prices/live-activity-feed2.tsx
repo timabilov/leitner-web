@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
 import { Zap, Crown, ArrowUpCircle, Check } from "lucide-react";
+import * as Sentry from "@sentry/react";
+import { usePostHog } from "posthog-js/react";
 
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
@@ -67,7 +69,7 @@ const parseActionStyle = (rawAction: string) => {
 
 // --- COMPONENT ---
 const LiveActivityFeed2 = () => {
-
+  const posthog = usePostHog();
   const { companyId } = useUserStore()
 
   const [currentActivity, setCurrentActivity] = useState<ActivityItem | null>(null);
@@ -76,23 +78,32 @@ const LiveActivityFeed2 = () => {
   useQuery({
     queryKey: ["liveActivityChatStyle", companyId],
     queryFn: async () => {
-      const response = await axiosInstance.get(`${API_BASE_URL}/company/${companyId}/notes/activity/live`);
-      
-      if (response.data && response.data.activities) {
-        const mapped: ActivityItem[] = response.data.activities.map((item: any) => {
-          const style = parseActionStyle(item.action);
-
-          return {
-            id: Math.random().toString(36),
-            user: item.user,
-            actionPrefix: style.prefix,
-            highlight: style.highlight,
-            time: item.time,
-          };
+      try {
+        const response = await axiosInstance.get(`${API_BASE_URL}/company/${companyId}/notes/activity/live`);
+        
+        if (response.data && response.data.activities) {
+          const mapped: ActivityItem[] = response.data.activities.map((item: any) => {
+            const style = parseActionStyle(item.action);
+  
+            return {
+              id: Math.random().toString(36),
+              user: item.user,
+              actionPrefix: style.prefix,
+              highlight: style.highlight,
+              time: item.time,
+              icon: style.icon
+            };
+          });
+          setActivityQueue(mapped);
+        }
+        return response.data;
+      } catch (error) {
+         Sentry.captureException(error, { 
+          tags: { section: "live_activity_feed" },
+          level: "warning" // It's not a crash, just a feature failure
         });
-        setActivityQueue(mapped);
+        console.log(error);
       }
-      return response.data;
     },
     refetchInterval: 10000,
     refetchOnWindowFocus: false,

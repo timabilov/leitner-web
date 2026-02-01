@@ -1,9 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { cn } from "@/lib/utils";
-import { useUserStore } from "@/store/userStore";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { 
   BellRing, BellOff, TriangleAlert, 

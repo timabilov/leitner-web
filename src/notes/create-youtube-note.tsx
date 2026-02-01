@@ -53,12 +53,19 @@ const CreateYoutubeNote = ({ component, refetch }) => {
   const [noteId, setNoteId] = useState<string | undefined>();
 
   useEffect(() => {
-    posthog.capture("youtube_dialog_toggled", { userId, email, state: isOpen });
-  }, [isOpen]);
+    if (isOpen && posthog)
+      posthog.capture("youtube_dialog_toggled", { userId, email, state: isOpen });
+  }, [isOpen, posthog]);
 
-  useEffect(() => {
+ useEffect(() => {
     const timeoutId = setTimeout(() => {
-      setIsValid(validateYouTubeUrl(urlInputValue));
+      const valid = validateYouTubeUrl(urlInputValue);
+      setIsValid(valid);
+      
+      // 1. PostHog: Track Validation (Only on valid inputs to avoid spam)
+      if (valid && urlInputValue) {
+        posthog.capture("youtube_url_valid", { video_id: videoId });
+      }
     }, 1000);
     return () => clearTimeout(timeoutId);
   }, [urlInputValue]);
@@ -76,6 +83,7 @@ const CreateYoutubeNote = ({ component, refetch }) => {
     const isShorts = url.includes("youtube.com/shorts/");
     if (isShorts) {
       toast.error(t("Shorts aren't supported"));
+      posthog.capture("youtube_shorts_attempted");
     }
     const regex =
       /^(?:https?:\/\/)?(?:www\.|m\.)?(?:(?:youtube\.com\/(?:watch\?v=|v\/|embed\/|live\/))|(?:youtu\.be|y2u\.be)\/)([a-zA-Z0-9_-]{11})(?:[?&].*)?$/i;
@@ -113,13 +121,19 @@ const CreateYoutubeNote = ({ component, refetch }) => {
       ),
     onSuccess: (response) => setNoteId(response.data.id),
     onError: (error: any) => {
+      const isPlanLimit = error?.status === 403;
       console.log(error?.response?.data);
       Sentry.captureException(error, {
         tags: { action: "create_youtube_note" },
         extra: { url: urlInputValue, userId, email, videoId },
       });
+      posthog.capture("youtube_note_creation_failed", {
+              reason: isPlanLimit ? "plan_limit" : "api_error",
+              error: error.message
+            });
 
-      const isPlanLimit = error?.status === 403;
+
+    
       const msg = isPlanLimit
         ? t("Please upgrade your subscription plan")
         : t("Failed to create note, please try again.");
@@ -177,6 +191,7 @@ const CreateYoutubeNote = ({ component, refetch }) => {
       toast.success(t("Note has been created"));
       refetch();
       // Invalidate folders query to update folder counts
+      posthog.capture("youtube_note_creation_completed", { note_id: noteId });
       queryClient.invalidateQueries({ queryKey: ["folders", companyId] });
     },
     onError: (error) => {
@@ -186,11 +201,8 @@ const CreateYoutubeNote = ({ component, refetch }) => {
       });
 
       console.log("Mark upload as finished error:", error.response?.data);
-      console.log(
-        t(
-          "Sorry, couldn't start processing your note. Please try again by creating new one."
-        )
-      );
+      toast.error(t("Sorry, couldn't start processing your note. Please try again by creating new one." ));
+    
     },
   });
 

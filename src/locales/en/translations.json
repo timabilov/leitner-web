@@ -259,5 +259,6 @@
   "Compression failed": "Compression failed",
   "Preparation": "Preparation",
   "Please upgrade your subscription plan": "Please upgrade your subscription plan",
-  "Failed to prepare note": "Failed to prepare note"
+  "Failed to prepare note": "Failed to prepare note",
+  "Failed to load attachments": "Failed to load attachments"
 }

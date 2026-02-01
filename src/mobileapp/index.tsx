@@ -1,10 +1,19 @@
-import Layout from "@/components/layout";
 import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
 import { Smartphone, Download } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
+import { useEffect } from "react";
 
 const MobileApp = () => {
   const { t } = useTranslation();
+  const posthog = usePostHog();
+
+
+  useEffect(() => {
+    posthog.capture("mobile_app_page_viewed");
+  }, [posthog]);
+
+
   const appStoreUrl =
     "https://apps.apple.com/us/app/leitner-ai-note-quiz-alerts/id6747087851";
 
@@ -50,6 +59,12 @@ const MobileApp = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-3 px-8 py-4 bg-zinc-900 hover:bg-zinc-800 dark:bg-zinc-50 dark:hover:bg-zinc-200 text-white dark:text-zinc-900 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+              onClick={() => {
+                posthog.capture("mobile_app_download_clicked", {
+                  destination: "app_store",
+                  url: appStoreUrl
+                });
+              }}
             >
               <Download className="h-5 w-5" />
               {t("Download on the App Store")}

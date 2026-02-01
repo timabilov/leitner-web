@@ -335,6 +335,11 @@ const LoginBase = () => {
 
   const [sessionData, setSessionData] = useState<any>(null);
 
+   useEffect(() => {
+    posthog.capture("login_page_viewed");
+  }, [posthog]);
+
+
   const googleVerifyMutation = useMutation({
     mutationFn: (newUser: any) => {
       return axiosInstance.post(
@@ -344,6 +349,10 @@ const LoginBase = () => {
     },
     onSuccess: async (response, variables) => {
       const data = response.data;
+       posthog.capture("login_success", { 
+        provider: "google", 
+        is_new_user: data?.new 
+      })
 
       // Essential: Set tokens immediately so the /finish call is authorized
       setAccessToken(data.access_token);
@@ -359,7 +368,7 @@ const LoginBase = () => {
       );
       posthog.identify(data.id, {
         email: variables.user.email,
-        new_user: true,
+        new_user: data?.new,
       });
       if (data?.new) {
         setSessionData({
@@ -398,6 +407,11 @@ const LoginBase = () => {
     },
     onError: (error: any) => {
       Sentry.captureException(error);
+      posthog.capture("login_failed", {
+        provider: "google",
+        error_message: error?.message,
+        status: error?.response?.status
+      });
       toast.error(t("An error occurred during sign-in."));
       setIsGoogleLoading(false);
     },
@@ -423,6 +437,9 @@ const LoginBase = () => {
           time_zone: userTimeZone,
         }
       );
+      posthog.capture("onboarding_completed", {
+        method: "google_web"
+      });
 
       // 2. Show success visual in modal
       setIsSuccess(true);
@@ -449,6 +466,8 @@ const LoginBase = () => {
       }, 1800); // Give user time to see the "Success" state
     } catch (error) {
       console.error("Error finishing onboarding:", error);
+      Sentry.captureException(error)
+      posthog.capture("onboarding_failed", { error: error });
       setIsFinishing(false);
       toast.error(t("Failed to finalize profile. Please try again."));
     }
@@ -458,6 +477,7 @@ const LoginBase = () => {
     const idToken = credentialResponse.credential;
     const decodedToken: any = jwtDecode(idToken);
     setIsGoogleLoading(true);
+    posthog.capture("login_attempted", { provider: "google" });
     googleVerifyMutation.mutate({
       idToken,
       user: {

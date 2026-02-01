@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -121,6 +121,11 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const queryClient = useQueryClient();
 
+   useEffect(() => {
+    posthog.capture("quiz_tab_viewed", { note_id: noteId });
+  }, [posthog, noteId]);
+
+  
   const getLastAnsweredDate = (questions: any[]) => {
     const answeredDates = questions
       .filter((q: any) => q.user_answered_date)
@@ -188,7 +193,11 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   const handleLevelSelect = (level) => {
     const questionsForLevel = quizLevels[level]?.questions || [];
     if (questionsForLevel.length > 0) {
-      posthog.capture('quiz_level_changed', { userId, email, level });
+    posthog.capture('quiz_level_selected', { 
+            note_id: noteId, 
+            level: level,
+            question_count: questionsForLevel.length 
+          });
       setQuizLevel(level);
       setActiveQuestions(questionsForLevel);
       setCurrentQuestionIndex(0);
@@ -212,7 +221,12 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   const progressValue = (currentQuestionIndex / totalQuestions) * 100;
 
   const handleCheckAnswer = (option, index) => {
-    posthog.capture('answer_check_clicked', { userId, email, option });
+     posthog.capture('quiz_question_answered', { 
+        note_id: noteId,
+        level: quizLevel,
+        question_index: currentQuestionIndex,
+        is_correct: isCorrect 
+      });
     setSelectedAnswer(option)
     if (option) {
       setShowFeedback(true);
@@ -229,7 +243,14 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
       setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedAnswer(null);
       setShowFeedback(false);
+      
     } else {
+        posthog.capture('quiz_completed', { 
+        note_id: noteId,
+        level: quizLevel,
+        final_score: score + (selectedAnswer === correctAnswer ? 1 : 0), // Add 1 if last was correct
+        total_questions: totalQuestions
+      });
       setIsFinished(true);
     }
   };

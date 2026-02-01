@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Textarea } from "@/components/ui/textarea";
 import { streamWithAuth } from "@/services/streamClient";
 import { QuizProgressRing } from "@/components/chat/quiz-progress-ring";
+import { usePostHog } from "posthog-js/react"; 
 
 interface ChatInterfaceProps {
   noteName?: string;
@@ -28,7 +29,7 @@ const ChatInterface = ({
 }: ChatInterfaceProps) => {
   const { t } = useTranslation();
   const { companyId } = useUserStore();
-  
+  const posthog = usePostHog();
   const chats = useChatStore((state) => state.chats);
   const addMessage = useChatStore((state) => state.addMessage);
   const updateMessageContent = useChatStore((state) => state.updateMessageContent);
@@ -130,14 +131,21 @@ const ChatInterface = ({
     if (isLoading) return;
     clearChat(noteId);
     hasInitialized.current = false;
+    posthog.capture("chat_cleared", { note_id: noteId });
+
   }, [isLoading, clearChat, noteId]);
 
   // --- SEND LOGIC ---
   const executeSendMessage = useCallback(async (textOverride?: string) => {
     const textToSend = textOverride || inputValue.trim();
     if (!textToSend || isLoading) return;
+    posthog.capture("chat_message_sent", {
+      note_id: noteId,
+      is_quick_action: !!textOverride, // True if clicked a button, False if typed
+      message_length: textToSend.length
+    });
 
-    // 1. User Message
+
     const userMsg: Message = { 
         id: Date.now().toString(), 
         role: "user", 
@@ -236,7 +244,7 @@ const ChatInterface = ({
       onError: (err) => {
         console.error("Streaming error:", err);
         Sentry.captureException(err);
-        
+         posthog.capture("chat_ai_streaming_failed", { note_id: noteId });
         const errorMsg = "\n\n" + t("Error: Connection interrupted") + ".";
         
         // If we fail on the very first byte, use the pre-seeded bubble
@@ -256,6 +264,7 @@ const ChatInterface = ({
         setStreamingMessageId(null);
         abortControllerRef.current = null;
         setTimeout(() => scrollToBottom("smooth"), 100);
+        posthog.capture("chat_ai_response_completed", { note_id: noteId });
       }
     });
 
@@ -285,7 +294,11 @@ const ChatInterface = ({
     if (prompt) {
       // Clear parent state first to minimize race conditions
       if (onActionComplete) onActionComplete();
-      
+       posthog.capture("chat_action_triggered", {
+        note_id: noteId,
+        action_type: pendingAction.type
+      });
+
       // Execute logic
       executeSendMessage(prompt);
     }
@@ -345,14 +358,17 @@ const ChatInterface = ({
         {!isLoading && (
           <div className="flex flex-nowrap gap-1.5 mb-3 justify-center">
             {[
-              { short: t("Study guide"), full: t("Can you create a study guide?") },
-              { short: t("Explain like i'm 5"), full: t("Can you explain like i'm 5?") },
-              { short: t("Quiz me"), full: t("Can you generate hard quiz for me?") },
-            ].map(({ short, full }, index) => (
+              { short: t("Study guide"), full: t("Can you create a study guide?"), id: 1 },
+              { short: t("Explain like i'm 5"), full: t("Can you explain like i'm 5?"), id: 2 },
+              { short: t("Quiz me"), full: t("Can you generate hard quiz for me?") , id: 3},
+            ].map(({ short, full, id }, index) => (
               <button
                 key={full}
                 type="button"
-                onClick={() => executeSendMessage(full)}
+                onClick={() => {
+                  posthog.capture("chat_quick_action_clicked", { action_id: id });
+                  executeSendMessage(full)
+                }}
                 disabled={isLoading}
                 className={`
                   items-center gap-1.5 px-3.5 py-1.5 text-[13px] rounded-2xl

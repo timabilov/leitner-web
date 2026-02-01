@@ -1,19 +1,54 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePostHog } from 'posthog-js/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, ChevronLeft, CheckCircle2, Layers, Loader2 } from 'lucide-react'; // Added ChevronLeft
 import FirstStepAnimation from './assets/first-step-animation';
 import SecondStepAnimation from './assets/second-step-animation';
 import ThirdStepAnimation from './third-step-animation';
 import FinalStepAnimation from './assets/final-step-animation';
+import * as Sentry from "@sentry/react"; 
 
 const OnboardingModal = ({ isOpen, t, onFinish, isFinishing, isSuccess }: any) => {
-  const [step, setStep] = useState(0);
   const TOTAL_STEPS = 4;
+  const posthog = usePostHog();
+
+  const [step, setStep] = useState(0);
+
+
+    useEffect(() => {
+    if (isOpen) {
+      posthog.capture('onboarding_viewed');
+      Sentry.logger.info('Onboarding Modal Opened', {
+        category: 'onboarding',
+        level: 'info',
+      });
+    }
+  }, [isOpen, posthog]);
+
+ useEffect(() => {
+    if (isSuccess) {
+      posthog.capture('onboarding_completed_success');
+    }
+  }, [isSuccess, posthog]);
+
 
   const nextStep = () => {
     if (step < TOTAL_STEPS - 1) {
+       posthog.capture('onboarding_step_completed', { 
+        step_index: step, 
+        step_name: getStepName(step) 
+      });
+      Sentry.logger.info( `Advanced to step ${step + 1}`, {
+        category: 'onboarding',
+        level: 'info',
+      });
       setStep(prev => prev + 1);
     } else {
+       posthog.capture('onboarding_finish_clicked');
+        Sentry.logger.info('User clicked Get Started', {
+        category: 'onboarding',
+        level: 'info',
+      });
       onFinish(); 
     }
   };
@@ -21,10 +56,18 @@ const OnboardingModal = ({ isOpen, t, onFinish, isFinishing, isSuccess }: any) =
   // New function to handle going back
   const prevStep = () => {
     if (step > 0) {
+      posthog.capture('onboarding_step_back', { 
+        from_step: step 
+      });
       setStep(prev => prev - 1);
     }
   };
 
+  const getStepName = (index: number) => {
+    const names = ["Intro", "Features", "Workflow", "Final"];
+    return names[index] || `Step ${index}`;
+  };
+  
   return (
     <AnimatePresence>
       {isOpen && (

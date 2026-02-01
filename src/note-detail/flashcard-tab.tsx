@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, RefreshCw } from "lucide-react";
@@ -27,6 +27,11 @@ export function FlashcardsTab({ noteId }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const flashcards = useRef([]);
+
+   useEffect(() => {
+    posthog.capture('flashcards_tab_viewed', { note_id: noteId });
+  }, [posthog, noteId]);
+
 
   const noteQuestionsQuery = useQuery({
     queryKey: [`notes-${noteId}-questions`],
@@ -68,6 +73,11 @@ export function FlashcardsTab({ noteId }) {
 
   // Safety check for empty or missing data
   if (!flashcards.current || flashcards.current.length === 0) {
+
+    useEffect(() => {
+        posthog.capture('flashcards_empty_state_shown', { note_id: noteId });
+    }, []);
+
     return (
       <div className="flex flex-col items-center justify-center text-center p-8 border rounded-lg bg-muted/50 h-64">
         <h3 className="text-lg font-semibold text-muted-foreground">{t("No Flashcards Available")}</h3>
@@ -78,6 +88,19 @@ export function FlashcardsTab({ noteId }) {
 
   const currentCard = flashcards.current[currentCardIndex];
   const totalCards = flashcards.current.length;
+
+   const handleFlip = () => {
+    const nextState = !isFlipped;
+    setIsFlipped(nextState);
+    if (nextState) {
+        // Only track when revealing the answer (effort made)
+        posthog.capture('flashcard_flipped', { 
+            note_id: noteId,
+            card_index: currentCardIndex 
+        });
+    }
+  };
+
 
   const handleNext = () => {
     posthog.capture('flashcard_next_clicked', { userId, email, index: currentCardIndex });
@@ -105,7 +128,7 @@ export function FlashcardsTab({ noteId }) {
     <div className="w-full flex flex-col items-center gap-6">
       <div
         className="w-full max-w-2xl h-80 cursor-pointer [perspective:1000px]"
-        onClick={() => setIsFlipped(!isFlipped)}
+        onClick={handleFlip}
       >
         <div
           className={cn(
@@ -152,7 +175,7 @@ export function FlashcardsTab({ noteId }) {
           <Button variant="outline" size="lg" onClick={handlePrevious} disabled={currentCardIndex === 0}>
             <ArrowLeft className="h-4 w-4 mr-2" /> {t("Previous")}
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setIsFlipped(!isFlipped)}>
+          <Button variant="ghost" size="icon" onClick={handleFlip}>
             <RefreshCw className={cn("h-5 w-5 transition-transform duration-500", isFlipped && "rotate-180")} />
           </Button>
           <Button variant="outline" size="lg" onClick={handleNext} disabled={currentCardIndex === totalCards - 1}>

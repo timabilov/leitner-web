@@ -39,31 +39,28 @@ Sentry.init({
     }),
   ],
   enabled: import.meta.env.MODE !== 'development',
+  enableLogs: true,
 });
 
-// Initialize PostHog
-posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
-  api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com',
-  // BEST PRACTICE: Disable autocapture in development to save event quota
-  autocapture: import.meta.env.PROD, 
-  capture_pageview: false, // We will handle this manually for SPAs (optional, see step 5)
-  enable_recording_console_log: true, 
-  session_recording: {
-    // 1. Privacy: Mask user input by default (Recommended)
-    maskAllInputs: true,
-    // 3. Debugging: Capture console logs (Errors/Warnings are crucial for React)
-    // 4. Privacy/Cleanup: CSS class masking
-    // Elements with class 'ph-no-capture' are ignored (DOM not recorded)
-    // Elements with class 'ph-mask' are recorded but text is blocked out
-    blockClass: 'ph-no-capture',
-    maskTextClass: 'ph-mask',
-  }
-})
+
+if (import.meta.env.PROD) {
+  posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
+    api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com',
+    autocapture: import.meta.env.PROD, 
+    capture_pageview: false,
+    enable_recording_console_log: true, 
+    session_recording: {
+      maskAllInputs: true,
+      blockClass: 'ph-no-capture',
+      maskTextClass: 'ph-mask',
+    }
+  })
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false, // default: true
+      refetchOnWindowFocus: false,
     },
   },
 });

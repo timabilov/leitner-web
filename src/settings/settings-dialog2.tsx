@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { User, CreditCard, Settings, LogOut } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -12,13 +12,48 @@ import AccountTab from "./tabs/account-tab";
 import SubscriptionTab from "./tabs/subscription-tab";
 import PreferencesTab from "./tabs/preferences-tab";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
+import { usePostHog } from "posthog-js/react";
+import * as Sentry from "@sentry/react"
 
 type Tab = 'account' | 'subscription' | 'preferences';
 
 const SettingsDialog = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolean) => void }) => {
   const { t } = useTranslation();
+  const posthog = usePostHog();
   const { clearStore } = useUserStore();
   const [activeTab, setActiveTab] = useState<Tab>('account');
+
+   useEffect(() => {
+    if (isOpen) {
+      posthog.capture("settings_dialog_opened");
+    }
+  }, [isOpen, posthog]);
+
+
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    // 4. Track Tab Switch (Feature Usage)
+    posthog.capture("settings_tab_changed", { tab });
+  };
+
+  const handleLogout = () => {
+    // 5. Track Logout (Churn/Session End)
+    posthog.capture("user_logged_out", { source: "settings_modal" });
+    
+    // 6. Sentry Breadcrumb (Context for debugging)
+    Sentry.addBreadcrumb({
+      category: "auth",
+      message: "User clicked logout button in settings",
+      level: "info",
+    });
+
+    clearStore();
+    // Assuming clearStore redirects or App.tsx handles the auth state change
+    setIsOpen(false); 
+  };
+
+
+
 
   // ✅ 1. Updated Sidebar Button Helper
   // Now uses the exact same styling logic as your AppSidebar
@@ -27,7 +62,7 @@ const SettingsDialog = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v:
 
     return (
       <SidebarMenuButton
-        onClick={() => setActiveTab(tab)}
+        onClick={() => handleTabChange(tab)}
         // Keep this for accessibility/semantics, but we override the styles below
         isActive={isActive} 
         className={cn(
@@ -72,7 +107,7 @@ const SettingsDialog = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v:
             <Button 
               variant="ghost" 
               className="w-full justify-start h-10 gap-3 px-3 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/30" 
-              onClick={clearStore}
+              onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
               {t("Log out")}

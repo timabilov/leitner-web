@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import Lottie from "lottie-react";
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import typingAnimation from './assets/typing.json';
 import { TypeAnimation } from 'react-type-animation';
-
+import { usePostHog } from "posthog-js/react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Spinner } from "@/components/ui/spinner";
@@ -46,7 +46,7 @@ export const StudyMaterials = ({
   const { t } = useTranslation();
   const { companyId, userId, email } = useUserStore();
   const queryClient = useQueryClient();
-
+ const posthog = usePostHog();
   // View State
   const [view, setView] = useState<"quiz" | "flash" | undefined>();
   const [quizLevel, setQuizLevel] = useState<"easy" | "hard" | "bonus" | null>(null);
@@ -55,6 +55,12 @@ export const StudyMaterials = ({
   // Animation State
   const [showSuccess, setShowSuccess] = useState(false);
   const prevStatusRef = useRef(noteQuery.data?.quiz_status);
+
+
+    useEffect(() => {
+      posthog.capture("study_materials_viewed", { note_id: noteId });
+    }, [posthog, noteId]);
+
 
   // --- MUTATIONS ---
   const generateStudyMaterialNoteMutation = useMutation({
@@ -95,6 +101,11 @@ export const StudyMaterials = ({
       });
     },
     onMutate: async (newEnabledValue: boolean) => {
+      posthog.capture("study_alerts_toggled", { 
+        note_id: noteId, 
+        enabled: newEnabledValue 
+      });
+
       await queryClient.cancelQueries({ queryKey: [`notes-${noteId}`] });
       const previousNoteData = queryClient.getQueryData<any>([`notes-${noteId}`]);
       queryClient.setQueryData<any>([`notes-${noteId}`], old => {
@@ -107,6 +118,10 @@ export const StudyMaterials = ({
     },
     onError: (error: any, newEnabledValue, context) => {
       toast.error(t('Failed to update quiz alerts. Please try again.'));
+       Sentry.captureException(error, {
+        tags: { action: "toggle_quiz_alerts" },
+        extra: { noteId, userId }
+      });
       if (context?.previousNoteData) {
         queryClient.setQueryData<any>([`notes-${noteId}`], context.previousNoteData);
       }
@@ -263,7 +278,10 @@ export const StudyMaterials = ({
           </p>
           <Button
             size="lg"
-            onClick={() => generateStudyMaterialNoteMutation.mutate()}
+            onClick={() => {
+              posthog.capture("study_generation_started", { note_id: noteId });
+              generateStudyMaterialNoteMutation.mutate()
+            }}
             disabled={generateStudyMaterialNoteMutation.isPending}
             className="gap-2 h-12 px-8 text-base shadow-lg hover:shadow-primary/25 transition-all"
           >
@@ -290,7 +308,10 @@ export const StudyMaterials = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
               <Card
                 className="group relative overflow-hidden cursor-pointer border-muted-foreground/20 hover:border-primary/50 transition-all hover:shadow-lg hover:-translate-y-1"
-                onClick={() => setView("quiz")}
+                onClick={() => {
+                  posthog.capture("study_tool_selected", { note_id: noteId, tool: "quiz" });
+                  setView("quiz")
+                }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <CardHeader className="flex flex-col items-center text-center p-8">
@@ -306,7 +327,10 @@ export const StudyMaterials = ({
 
               <Card
                 className="group relative overflow-hidden cursor-pointer border-muted-foreground/20 hover:border-primary/50 transition-all hover:shadow-lg hover:-translate-y-1"
-                onClick={() => setView("flash")}
+                onClick={() => {
+                  posthog.capture("study_tool_selected", { note_id: noteId, tool: "flashcards" });
+                  setView("flash")
+                }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <CardHeader className="flex flex-col items-center text-center p-8">

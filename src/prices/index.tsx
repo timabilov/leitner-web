@@ -13,6 +13,7 @@ import CountdownTimer from "@/components/countdown-timer";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 import { useSearchParams } from "react-router-dom";
 import { Trans } from "react-i18next"; 
+import { usePostHog } from "posthog-js/react";
 
 // --- COMPONENT: Trust & Organic Data (Bottom Section) ---
 const TrustStats = () => {
@@ -246,6 +247,16 @@ export default function PricingSection() {
  const [searchParams] = useSearchParams();
  const isPromoLink = searchParams.get("sale") === "true";
 
+   const posthog = usePostHog();
+
+    useEffect(() => {
+    posthog.capture("pricing_page_viewed", {
+      is_promo: isPromoLink,
+      source: "web_app"
+    });
+  }, [posthog, isPromoLink]);
+
+
 
   useEffect(() => {
     const init = async () => {
@@ -299,6 +310,12 @@ export default function PricingSection() {
       toast.error(t("Payment system loading..."));
       return;
     }
+    posthog.capture("pricing_checkout_started", {
+      price_id: priceId,
+      is_promo: isPromoLink,
+      selected_tier: selectedId
+    });
+
     setLoadingPriceId(priceId);
 
     try {
@@ -396,7 +413,10 @@ export default function PricingSection() {
               key={tier.id}
               tier={tier}
               isSelected={selectedId === tier.id}
-              onSelect={() => setSelectedId(tier.id)}
+              onSelect={() => {
+                posthog.capture("pricing_plan_selected", { plan_id: tier.id });
+                setSelectedId(tier.id)
+              }}
               onCheckout={() => openCheckout(tier.priceId, tier.discountId)}
               isLoading={loadingPriceId === tier.priceId}
               displayPrice={tier.originalPrice}

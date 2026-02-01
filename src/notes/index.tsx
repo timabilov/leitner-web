@@ -55,6 +55,11 @@ const Notes = ({ children }: any) => {
 
   const { t } = useTranslation(); // Translation hook
 
+   useEffect(() => {
+    posthog.capture("dashboard_viewed");
+  }, [posthog]);
+
+
   // 3. Create the Scroll Handler
   const scrollToNotes = () => {
     if (notesListRef.current) {
@@ -133,7 +138,6 @@ const Notes = ({ children }: any) => {
 
   const searchNotes = async (query: string) => {
     try {
-      console.log("Searching notes with query:", query);
       return new Promise((resolve) => {
         setTimeout(() => {
           const filteredNotes = (notesQuery.data?.data?.notes || []).filter(
@@ -240,7 +244,7 @@ const Notes = ({ children }: any) => {
             </Alert>
           </div>
           {/* 2. ACTION CARDS SECTION - 1 col on mobile, 2 col on sm+ */}
-          <div className="px-4 grid grid-cols-1 sm:grid-cols-4  md:grid-cols-2 w-full gap-4 max-w-4xl mx-auto md:justify-items-center">
+          <div onClick={() => posthog.capture("youtube_create_clicked")} className="px-4 grid grid-cols-1 sm:grid-cols-4  md:grid-cols-2 w-full gap-4 max-w-4xl mx-auto md:justify-items-center">
             <CreateYoutubeNote
               refetch={notesQuery.refetch}
               className="w-4 h-4"
@@ -267,7 +271,10 @@ const Notes = ({ children }: any) => {
             />
 
             <Card
-              onClick={openFilePicker}
+              onClick={() => {
+                posthog.capture("file_picker_clicked");
+                openFilePicker()
+              }}
               className="sm:col-span-full md:max-w-[330px] md:col-span-1 md:justify-self-start bg-white z-40 hover:shadow-lg transition-all duration-300 hover:border-black w-full cursor-pointer relative overflow-hidden group"
             >
               <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-amber-500/5 blur-3xl group-hover:bg-amber-500/10 transition-colors" />

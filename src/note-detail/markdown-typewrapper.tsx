@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
+import { usePostHog } from "posthog-js/react";
 
 interface MarkdownTypewriterProps {
   content: string;
@@ -9,6 +10,7 @@ interface MarkdownTypewriterProps {
 export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterProps) => {
   // Memoize content to prevent unnecessary markdown parsing if string hasn't changed
   const memoizedContent = useMemo(() => content, [content]);
+  const posthog = usePostHog();
 
   return (
     <div className="prose dark:prose-invert max-w-none text-sm break-words">
@@ -20,7 +22,20 @@ export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterP
         components={{
             // Custom styles for markdown elements if needed
             p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
-            a: ({node, ...props}) => <a className="text-blue-500 hover:underline" target="_blank" {...props} />,
+           a: ({node, href, ...props}) => (
+              <a 
+                href={href}
+                className="text-blue-500 hover:underline cursor-pointer" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                onClick={() => {
+                  posthog.capture("chat_ai_link_clicked", { 
+                    url: href,
+                  });
+                }}
+                {...props} 
+              />
+            ),
             ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2" {...props} />,
             ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2" {...props} />,
             code: ({node, ...props}) => <code className="bg-zinc-800/50 rounded px-1 py-0.5 text-xs font-mono" {...props} />,

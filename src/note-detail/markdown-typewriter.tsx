@@ -2,40 +2,38 @@ import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
+import { usePostHog } from "posthog-js/react"; // 1. Import PostHog
 
 interface MarkdownTypewriterProps {
   content: string;
   isStreaming?: boolean;
+  noteId?: string; // Optional: Pass noteId if you want to link analytics to a specific note
 }
 
-export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterProps) => {
+export const MarkdownTypewriter = ({ content = "", isStreaming, noteId }: MarkdownTypewriterProps) => {
+  const posthog = usePostHog(); // 2. Init Hook
+
+  // Sentry Protection: Defensive check to prevent .length crashes if API returns null
+  if (typeof content !== "string") return null;
+
   // If not streaming, show content immediately (no animation on reload)
   const [displayedContent, setDisplayedContent] = useState(isStreaming ? "" : content);
 
   useEffect(() => {
-    // If not streaming, show full content instantly
     if (!isStreaming) {
       setDisplayedContent(content);
       return;
     }
 
-    // If we've finished displaying everything, stop.
     if (displayedContent.length === content.length) return;
 
-    // Handle immediate updates (e.g. if content was reset or pasted)
     if (content.length < displayedContent.length) {
       setDisplayedContent(content);
       return;
     }
 
-    // Define the Chunk Size (3 characters)
     const CHUNK_SIZE = 3;
-
-    // Calculate lag to adjust speed dynamically
     const distance = content.length - displayedContent.length;
-
-    // If we are falling very far behind (>50 chars), speed up (10ms).
-    // Otherwise, use a standard reading pace (25ms) since we are showing 3 chars at a time.
     const delay = distance > 50 ? 10 : 25;
 
     const timeout = setTimeout(() => {
@@ -50,7 +48,6 @@ export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterP
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkBreaks]}
         components={{
-          // Inline code
           code: ({ className, children, ...props }) => {
             const isInline = !className;
             return isInline ? (
@@ -69,13 +66,11 @@ export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterP
               </code>
             );
           },
-          // Code blocks
           pre: ({ children }) => (
             <pre className="bg-muted-foreground/20 p-2 rounded my-1 overflow-x-auto">
               {children}
             </pre>
           ),
-          // Lists - minimal spacing
           ul: ({ children }) => (
             <ul className="list-disc list-inside my-0.5">{children}</ul>
           ),
@@ -83,24 +78,30 @@ export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterP
             <ol className="list-decimal list-inside my-0.5">{children}</ol>
           ),
           li: ({ children }) => <li className="my-0">{children}</li>,
-          // Links
+          
+          // 3. PostHog Tracking: Track Link Clicks
           a: ({ href, children }) => (
             <a
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary underline hover:text-primary/80"
+              className="text-primary underline hover:text-primary/80 cursor-pointer"
+              onClick={() => {
+                if (posthog) {
+                  posthog.capture("chat_ai_link_clicked", { 
+                    url: href,
+                    note_id: noteId
+                  });
+                }
+              }}
             >
               {children}
             </a>
           ),
-          // Paragraphs - no wrapper, just children
+          
           p: ({ children }) => <>{children}</>,
-          // Bold
           strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-          // Italic
           em: ({ children }) => <em className="italic">{children}</em>,
-          // Headings - keep inline
           h1: ({ children }) => <strong className="text-lg font-bold">{children}</strong>,
           h2: ({ children }) => <strong className="text-base font-bold">{children}</strong>,
           h3: ({ children }) => <strong className="font-bold">{children}</strong>,
@@ -108,7 +109,7 @@ export const MarkdownTypewriter = ({ content, isStreaming }: MarkdownTypewriterP
       >
         {displayedContent}
       </ReactMarkdown>
-      {/* Cursor: Only show if we are actually streaming AND haven't finished typing the current block */}
+      
       {isStreaming && displayedContent.length < content.length && (
         <span className="inline-block w-1.5 h-4 ml-0.5 align-middle bg-primary/70 animate-pulse" />
       )}

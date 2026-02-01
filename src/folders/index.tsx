@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { usePostHog } from "posthog-js/react";
@@ -58,6 +58,11 @@ export default function Folders() {
   
   // 1. New State to track if user has started searching/filtering
   const [hasSearched, setHasSearched] = useState(false);
+
+   useEffect(() => {
+    posthog.capture("folders_page_viewed");
+  }, [posthog]);
+
 
   // --- CREATE MUTATION ---
   const createFolderMutation = useMutation({
@@ -241,6 +246,7 @@ export default function Folders() {
 // --- SUB-COMPONENT: FOLDER CARD ---
 const FolderCard = ({ folder, index, onClick, isSelected, isSpecial, skipAnimation }: any) => {
   const { t } = useTranslation();
+  const posthog = usePostHog(); 
 
   return (
     <div
@@ -289,12 +295,18 @@ const FolderCard = ({ folder, index, onClick, isSelected, isSpecial, skipAnimati
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={(e) => {
+                posthog.capture("folder_rename_clicked", { folder_id: folder.id });
+                 e.stopPropagation()
+                 }}>
                 {t("Rename")}
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-red-600"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  posthog.capture("folder_delete_clicked", { folder_id: folder.id });
+                  e.stopPropagation()
+                }}
               >
                 {t("Delete")}
               </DropdownMenuItem>

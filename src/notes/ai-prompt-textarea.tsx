@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Zoom from "react-medium-image-zoom";
 import "react-medium-image-zoom/dist/styles.css";
+import * as Sentry from "@sentry/react"; // Ensure Sentry is imported
 
 // --- Services & Utils ---
 import { axiosInstance, convertBlobToWav, createZip2, uploadFileToCF } from "@/services/auth";
@@ -32,8 +33,6 @@ import { NoteCreationToast } from "./note-creation-toast";
 import { useNavigate } from "react-router";
 import FolderSelect from "@/components/select-folder";
 import { useFolders } from "@/hooks/use-folders";
-
-// Import your custom toast component
 
 // ============================================================================
 // 1. HOOK: useAudioRecorder
@@ -114,6 +113,7 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
     } catch (err: any) {
       if (err.name === "NotAllowedError") setIsBlocked(true);
       console.error(err);
+      Sentry.captureException(err, { tags: { section: "audio_recorder" } });
     }
   };
 
@@ -191,12 +191,11 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { companyId,  selectedFolder } = useUserStore();
-  const { data } = useFolders(); // Uses cached data if available
+  const { data } = useFolders();
 
   const [prompt, setPrompt] = useState("");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
-  // --- FLOW CONTEXT (For Progress Tracking) ---
   const flowContext = useRef<{
     toastId: string | number | null;
     progressInterval: NodeJS.Timeout | null;
@@ -211,17 +210,13 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
     name: null
   });
 
-  // --- PROGRESS HELPERS ---
-  // Helper to render/update your custom toast
   const updateToast = (step: string, progress: number, status: "loading" | "success" | "error" = "loading", noteId?: string) => {
-    // If we have an ID, we dismiss specifically or let Sonner handle replacement
-    // Sonner's toast.custom returns an ID we can use to update
     if (flowContext.current.toastId) {
       toast.custom(
         () => <NoteCreationToast step={step} progress={progress} status={status} noteId={noteId} name={flowContext.current.name}  onClick={() => status === 'success' ?  navigate(`/notes/${noteId}`) : null} />, 
         { 
           id: flowContext.current.toastId, 
-          duration: 3000 // Auto dismiss on success only
+          duration: 3000 
         }
       );
     } else {
@@ -237,11 +232,9 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
     if (flowContext.current.progressInterval) clearInterval(flowContext.current.progressInterval);
     let current = startFrom;
     
-    // Initial update
     updateToast(stepName, current, "loading");
     
     flowContext.current.progressInterval = setInterval(() => {
-      // Increment randomly to look natural, cap at 90% until next step actually finishes
       current = Math.min(current + (Math.random() * 5), 90);
       updateToast(stepName, current, "loading");
     }, 400);
@@ -255,20 +248,34 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
     stopProgress();
     console.error(error);
     
+    // 1. Sentry: Capture Exception
+    Sentry.captureException(error, {
+      tags: { section: "note_creation", step: stepName },
+      extra: { companyId }
+    });
+
+    // 2. PostHog: Track Failure
+    posthog.capture('note_creation_failed', {
+      step: stepName,
+      error_message: error?.message || 'Unknown',
+      is_plan_limit: error?.status === 403
+    });
+    
     const isPlanLimit = error?.status === 403;
     const msg = isPlanLimit ? t("Please upgrade your subscription plan") : t("Failed to prepare note");
 
     updateToast(msg, 0, "error");
     
-    // Cleanup after error display
     setTimeout(() => {
         toast.dismiss(flowContext.current.toastId!);
         flowContext.current.toastId = null;
     }, 4000);
   };
 
-  // --- AUDIO LOGIC ---
   const handleAudioStop = useCallback(async (audioBlob: Blob) => {
+    // 3. PostHog: Track Audio Recording
+    posthog.capture('audio_recorded', { size: audioBlob.size });
+
     let finalBlob = audioBlob;
     let extension = "webm";
     let mimeType = audioBlob.type;
@@ -279,14 +286,18 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
       try {
         finalBlob = await convertBlobToWav(audioBlob); 
         extension = "wav"; mimeType = "audio/wav";
-      } catch (error) { toast.error(t("Audio conversion failed")); return; }
+      } catch (error) { 
+        Sentry.captureException(error, { tags: { section: "audio_conversion" } });
+        toast.error(t("Audio conversion failed")); 
+        return; 
+      }
     }
 
     const fileName = `recording_${Date.now()}.${extension}`;
     const audioFile = new File([finalBlob], fileName, { type: mimeType });
     Object.assign(audioFile, { preview: URL.createObjectURL(finalBlob) });
-    setFiles((prev) => [...prev, audioFile]);
-  }, [t]);
+    setFiles((prev: any) => [...prev, audioFile]);
+  }, [t, setFiles, posthog]);
 
   const recorder = useAudioRecorder(handleAudioStop);
 
@@ -297,21 +308,16 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
     return `${minutes}:${seconds}`;
   };
 
-
   const removeFile = (fileToRemove: any) => {
-    setFiles(files.filter(f => f !== fileToRemove));
+    setFiles(files.filter((f: any) => f !== fileToRemove));
     URL.revokeObjectURL(fileToRemove.preview);
   };
 
-
-
-  // --- MUTATIONS ---
   const draftNoteMutation = useMutation({
     mutationFn: (newNote: any) => axiosInstance.post(`${API_BASE_URL}/company/${companyId}/notes/create`, newNote),
     onSuccess: (res) => {
       stopProgress();
       flowContext.current.noteId = res?.data.id;
-      // Start next step visual
       generateUploadLinkMutation.mutate({ noteId: res?.data.id, file_name: flowContext.current.zipData.fileName });
     },
     onError: (e: any) => handleError(e, "Draft creation")
@@ -323,7 +329,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
         return axiosInstance.put(`${API_BASE_URL}/company/${companyId}/notes/${noteId}/generateFileUploadLink`, { file_name })
     },
     onSuccess: async (res) => {
-      stopProgress(); // Stop simulation, start real upload tracking
+      stopProgress();
       
       const { noteId, zipData } = flowContext.current;
       
@@ -336,7 +342,6 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
               zipData.zipBlob, 
               zipData.fileName, 
               (percentage) => {
-                 // Update toast with REAL progress
                  updateToast(t("Uploading files..."), percentage, "loading");
               }
           );
@@ -356,13 +361,13 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
     },
     onSuccess: (_, noteId) => {
       stopProgress();
-      // Show Success State with Lottie
+      // 4. PostHog: Track Successful Creation
+      posthog.capture('note_creation_completed', { note_id: noteId });
+
       updateToast(t("Please wait a bit..."), 100, "success", noteId );
       refetch();
-      // Invalidate folders query to update folder counts
       queryClient.invalidateQueries({ queryKey: ["folders", companyId] });
 
-      // Delay clearing inputs slightly so user sees success state
       setTimeout(() => {
           setPrompt("");
           setFiles([]);
@@ -372,11 +377,16 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
     onError: (e: any) => handleError(e, t("Finalization"))
   });
 
-  // --- TRIGGER ---
   const saveNote = async () => {
     if (!prompt.trim() && files.length === 0) return;
     
-    // 1. Initialize Toast
+    // 5. PostHog: Track Start
+    posthog.capture('note_creation_started', {
+        input_type: files.length > 0 ? (prompt ? 'mixed' : 'files_only') : 'text_only',
+        file_count: files.length,
+        has_audio: files.some((f: any) => f.type.startsWith('audio/'))
+    });
+
     const id = toast.custom(
         () => <NoteCreationToast step={t("Preparing content...")} progress={0} status="loading" />, 
         { duration: Infinity }
@@ -413,7 +423,6 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
 
   const isSubmitting = draftNoteMutation.isPending || generateUploadLinkMutation.isPending || markUploadAsFinishedMutation.isPending;
 
-  // --- STYLING VARIANTS ---
   const containerVariants = {
     idle: { boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.05)" },
     active: { borderColor: "transparent", boxShadow: "0 0 0 4px rgba(245, 158, 11, 0.1)" },
@@ -432,7 +441,6 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
         }
       `}</style>
 
-      {/* Decorative Glow background */}
       <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/5 blur-3xl group-focus-within:bg-amber-500/10 transition-all pointer-events-none hover:shadow-lg" />
       
       <motion.div
@@ -455,11 +463,10 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
           className="relative z-20 w-full resize-none border-0 bg-transparent shadow-none focus:ring-0 text-base py-3 px-3 outline-none placeholder:text-muted-foreground/50"
         />
 
-        {/* File Previews Area */}
         <AnimatePresence>
           {files.length > 0 && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="relative z-20 flex flex-wrap gap-2 px-3 pb-3 mt-1">
-              {files.map((file, idx) => (
+              {files.map((file: any, idx: number) => (
                 file.type.startsWith("audio/") ? (
                   <AudioPreview key={file.name+idx} file={file} onRemove={() => removeFile(file)} />
                 ) : (
@@ -481,7 +488,6 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
           )}
         </AnimatePresence>
 
-        {/* Nested Organic Action Bar */}
         <div className="relative z-20 flex justify-between items-center rounded-[1rem] bg-background/50 backdrop-blur-sm border border-border/40 p-1.5 mt-2 min-h-[48px]">
           <AnimatePresence mode="wait" initial={false}>
             {recorder.status === "idle" ? (
@@ -496,7 +502,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                 
                 <Tooltip>
                   <TooltipTrigger >
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-pink-600 rounded-full h-9 w-9" onClick={() => { if (!recorder.devices.length) recorder.getDevices(true); recorder.start(); }}><Mic className="h-5 w-5" /></Button>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-pink-600 rounded-full h-9 w-9" onClick={() => { if (!recorder.devices.length) recorder.getDevices(true); posthog.capture('audio_recording_started'); recorder.start(); }}><Mic className="h-5 w-5" /></Button>
                   </TooltipTrigger>
                   <TooltipContent><p>{t("Start recording")}</p></TooltipContent>
                 </Tooltip>
@@ -568,7 +574,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
               disabled={isSubmitting || recorder.status === "recording"} 
               className="rounded-full h-10 w-10 bg-black hover:bg-black-600 text-white shadow-lg shadow-black/20 transition-all active:scale-95"
             >
-              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : /*<AIArrow className="h-5 w-5" strokeWidth={5} />*/ <ArrowUp />}
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : <ArrowUp />}
             </Button>
           </div>
         </div>
