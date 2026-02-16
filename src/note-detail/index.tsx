@@ -296,14 +296,16 @@ const NoteDetailBase = () => {
       zip.forEach((path, entry) => {
         promises.push(
           (async () => {
-            const blob = await entry.async("blob");
+            const rawBlob = await entry.async("blob");
             const name = entry.name.toLowerCase();
             if (/\.(jpg|jpeg|png|webp|gif)$/.test(name))
-              imgs.push({ name: entry.name, url: URL.createObjectURL(blob) });
+              imgs.push({ name: entry.name, url: URL.createObjectURL(rawBlob) });
             else if (/\.(mp3|wav|m4a|ogg|webm)$/.test(name))
-              auds.push({ name: entry.name, url: URL.createObjectURL(blob) });
-            else if (name.endsWith(".pdf"))
-              pdfs.push({ name: entry.name, url: URL.createObjectURL(blob) });
+              auds.push({ name: entry.name, url: URL.createObjectURL(rawBlob) });
+            else if (name.endsWith(".pdf")){
+              const pdfBlob = new Blob([rawBlob], { type: "application/pdf" });
+              pdfs.push({ name: entry.name, url: URL.createObjectURL(pdfBlob)  });
+            }
             else if (name.endsWith(".txt"))
               txt += (await entry.async("string")) + "\n";
           })(),
@@ -570,7 +572,7 @@ const NoteDetailBase = () => {
                           audioPaths.length > 0 ||
                           pdfPaths.length > 0 ||
                           textContent) && (
-                          <div className="shrink-0 max-h-[120px] overflow-y-auto space-y-2 pr-2 pt-2 border-t border-zinc-200/50">
+                          <div className="shrink-0 h-full overflow-y-auto space-y-2 pr-2 pt-2 border-t border-zinc-200/50">
                             {imagePaths.length > 0 && (
                               <div className="grid grid-cols-3 gap-2 bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
                                 {imagePaths.map((img, i) => (
@@ -778,9 +780,9 @@ const NoteDetailBase = () => {
 
       {previewFile && (
         <FilePreviewDialog
-          renderAsBlobUrl
-          url={previewFile.url}
           name={previewFile?.name || ""}
+          file={previewFile}
+          url={previewFile.url}
           onClose={() => setPreviewFile(null)}
         />
       )}

@@ -197,6 +197,9 @@ const ChatInterface = ({
       signal: abortController.signal,
       
       onData: (event, data) => {
+        console.log(event)
+        console.log("******")
+        console.log(data)
         if (event === "done") return; 
         let chunk = "";
         if (event === "message") chunk = data.content || "";

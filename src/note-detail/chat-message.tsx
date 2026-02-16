@@ -149,8 +149,11 @@ const ChatMessageItem = ({
             {onRetry && isLastMessage && (
               <button
                 onClick={() => {
-                  posthog.capture("chat_retry_clicked", { note_id: noteId, message_id: messageId });
-                  onRetry()
+                  posthog.capture("chat_retry_clicked", {
+                    note_id: noteId,
+                    message_id: messageId,
+                  });
+                  onRetry();
                 }}
                 className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
               >
