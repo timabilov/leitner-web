@@ -201,7 +201,7 @@ const ChatInterface = ({
         let chunk = "";
         if (event === "message" && !data.args && data.content && data.content.indexOf("type") === 2) {
             posthog.capture("chat_ai_response_quiz_not_parsable", { note_id: noteId, content: data.content });
-            Sentry.logger.info("chat_ai_response_quiz_not_parsable", {content: data.content});
+            Sentry.captureException("chat_ai_response_quiz_not_parsable",  data.content);
         }
         if (event === "message") chunk = data.content || "";
         else if (event === "quiz_ui") chunk = data.args || ""; 
