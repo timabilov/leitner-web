@@ -189,9 +189,7 @@ const NoteDetailBase = () => {
           query.state?.data?.data?.status !== "failed" &&
           query.state?.data?.data?.status !== "transcribed" &&
           query.state?.data?.data?.status !== "draft";
-        return (isPolling &&
-          (quiz_status === "in_progress" ||
-            quiz_status === "ready_to_generate")) ||
+        return (isPolling && quiz_status === "in_progress"  ) ||
           isNoteProcessing
           ? 3000
           : false;
@@ -205,6 +203,7 @@ const NoteDetailBase = () => {
 
   useEffect(() => {
     if (isPolling) {
+      console.log("isPolling", isPolling)
       refetch();
     }
   }, [isPolling, refetch]);
@@ -215,6 +214,7 @@ const NoteDetailBase = () => {
       noteQueryResponse?.data?.status !== "transcribed" &&
       noteQueryResponse?.data?.status !== "draft"
     ) {
+      console.log("isPolling111", isPolling)
       setIsPolling(true);
       return true;
     } else if (!isPolling) {

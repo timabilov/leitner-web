@@ -197,11 +197,12 @@ const ChatInterface = ({
       signal: abortController.signal,
       
       onData: (event, data) => {
-        console.log(event)
-        console.log("******")
-        console.log(data)
         if (event === "done") return; 
         let chunk = "";
+        if (event === "message" && !data.args && data.content && data.content.indexOf("type") === 2) {
+            posthog.capture("chat_ai_response_quiz_not_parsable", { note_id: noteId, content: data.content });
+            Sentry.logger.info("chat_ai_response_quiz_not_parsable", {content: data.content});
+        }
         if (event === "message") chunk = data.content || "";
         else if (event === "quiz_ui") chunk = data.args || ""; 
         
@@ -247,7 +248,7 @@ const ChatInterface = ({
       onError: (err) => {
         console.error("Streaming error:", err);
         Sentry.captureException(err);
-         posthog.capture("chat_ai_streaming_failed", { note_id: noteId });
+        posthog.capture("chat_ai_streaming_failed", { note_id: noteId });
         const errorMsg = "\n\n" + t("Error: Connection interrupted") + ".";
         
         // If we fail on the very first byte, use the pre-seeded bubble
