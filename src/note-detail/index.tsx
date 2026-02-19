@@ -689,7 +689,7 @@ const NoteDetailBase = () => {
                               backgroundClip: "text",
                               WebkitBackgroundClip: "text",
                               color: "transparent",
-                              animation: "gradient-flow 4s linear infinite",
+                              animation: "gradient-flow-text 4s linear infinite",
                             }}
                           >
                             {t("Processing")}
@@ -788,7 +788,7 @@ const NoteDetailBase = () => {
       )}
       <style
         dangerouslySetInnerHTML={{
-          __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `,
+          __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow-text { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `,
         }}
       />
     </>
