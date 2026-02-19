@@ -28,7 +28,7 @@ const ChatInterface = ({
   onActionComplete
 }: ChatInterfaceProps) => {
   const { t } = useTranslation();
-  const { companyId } = useUserStore();
+  const { companyId, email } = useUserStore();
   const posthog = usePostHog();
   const chats = useChatStore((state) => state.chats);
   const addMessage = useChatStore((state) => state.addMessage);
@@ -204,6 +204,12 @@ const ChatInterface = ({
             Sentry.captureException("chat_ai_response_quiz_not_parsable",  data.content);
         }
         if (event === "message") chunk = data.content || "";
+        if (event === "quiz_ui" && Object.keys(JSON.parse(data.args))?.length === 0) {
+          posthog.capture("chat_ai_response_quiz_not_created", { note_id: noteId, content: data.content,  email });
+          Sentry.captureException({message: "chat_ai_response_quiz_not_created",  content: data.content, note_id: noteId, email});
+          chunk = t("No quiz available")
+        }
+
         else if (event === "quiz_ui") chunk = data.args || ""; 
         
         if (!chunk) return; 
