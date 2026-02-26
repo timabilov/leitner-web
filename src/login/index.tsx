@@ -370,7 +370,7 @@ const LoginBase = () => {
         email: variables.user.email,
         new_user: data?.new,
       });
-      if (data?.new) {
+      if (/*data?.new*/ true ) {
         setSessionData({
           id: data.id,
           idToken: variables.idToken,

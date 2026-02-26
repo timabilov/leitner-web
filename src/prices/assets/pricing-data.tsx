@@ -1,15 +1,64 @@
+export const PRICING_TIERS_CLAIM = [
+  {
+    key: "weekly",
+    id: "pro_weekly",
+    discountId: 'dsc_01kj5c3fkwfqcq1wdhect5nr19',
+    unit: "week",
+    name: "Weekly",
+    claimOffer: "Free first week",
+    defaultPrice: 5.99,
+    originalPrice: 0,
+    description: "Perfect for short-term projects.",
+    priceId: "pri_01kaxbbdytvqamegsd7e486r59", 
+    features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+  },
+  {
+    key: "monthly",
+    id: "pro_monthly",
+    unit: "month",
+    name: "Monthly",
+    claimOffer: "+42% discount",
+    defaultPrice: 11.99,
+    originalPrice: 6.99,
+    discountId: 'dsc_01kbaks5he1g277bedvg06xs1m',
+    discount: "50% OFF",
+    description: "Recommended for ongoing usage.",
+    priceId: "pri_01kaxb9tc7q2kqmh0c3rhda462", 
+    features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+    isPopular: true, // Helper flag for default selection
+  },
+  {
+    key: "annual",
+    id: "pro_annual",
+     unit: "month",
+    name: "Annual",
+    defaultPrice: 79.99,
+    originalPrice: 65.89, //239 dan endirime claimsiz gelende
+    discount: "80% OFF",
+    claimOffer: "+2 month free",
+    montly_price: 65.89,
+    discountId: 'dsc_01kbaksng47cf7gsr4wht0xrdq',
+    description: "Best value. Save significantly.",
+    priceId: "pri_01kaxb7rjs3vkn4dtjrk8x7hmh",
+    features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+  },
+];
+
+
 export const PRICING_TIERS = [
   {
     key: "weekly",
     id: "pro_weekly",
+     unit: "week",
     name: "Weekly",
-    originalPrice: 8.99,
+    originalPrice: 5.99,
     description: "Perfect for short-term projects.",
     priceId: "pri_01kaxbbdytvqamegsd7e486r59", 
-    features: ['Unlimited notes', 'Unlimited videos', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+    features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
   },
   {
     key: "monthly",
+    unit: "month",
     id: "pro_monthly",
     name: "Monthly",
     defaultPrice: 34.99,
@@ -18,19 +67,20 @@ export const PRICING_TIERS = [
     discount: "50% OFF",
     description: "Recommended for ongoing usage.",
     priceId: "pri_01kaxb9tc7q2kqmh0c3rhda462", 
-    features: ['Unlimited notes', 'Unlimited videos', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+    features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
     isPopular: true, // Helper flag for default selection
   },
   {
     key: "annual",
     id: "pro_annual",
     name: "Annual",
-    defaultPrice: 239.95,
-    originalPrice: 57.99,
+    unit: "month",
+    defaultPrice: 239.99,
+    originalPrice: 79.99, //239 dan endirime claimsiz gelende
     discount: "80% OFF",
     discountId: 'dsc_01kbaksng47cf7gsr4wht0xrdq',
     description: "Best value. Save significantly.",
     priceId: "pri_01kaxb7rjs3vkn4dtjrk8x7hmh",
-    features: ['Unlimited notes', 'Unlimited videos', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
+    features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
   },
 ];

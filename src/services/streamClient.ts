@@ -102,6 +102,7 @@ export const streamWithAuth = async ({ url, body, signal, onData, onError, onDon
         }
 
         if (jsonData) {
+          console.log("jsonData", jsonData)
             onData(eventType, jsonData);
         }
       }

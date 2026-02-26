@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, Star } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ClaimButton } from '.';
 
 /**
  * Shadcn-style Animated Underline
@@ -34,7 +35,7 @@ const FEEDBACKS = [
   },
 ];
 
-const SecondStepAnimation = ({ t }: { t: any }) => {
+const FourthStepAnimation = ({ t }: { t: any }) => {
   // Parent container variants for staggered children
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -69,6 +70,10 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
           </span>
         </h2>
       </div>
+      {/* <div className='pt-4'>
+        <ClaimButton />
+
+      </div> */}
 
       {/* 2. VISUAL ANIMATION: STAGGERED REVEAL (NO OVERLAP) */}
       <motion.div 
@@ -98,6 +103,9 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
                 <div className="flex text-amber-500 gap-0.5">
                   <Star size={10} fill="currentColor" />
                   <Star size={10} fill="currentColor" />
+                  <Star size={10} fill="currentColor" />
+                  <Star size={10} fill="currentColor" />
+                  <Star size={10} fill="currentColor" />
                 </div>
               </div>
               <p className="text-[11px] text-slate-500 font-normal leading-snug italic">
@@ -125,7 +133,11 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
             {t("when collective.")}
           </span>
         </h3>
-        
+         <div className='pt-4 flex justify-center'>
+        <ClaimButton />
+
+      </div>
+
         {/* <div className="mt-6 flex flex-col items-center gap-3">
           <div className="flex -space-x-2">
             {[1,2,3,4].map(i => (
@@ -144,4 +156,4 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
   );
 };
 
-export default SecondStepAnimation;
+export default FourthStepAnimation;

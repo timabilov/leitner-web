@@ -67,7 +67,7 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
         
         {/* Central Core */}
         <motion.div animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 3, repeat: Infinity }}
-          className="relative z-20 w-24 h-24 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-center overflow-hidden"
+          className="relative z-20 w-24 h-24 bg-white border border-slate-200 rounded-lg shadow-sm flex items-center justify-center"
         >
           <div className="relative">
              {/* Icon now uses the Brand Gradient via SVG definition */}

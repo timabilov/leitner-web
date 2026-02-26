@@ -7,7 +7,7 @@ export const useOfferCountdown = () => {
 
   useEffect(() => {
     // 1. Initialize the offer if it doesn't exist (e.g., 72 hours / 3 days)
-    initializeOffer(72);
+    initializeOffer(1);
   }, [initializeOffer]);
 
   useEffect(() => {

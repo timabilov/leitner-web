@@ -70,7 +70,7 @@ const parseActionStyle = (rawAction: string) => {
 // --- COMPONENT ---
 const LiveActivityFeed2 = () => {
   const posthog = usePostHog();
-  const { companyId } = useUserStore()
+  const { companyId } = useUserStore() || 169;
 
   const [currentActivity, setCurrentActivity] = useState<ActivityItem | null>(null);
   const [activityQueue, setActivityQueue] = useState<ActivityItem[]>([]);
@@ -107,7 +107,7 @@ const LiveActivityFeed2 = () => {
     },
     refetchInterval: 10000,
     refetchOnWindowFocus: false,
-    enabled: !!companyId,
+    enabled: true,
   });
 
   useEffect(() => {
@@ -131,7 +131,7 @@ const LiveActivityFeed2 = () => {
   }, []);
 
   return (
-    <div className="absolute top-2 right-2 z-50 pointer-events-none w-auto hidden md:block">
+    <div className="z-50 pointer-events-none w-auto hidden md:block"> {/*absolute top-2 right-2  */}
       <AnimatePresence mode="wait">
         {currentActivity && (
           <SystemMessagePill item={currentActivity} />

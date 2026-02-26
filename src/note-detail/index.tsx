@@ -230,12 +230,12 @@ const NoteDetailBase = () => {
   }, [noteQueryResponse]);
 
   const { data: filesResponse } = useQuery({
-    queryKey: [`notes`, noteId, "file"],
+    queryKey: [`notes`, noteId, "file", note],
     queryFn: () =>
       axiosInstance.get(
         `${API_BASE_URL}/company/${companyId}/notes/${noteId}/documents-url`,
       ),
-    enabled: !!note && note.note_type !== "youtube",
+    enabled: !!(note && note.note_type !== "youtube"),
   });
 
   useEffect(() => {
@@ -533,17 +533,9 @@ const NoteDetailBase = () => {
 
         {/* --- RESIZABLE PANEL GROUP --- */}
         <div className="flex-1 min-h-0 flex flex-col">
-          <PanelGroup direction="vertical">
-            {/* PANEL 1: MEDIA TRAY */}
-            {isMediaExpanded && hasMedia && (
-              <>
-                <Panel
-                  defaultSize={note?.youtube_url ? 40 : 15}
-                  minSize={15}
-                  maxSize={80}
-                  order={1}
-                  className="bg-zinc-50/50 dark:bg-zinc-900/20 border-b border-zinc-200/50"
-                >
+            {
+              isMediaExpanded && hasMedia &&  !note?.youtube_url && (
+                <>
                   <div className="w-full h-full flex flex-col px-6 py-4">
                     {/* The Video Area */}
                     <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
@@ -554,32 +546,20 @@ const NoteDetailBase = () => {
                            This ensures that as the panel gets taller (drag down), the video height increases,
                            and the width scales accordingly.
                         */}
-                        {note?.youtube_url && (
-                          <div className="flex-1 min-h-0 flex items-center justify-center">
-                            <div className="relative h-full w-auto max-w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black mx-auto">
-                              <iframe
-                                className="w-full h-full"
-                                src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`}
-                                allowFullScreen
-                                title="YouTube Video"
-                              />
-                            </div>
-                          </div>
-                        )}
-
+                       
                         {/* Attachments at bottom of tray (fixed height) */}
                         {(imagePaths.length > 0 ||
                           audioPaths.length > 0 ||
                           pdfPaths.length > 0 ||
                           textContent) && (
-                          <div className="shrink-0 h-full overflow-y-auto space-y-2 pr-2 pt-2 border-t border-zinc-200/50">
+                          <div className="shrink-0 h-full max-h-[250px] overflow-y-auto space-y-2 pr-2 pt-2 border-t border-zinc-200/50">
                             {imagePaths.length > 0 && (
-                              <div className="grid grid-cols-3 gap-2 bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                              <div className="flex bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
                                 {imagePaths.map((img, i) => (
                                   <Zoom key={i}>
                                     <img
                                       src={img.url}
-                                      className="aspect-square object-cover rounded-md border border-zinc-200"
+                                      className="aspect-square object-cover rounded-md border border-zinc-200 h-[120px] mr-1"
                                     />
                                   </Zoom>
                                 ))}
@@ -617,6 +597,45 @@ const NoteDetailBase = () => {
                         )}
                       </div>
                     </div>
+                  </div>
+                </>
+              )
+            }
+          <PanelGroup direction="vertical">
+            {note?.youtube_url  && (
+              <>
+            {/* PANEL 1: MEDIA TRAY */}
+                <Panel
+                  defaultSize={note?.youtube_url ? 40 : 15}
+                  minSize={15}
+                  maxSize={80}
+                  order={1}
+                  className="bg-zinc-50/50 dark:bg-zinc-900/20 border-b border-zinc-200/50"
+                >
+                  <div className="w-full h-full flex flex-col px-6 py-4">
+                    {/* The Video Area */}
+                    <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
+                      <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
+                        {/* 
+                           UPDATED CSS for YOUTUBE VIDEO:
+                           We use 'h-full', 'w-auto' and 'max-w-full' along with aspect-video.
+                           This ensures that as the panel gets taller (drag down), the video height increases,
+                           and the width scales accordingly.
+                        */}
+                        {note?.youtube_url && (
+                          <div className="flex-1 min-h-0 flex items-center justify-center">
+                            <div className="relative h-full w-auto max-w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black mx-auto">
+                              <iframe
+                                className="w-full h-full"
+                                src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`}
+                                allowFullScreen
+                                title="YouTube Video"
+                              />
+                            </div>
+                          </div>
+                        )}
+                    </div>
+                  </div>
                   </div>
                 </Panel>
 

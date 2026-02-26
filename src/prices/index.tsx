@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
-import { PRICING_TIERS } from "./assets/pricing-data";
+import { PRICING_TIERS, PRICING_TIERS_CLAIM } from "./assets/pricing-data";
 import LiveActivityFeed2 from "./live-activity-feed2";
 import CountdownTimer from "@/components/countdown-timer";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
@@ -16,7 +16,7 @@ import { Trans } from "react-i18next";
 import { usePostHog } from "posthog-js/react";
 
 // --- COMPONENT: Trust & Organic Data (Bottom Section) ---
-const TrustStats = () => {
+export const TrustStats = () => {
   const { t } = useTranslation();
   
   const stats = [
@@ -26,7 +26,7 @@ const TrustStats = () => {
   ];
 
   return (
-    <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+    <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100 absolute">
       {stats.map((stat, i) => (
         <div key={i} className="flex items-center gap-3 bg-zinc-100/50 p-3 rounded-xl border border-border/30 backdrop-blur-sm">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-600 dark:text-zinc-300 group-hover:scale-105 transition-transform duration-300">
@@ -43,7 +43,7 @@ const TrustStats = () => {
 };
 
 // --- COMPONENT: Social Proof (Centered Bottom) ---
-const SocialProof = () => (
+export const SocialProof = () => (
   <div className="flex flex-col items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200 mt-2">
     <div className="flex flex-wrap justify-center items-center gap-4 bg-muted/30 p-3 rounded-2xl border border-border/40 backdrop-blur-sm">
       {/* Avatars Stack */}
@@ -93,6 +93,9 @@ const PricingCard = ({
   onSelect,
   onCheckout,
   isLoading,
+  isPromo,
+  isSpecialAnnual,
+  claimOffer
 }: {
   tier: (typeof PRICING_TIERS)[0];
   isSelected: boolean;
@@ -100,6 +103,9 @@ const PricingCard = ({
   onCheckout: () => void;
   isLoading: boolean;
   displayPrice: string | null;
+  isPromo?: boolean;
+  isSpecialAnnual: boolean;
+  claimOffer: string
 }) => {
   const { t } = useTranslation();
 
@@ -131,18 +137,31 @@ const PricingCard = ({
             {tier.discount}
           </div>
         )}
+         {/* Badge Logic */}
+  
 
         {/* Content Section */}
         <div className="flex flex-col gap-4 relative z-10 flex-1" style={{ transform: "translateZ(20px)" }}>
           <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-bold">{t(tier.name)}</h3>
+          <div className="flex justify-between items-start gap-2">
+              <h3 className="text-lg font-bold leading-none">{t(tier.name)}</h3>
+                {isSpecialAnnual && (
+                  <span className=" inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-inset ring-pink-500/20 whitespace-nowrap">
+                    🎁 {t(claimOffer)}
+                  </span>
+                  )}
+            
+            </div>
 
             <div className="flex items-baseline gap-2 flex-wrap">
               <div className="relative">
                 {/* CHANGED: Smaller price text (text-3xl) */}
                 <span className="text-3xl font-bold tracking-tight">
-                  {`$${tier.originalPrice}`}
+                  {`$${tier.key === "annual" ? (tier.originalPrice/12).toFixed(2): tier.originalPrice}`}
                 </span>
+                 <span className="text-md font-bold tracking-tight opacity-70" >{`/${tier.unit}`}</span>
+              
+              
                 {isSelected && (
                   <svg
                     className="absolute bottom-1 left-0 -z-10 w-full h-[1.5em]"
@@ -164,7 +183,7 @@ const PricingCard = ({
               {tier.defaultPrice && (
                 <div className="flex flex-col justify-end ml-1">
                   <span className="text-sm font-medium line-through text-foreground decoration-1 opacity-70">
-                    ${tier.defaultPrice}
+                    ${tier.key === "annual" ? (tier.defaultPrice/12).toFixed(2) : tier.defaultPrice}
                   </span>
                 </div>
               )}
@@ -195,6 +214,7 @@ const PricingCard = ({
             </div>
           </div>
         </div>
+          
 
         {/* Footer / Button */}
         <div className="pt-2 mt-auto" style={{ transform: "translateZ(20px)" }}>
@@ -371,10 +391,11 @@ export default function PricingSection() {
                 </span>
                 <span>{t("Select plan")}</span>
               </h1>
-              <p className="text-muted-foreground">
+              {/* <p className="text-muted-foreground">
                 {t("Capture everything in one note! Seamlessly combine PDFs, voice recordings, multiple images, and text.")}
-              </p>
-
+              </p> */}
+   
+            
 
           </div>
         </div>
@@ -395,7 +416,7 @@ export default function PricingSection() {
                       {
                         targetDate &&  <CountdownTimer 
                           targetDate={targetDate} 
-                          size="xs" 
+                          size="md" 
                         /> 
                       }
                     </div>
@@ -408,7 +429,7 @@ export default function PricingSection() {
         </div>
         {/* --- PRICING GRID --- */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3 w-full max-w-4xl px-4 z-20 justify-items-center items-stretch">
-          {PRICING_TIERS.map((tier) => (
+          {(isPromoLink ? PRICING_TIERS_CLAIM : PRICING_TIERS).map((tier) => (
             <PricingCard
               key={tier.id}
               tier={tier}
@@ -420,6 +441,9 @@ export default function PricingSection() {
               onCheckout={() => openCheckout(tier.priceId, tier.discountId)}
               isLoading={loadingPriceId === tier.priceId}
               displayPrice={tier.originalPrice}
+              isPromo={isPromoLink} 
+              isSpecialAnnual={isPromoLink}
+              claimOffer={tier.claimOffer}
             />
           ))}
         </div>

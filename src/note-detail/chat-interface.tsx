@@ -197,13 +197,21 @@ const ChatInterface = ({
       signal: abortController.signal,
       
       onData: (event, data) => {
-        if (event === "done") return; 
         let chunk = "";
+        if (event === "done") return; 
+        if (!data?.cache_hit) {
+          chunk = "Sorry, content is too small";
+        }
+       
         if (event === "message" && !data.args && data.content && data.content.indexOf("type") === 2) {
             posthog.capture("chat_ai_response_quiz_not_parsable", { note_id: noteId, content: data.content });
             Sentry.captureException("chat_ai_response_quiz_not_parsable",  data.content);
+            chunk = t("Sorry error happened, try reloading the app or try again later.")
+            return;
         }
-        if (event === "message") chunk = data.content || "";
+        if (event === "message" && data.content.indexOf("type") !== 2) {
+          chunk = data.content || "";
+        }
         if (event === "quiz_ui" && Object.keys(JSON.parse(data.args))?.length === 0) {
           posthog.capture("chat_ai_response_quiz_not_created", { note_id: noteId, content: data.content,  email });
           Sentry.captureException({message: "chat_ai_response_quiz_not_created",  content: data.content, note_id: noteId, email});
