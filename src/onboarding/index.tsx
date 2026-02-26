@@ -26,7 +26,7 @@ import { Flame } from "lucide-react";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 import Lottie from "lottie-react";
 
-export const ClaimButton = ({ onClick }: { onClick: () => void }) => {
+export const ClaimButton = ({ onClick, t }: { onClick: () => void, t: any }) => {
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [mounted, setMounted] = useState(false);
   const { targetDate } = useOfferCountdown();
@@ -114,7 +114,7 @@ export const ClaimButton = ({ onClick }: { onClick: () => void }) => {
       {/* Optional: Icon with matching gradient */}
       <span className="font-mono text-[15px] font-black tracking-tight animate-organic-text bg-gradient-to-r from-red-600 via-orange-500 to-rose-600 bg-clip-text text-transparent drop-shadow-sm flex items-center">
           <Lottie  style={{  height: "15px" }} animationData={ShopAnimation} loop={true} />{' '}
-         {timeLeft.d}d:{timeLeft.h}h:{timeLeft.m}m:{timeLeft.s}s
+         {timeLeft.d}{t("d")}:{timeLeft.h}{t("h")}:{timeLeft.m}{t("m")}:{timeLeft.s}{t("s")}
       </span>
     </div>
 
@@ -137,7 +137,7 @@ export const ClaimButton = ({ onClick }: { onClick: () => void }) => {
 
       {/* 3. CONTENT */}
       <span className="relative z-10 flex items-center gap-2">
-        <span className="drop-shadow-sm">🔥 TRY for $0</span>
+        <span className="drop-shadow-sm">🔥 {t("TRY for $0")}</span>
       </span>
     </button>
       </div>

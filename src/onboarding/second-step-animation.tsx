@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCircle2, Smartphone, Sparkles } from 'lucide-react';
 import AIIcon from '@/note-detail/assets/ai-icon';
 import { useNavigate } from "react-router-dom";
+import { Trans } from 'react-i18next';
 
 /**
  * Shadcn-style Animated Underline
@@ -127,11 +128,12 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
         </div>
         
         <h3 className="text-xl font-bold text-slate-900 tracking-tighter leading-none">
-          {t("We’ll alert you only")}<br />
+          {t("alerts.weAlertYouOnly")}<br />
           <span className="text-slate-400 font-semibold text-lg mt-1 inline-block tracking-tight">
-            {t("when your brain needs it.")}
+            {t("alerts.whenYourBrainNeedsIt")}
           </span>
         </h3>
+
       </div>
     </div>
   );

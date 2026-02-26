@@ -7,7 +7,7 @@ import {
   useMotionValue,
 } from "framer-motion";
 import CatPenIcon from "@/notes/assets/cat-pen-icon";
-import { useTranslation } from "react-i18next";
+import { useTranslation, Trans } from "react-i18next";
 import { useUserStore } from "@/store/userStore";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { jwtDecode } from "jwt-decode";
 import { usePostHog } from "posthog-js/react";
 import OnboardingModal from "@/onboarding";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 // const dummy = {"idToken":"eyJhbGciOiJSUzI1NiIsImtpZCI6IjZhOTA2ZWMxMTlkN2JhNDZhNmE0M2VmMWVhODQyZTM0YThlZTA4YjQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiIyNDE2ODczNTI5ODUtdW1iMzVlZGNwMTAxMXI2MXRudmVrY2g1c3V1dTZsZGsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiIyNDE2ODczNTI5ODUtdW1iMzVlZGNwMTAxMXI2MXRudmVrY2g1c3V1dTZsZGsuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMTQ1NjU1NDQ5MzM1MTY0MTMwNDUiLCJlbWFpbCI6InRhZ2hpemFkZWhrYW1yYW45MkBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibmJmIjoxNzY2NDkxNTczLCJuYW1lIjoiS2FtcmFuIFRhZ2hpemFkZWgiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSXdERzhUQlA5elFQMVlLM0h0bGNzdzhMZHJ4TlJacG1NblBHUk5ILVBoM1JzRUJiRT1zOTYtYyIsImdpdmVuX25hbWUiOiJLYW1yYW4iLCJmYW1pbHlfbmFtZSI6IlRhZ2hpemFkZWgiLCJpYXQiOjE3NjY0OTE4NzMsImV4cCI6MTc2NjQ5NTQ3MywianRpIjoiOWYxNjVmMDk5ZDRmYjljODJhM2IwNjhhODcxMjg2YzNmMGQ1ZmYzOSJ9.LshYlaNJ1zb_sycbgT4IlfQCVIXceOiG7_sgRtzuZi_tXxDIyy3JIT1pL6Kqh_JeKOnqTiuEU_P-fFdb1Ozc6sLa6IZxOqg98jO4a_sQXejUGmhTRTuNhbpm5B-r4FMpHE2LaRmLD_KQEWMOUU2XDUr52gCegvCSykWB2WIpAn_7Wz7hQxTinaBcdVpvMcpX8dzcoWiqfXyoWsHXuFiWHMNPAyjnxOAIQPsI0GOJ0QwqkynRM7FEo7RwOIZsgqPqQcfZQQOqAsFVMkoh9wLb_s2AwELCtQHRzsGn0AODAWzgmwbersWv-baXZldjD5DE3WQuNjIqBDGyaUppbgWDYQ","user":{"id":"114565544933516413045","name":"Kamran Taghizadeh","email":"taghizadehkamran92@gmail.com","photo":"https://lh3.googleusercontent.com/a/ACg8ocIwDG8TBP9zQP1YK3Htlcsw8LdrxNRZpmMnPGRNH-Ph3RsEBbE=s96-c"},"platform":"web"}
 
@@ -327,14 +328,14 @@ const LoginBase = () => {
   const setAccessToken = useUserStore((state) => state.setAccessToken);
   const setRefreshToken = useUserStore((state) => state.setRefreshToken);
   const setUserData = useUserStore((state) => state.setUserData);
-
+  const { accessToken } = useUserStore();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(!!accessToken || false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [sessionData, setSessionData] = useState<any>(null);
-
+  console.log(accessToken)
    useEffect(() => {
     posthog.capture("login_page_viewed");
   }, [posthog]);
@@ -524,6 +525,9 @@ const LoginBase = () => {
           }`}
       </style>
       <AnimatedGrid />
+        <div className="absolute top-8 right-8 z-[101]">
+          <LanguageSwitcher />
+        </div>
       <OnboardingModal
         isOpen={showOnboarding}
         t={t}
@@ -531,96 +535,106 @@ const LoginBase = () => {
         isSuccess={isSuccess}
         onFinish={handleFinishOnboarding}
       />
-
-      <FloatingBlobs />
-      <RisingBubbles />
+        <FloatingBlobs />
+        <RisingBubbles />
+  
+        
 
       <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div className="absolute left-[10%] top-[20%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-40"></div>
         <div className="absolute right-[15%] top-[30%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-30"></div>
       </div>
 
-      <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10"></header>
-
-      <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
-        <div className="mb-2 flex flex-col items-center gap-2">
-          <div className="flex items-center justify-center text-white ">
-            <CatPenIcon
-              className="h-30 w-30 animate-slow-bounce"
-              strokeWidth={2.5}
-            />
-            {/* <AiOrbitAnimation /> */}
-          </div>
-          <h3 className="text-4xl font-bold  text-slate-700  tracking-tighter  dark:text-zinc-50">
-            Bycat AI
-          </h3>
-        </div>
-
-        <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
-          <AnimatePresence mode="wait">
-            <motion.h1
-              key={index}
-              initial={{ y: 20, opacity: 0, filter: "blur(10px)" }}
-              animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-              exit={{ y: -20, opacity: 0, filter: "blur(10px)" }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="text-4xl font-bold tracking-tight text-slate-700 md:text-4xl leading-[1.1] max-w-3xl mx-auto"
-            >
-              {t(messages[index])}
-              <span className="inline-block ml-3 align-middle">
-                <SparkleHot className="w-8 h-8 md:w-8 md:h-8" />
-              </span>
-            </motion.h1>
-          </AnimatePresence>
-        </div>
-
-        <div className="w-full max-w-sm space-y-4 flex flex-col items-center">
-          <button
-            disabled={isGoogleLoading}
-            onClick={() => {}}
-            className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300"
-          >
-            {isGoogleLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900"></div>
-            ) : (
-              <GoogleColoredIcon className="h-7 w-7" />
-            )}
-            <div className="absolute inset-0 z-10 opacity-0 overflow-hidden flex items-center justify-center">
-              {/* 
-                Google buttons have a max-width. We perform a CSS transform scale 
-                to force the iframe to cover the entire width of your custom button 
-                so there are no 'dead zones' for the touch event.
-              */}
-              <div className="scale-[2.0] w-full h-full flex items-center justify-center">
-                <GoogleLogin shape="square" onSuccess={signIn} />
+      <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10">
+      
+      </header>
+        {/* {
+          accessToken ? null : ( */}
+            <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
+              <div className="mb-2 flex flex-col items-center gap-2">
+                <div className="flex items-center justify-center text-white ">
+                  <CatPenIcon
+                    className="h-30 w-30 animate-slow-bounce"
+                    strokeWidth={2.5}
+                  />
+                  {/* <AiOrbitAnimation /> */}
+                </div>
+                <h3 className="text-4xl font-bold  text-slate-700  tracking-tighter  dark:text-zinc-50">
+                  Bycat AI
+                </h3>
               </div>
-            </div>
-            {t("Continue with Google")}
-          </button>
 
-          <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
-            <AppleLogo className="h-7 w-7 text-foreground" />
-            {t("Continue with Apple")}
-          </button>
-        </div>
+              <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  <motion.h1
+                    key={index}
+                    initial={{ y: 20, opacity: 0, filter: "blur(10px)" }}
+                    animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                    exit={{ y: -20, opacity: 0, filter: "blur(10px)" }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="text-4xl font-bold tracking-tight text-slate-700 md:text-4xl leading-[1.1] max-w-3xl mx-auto"
+                  >
+                    {t(messages[index])}
+                    <span className="inline-block ml-3 align-middle">
+                      <SparkleHot className="w-8 h-8 md:w-8 md:h-8" />
+                    </span>
+                  </motion.h1>
+                </AnimatePresence>
+              </div>
 
-        <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
-          {t("By signing in, you agree to our")}{" "}
-          <Link
-            to="/terms"
-            className="underline decoration-slate-300 underline-offset-2 text-slate-900"
-          >
-            {t("Term of Use")}
-          </Link>{" "}
-          {t("and")}{" "}
-          <Link
-            to="/privacy"
-            className="underline decoration-slate-300 underline-offset-2 text-slate-900"
-          >
-            {t("Privacy Policy")}
-          </Link>
-        </p>
-      </main>
+              <div className="w-full max-w-sm space-y-4 flex flex-col items-center">
+                <button
+                  disabled={isGoogleLoading}
+                  onClick={() => {}}
+                  className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300"
+                >
+                  {isGoogleLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900"></div>
+                  ) : (
+                    <GoogleColoredIcon className="h-7 w-7" />
+                  )}
+                  <div className="absolute inset-0 z-10 opacity-0 overflow-hidden flex items-center justify-center">
+                    {/* 
+                      Google buttons have a max-width. We perform a CSS transform scale 
+                      to force the iframe to cover the entire width of your custom button 
+                      so there are no 'dead zones' for the touch event.
+                    */}
+                    <div className="scale-[2.0] w-full h-full flex items-center justify-center">
+                      <GoogleLogin shape="square" onSuccess={signIn} />
+                    </div>
+                  </div>
+                  {t("Continue with Google")}
+                </button>
+
+                <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
+                  <AppleLogo className="h-7 w-7 text-foreground" />
+                  {t("Continue with Apple")}
+                </button>
+              </div>
+
+              <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
+                <Trans i18nKey="auth.agreement">
+                    {t("By signing in, you agree to our")}{" "}
+        <Link
+          to="/terms"
+          className="underline decoration-slate-300 underline-offset-2 text-slate-900"
+        >
+         {t("Terms of use")}
+        </Link>{" "}
+        and{" "}
+        <Link
+          to="/privacy"
+          className="underline decoration-slate-300 underline-offset-2 text-slate-900"
+        >
+           {t("Privacy Policy")}
+        </Link>
+      </Trans>
+
+               
+              </p>
+            </main>
+          {/* )
+        } */}
     </div>
   );
 };

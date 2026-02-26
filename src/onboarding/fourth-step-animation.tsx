@@ -134,7 +134,7 @@ const FourthStepAnimation = ({ t }: { t: any }) => {
           </span>
         </h3>
          <div className='pt-4 flex justify-center'>
-        <ClaimButton />
+        <ClaimButton t={t} onClick={() => console.log}/>
 
       </div>
 

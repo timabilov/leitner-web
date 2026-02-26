@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Mic, FileText, Image as ImageIcon, Type, Sparkles, CheckCircle2, Layers, Youtube } from 'lucide-react';
+import { Mic, FileText, Image as ImageIcon, Type, Sparkles, CheckCircle2, Layers, Youtube, MessageCircle } from 'lucide-react';
 
 /**
  * 1. Brand Gradient Definition
@@ -87,7 +87,7 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
             transition={{ duration: 2.8, repeat: Infinity, delay: 0.5 }}
             className="absolute -top-2 -right-2 bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md border-2 border-white shadow-sm"
           >
-            5 in 1
+            6 in 1
           </motion.div>
         </motion.div>
 
@@ -97,6 +97,7 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
         <Fragment icon={<FileText size={15} />} label={t("PDF")} initialPos={{ x: -140, y: 20 }} delay={0.4} />
         <Fragment icon={<ImageIcon size={15} />} label={t("Photo")} initialPos={{ x: 140, y: 30 }} delay={0.6} />
         <Fragment icon={<Type size={15} />} label={t("Text")} initialPos={{ x: 0, y: 110 }} delay={0.1} />
+        <Fragment icon={<MessageCircle size={15} />} label={t("AI Chat")} initialPos={{ x: 0, y: -110 }} delay={0.1} />
       </div>
 
       <div className="w-full text-center">
@@ -105,7 +106,7 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
             <CheckCircle2 size={15} className="text-slate-900" />{t("Summarize YouTube and Lectures")}
           </div>
           <div className="flex items-center justify-center gap-2 text-slate-500 font-medium text-[13px] tracking-tight">
-            <CheckCircle2 size={15} className="text-slate-900" />{t("One workspace, five ways to learn")}
+            <CheckCircle2 size={15} className="text-slate-900" />{t("One workspace, six ways to learn")}
           </div>
         </div>
         

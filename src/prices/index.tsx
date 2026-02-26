@@ -391,12 +391,8 @@ export default function PricingSection() {
                 </span>
                 <span>{t("Select plan")}</span>
               </h1>
-              {/* <p className="text-muted-foreground">
-                {t("Capture everything in one note! Seamlessly combine PDFs, voice recordings, multiple images, and text.")}
-              </p> */}
    
             
-
           </div>
         </div>
         {/* --- HEADER --- */}
