@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, Star } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ClaimButton } from '.';
+import OnboardingBanner from './onboarding-banner';
 
 /**
  * Shadcn-style Animated Underline
@@ -35,34 +36,31 @@ const FEEDBACKS = [
   },
 ];
 
-const FourthStepAnimation = ({ t }: { t: any }) => {
-  // Parent container variants for staggered children
+
+
+const FourthStepAnimation = ({ t, finishSignup }: { t: any, finishSignup: () => void }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.12, // Very fast stagger
-        delayChildren: 0.2
-      }
+      transition: { staggerChildren: 0.12, delayChildren: 0.2 }
     }
   };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: { 
-      opacity: 1, 
-      y: 0, 
-      scale: 1,
+      opacity: 1, y: 0, scale: 1,
       transition: { type: "spring", stiffness: 300, damping: 25 } 
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 pt-0 font-sans tracking-tight">
+    // FIX: Removed `h-full`, `overflow-y-auto`. Replaced with `h-fit`.
+    <div className="flex flex-col items-center justify-start w-full max-w-sm mx-auto h-fit bg-white py-4 pt-0 font-sans tracking-tight">
       
       {/* 1. HEADER SECTION */}
-      <div className="text-center">
+      <div className="text-center w-full">
         <h2 className="text-3xl font-bold text-slate-900 tracking-tighter leading-none">
           {t("Study Together")}<br />
           <span className="relative inline-block text-slate-400 font-semibold text-xl mt-2 tracking-tight">
@@ -70,23 +68,19 @@ const FourthStepAnimation = ({ t }: { t: any }) => {
           </span>
         </h2>
       </div>
-      {/* <div className='pt-4'>
-        <ClaimButton />
 
-      </div> */}
-
-      {/* 2. VISUAL ANIMATION: STAGGERED REVEAL (NO OVERLAP) */}
+      {/* 2. VISUAL ANIMATION: STAGGERED REVEAL */}
       <motion.div 
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative w-full flex flex-col gap-3 px-4 py-4"
+        className="relative w-full flex flex-col gap-3 px-2 py-6"
       >
         {FEEDBACKS.map((f) => (
           <motion.div
             key={f.id}
             variants={itemVariants}
-            style={{ x: f.offset }} // Organic shifting without blocking text
+            style={{ x: f.offset }} 
             className="flex items-start gap-3 px-4 py-3 bg-white border border-slate-200 shadow-[0_2px_10px_rgba(0,0,0,0.02)] rounded-lg w-full"
           >
             <div className="relative shrink-0 mt-0.5">
@@ -117,8 +111,10 @@ const FourthStepAnimation = ({ t }: { t: any }) => {
       </motion.div>
 
       {/* 3. FOOTER SECTION */}
-      <div className="w-full px-8 text-center pb-2">
-        <div className="flex flex-col gap-2 mb-4">
+      <div className="w-full text-center flex flex-col gap-5 pt-2">
+        
+        {/* Bullet Points */}
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-center gap-2 text-slate-500 font-medium text-[13px] tracking-tight">
             <CheckCircle2 size={15} className="text-slate-900" />{t("Real-time collaborative insights")}
           </div>
@@ -127,33 +123,31 @@ const FourthStepAnimation = ({ t }: { t: any }) => {
           </div>
         </div>
         
-        <h3 className="text-xl font-bold text-slate-900 tracking-tighter leading-none">
+        <h3 className="text-xl font-bold text-slate-900 tracking-tighter leading-none mb-2">
           {t("Learning is better")}<br />
           <span className="text-slate-400 font-semibold text-lg mt-1 inline-block tracking-tight">
             {t("when collective.")}
           </span>
         </h3>
-         <div className='pt-4 flex justify-center'>
-        <ClaimButton t={t} onClick={() => console.log}/>
 
-      </div>
-
-        {/* <div className="mt-6 flex flex-col items-center gap-3">
-          <div className="flex -space-x-2">
-            {[1,2,3,4].map(i => (
-              <Avatar key={i} className="h-7 w-7 border-2 border-white shadow-sm grayscale opacity-40">
-                <AvatarImage src={`https://i.pravatar.cc/100?u=u${i}`} />
-              </Avatar>
-            ))}
+        {/* Claim Button (Banner is now globally in the modal header, so we just show the button here) */}
+       
+ <div className="flex flex-col items-center justify-center gap-4 w-full pt-2">
+          <OnboardingBanner step={3}/>
+          
+          <div className='flex justify-center w-full'>
+            <ClaimButton t={t} onClick={finishSignup}/>
           </div>
-          <span className="relative text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] py-1">
-            {t("100+ joined today")} 
-            <AnimatedUnderline color="#f1f5f9" />
-          </span>
-        </div> */}
+        </div>
+
       </div>
     </div>
   );
 };
 
+
+
 export default FourthStepAnimation;
+
+
+

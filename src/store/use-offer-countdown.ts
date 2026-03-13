@@ -1,5 +1,5 @@
-import { useOfferStore } from "@/store/offer-store";
 import { useEffect, useState } from "react";
+import { useOfferStore } from "./offer-store";
 
 export const useOfferCountdown = () => {
   const { offerDeadline, hasPromo, discountPercent } = useOfferStore();

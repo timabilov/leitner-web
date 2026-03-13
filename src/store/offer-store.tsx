@@ -2,42 +2,56 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface OfferState {
-  offerDeadline: string | null; // Store as ISO string for serialization
-  hasOfferExpired: boolean;
-  initializeOffer: (durationInHours?: number) => void;
-  resetOffer: () => void;
+  hasPromo: boolean;
+  offerDeadline: string | null; // ISO string
+  discountPercent: number;
+  promoName: string | null;
+  lastFetched: number;
+  // Actions
+  setPromoFromApi: (data: PromoApiResponse) => void;
+  clearOffer: () => void;
+}
+
+// Define the shape of your API response for type safety
+interface PromoApiResponse {
+  has_promo: boolean;
+  claim_until?: string; // ISO date string from Go backend
+  discount_percent?: number;
+  name?: string;
 }
 
 export const useOfferStore = create<OfferState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
+      hasPromo: false,
       offerDeadline: null,
-      hasOfferExpired: false,
-
-      initializeOffer: (durationInHours = 24) => {
-        const { offerDeadline } = get();
-        
-        // If a deadline already exists and is in the future, do nothing
-        if (offerDeadline) {
-          const now = new Date();
-          const target = new Date(offerDeadline);
-          if (target > now) return;
+      discountPercent: 0,
+      promoName: null,
+      lastFetched: 0, // Default 0
+      setPromoFromApi: (data: PromoApiResponse) => {
+        if (!data.has_promo) {
+          set({ hasPromo: false, offerDeadline: null, discountPercent: 0, promoName: null,  lastFetched: Date.now(),  });
+          return;
         }
 
-        // Otherwise, set a new deadline (e.g., 24 hours from now)
-        const newDeadline = new Date();
-        newDeadline.setHours(newDeadline.getHours() + durationInHours);
-        
-        set({ 
-          offerDeadline: newDeadline.toISOString(),
-          hasOfferExpired: false 
+        set({
+          hasPromo: true,
+          offerDeadline: data.claim_until || null,
+          discountPercent: data.discount_percent || 0,
+          promoName: data.name || null,
+          lastFetched: Date.now(), 
         });
       },
 
-      resetOffer: () => set({ offerDeadline: null, hasOfferExpired: false }),
+      clearOffer: () => set({
+        hasPromo: false,
+        offerDeadline: null,
+        discountPercent: 0,
+        promoName: null
+      }),
     }),
     {
-      name: 'leitner-offer-storage', // Key in localStorage
+      name: 'leitner-promo-storage',
       storage: createJSONStorage(() => localStorage),
     }
   )

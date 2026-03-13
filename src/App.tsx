@@ -14,11 +14,12 @@ import Folders from "./folders";
 import MobileApp from "./mobileapp";
 import Layout from "./components/layout";
 import { useTranslation } from "react-i18next";
-
-
+import { useInitPromo } from "./store/use-init-promo";
 
 function App() {
     const { t } = useTranslation();
+    console.log("App rendered");
+     useInitPromo();
 
   return (
       <TooltipProvider>
@@ -32,10 +33,10 @@ function App() {
           >
             <Routes>
               {/* --- PUBLIC ROUTES (Only accessible if NOT logged in) --- */}
-              <Route element={<PublicRoute />}>
+              {/* <Route element={<PublicRoute />}>
                 <Route path="/" element={<Login />} />
-              </Route>
-
+              </Route> */}
+            <Route path="/" element={<Login />} />
               {/* --- PROTECTED ROUTES (Only accessible if logged in) --- */}
               <Route element={<ProtectedRoute />}>
                <Route element={<Layout />}>

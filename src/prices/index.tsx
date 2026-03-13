@@ -26,7 +26,7 @@ export const TrustStats = () => {
   ];
 
   return (
-    <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100 absolute">
+    <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
       {stats.map((stat, i) => (
         <div key={i} className="flex items-center gap-3 bg-zinc-100/50 p-3 rounded-xl border border-border/30 backdrop-blur-sm">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-600 dark:text-zinc-300 group-hover:scale-105 transition-transform duration-300">
@@ -263,8 +263,8 @@ export default function PricingSection() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>("pro_monthly");
   const [prices, setPrices] = useState<Record<string, string>>({});
- const { targetDate } = useOfferCountdown();
- const [searchParams] = useSearchParams();
+  const { targetDate } = useOfferCountdown();
+  const [searchParams] = useSearchParams();
  const isPromoLink = searchParams.get("sale") === "true";
 
    const posthog = usePostHog();
@@ -342,7 +342,7 @@ export default function PricingSection() {
       paddle.Checkout.open({
         items: [{ priceId: priceId, quantity: 1 }],
         discountId: discountId,
-        customData: { internal_user_id: userId, internal_email: email },
+        customData: { internal_user_id: userId, internal_email: email, internal_use_promo: isPromoLink ?  "true" : null},
         settings: {
           displayMode: "overlay",
           theme: "system",
@@ -379,7 +379,11 @@ export default function PricingSection() {
       </style>
 
       {/* Live Activity Feed */}
-      <LiveActivityFeed2 />
+      <div className="relative  z-[9999]">
+          <div className="absolute right-2 top-0 z-9999">
+            <LiveActivityFeed2 />
+          </div>
+        </div>
 
       <div className="relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground">
          <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 w-full">
@@ -444,9 +448,7 @@ export default function PricingSection() {
           ))}
         </div>
            <div className="w-full max-w-4xl px-4 mt-10 flex flex-col gap-8 z-10">
-          
-          {/* 1. Trust Indicators (Organic Data) */}
-          <TrustStats />
+            <TrustStats />
           </div>
   
 

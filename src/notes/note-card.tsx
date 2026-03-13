@@ -153,14 +153,21 @@ export const NoteCard = ({ item, view }) => {
 
               {/* === STANDARD CARD CONTENT === */}
               {/* --- HEADER --- */}
-              <div className="relative z-10 flex items-center justify-between w-full mb-4">
+              <div className={cn("relative z-10 flex items-center  justify-between w-full",
+                  view === "grid" ? "mb-4" : "mb-0",
+      
+              )}>
                 <div className={cn(
                   "flex items-center justify-center rounded-md border border-border/50 bg-muted/50 text-muted-foreground transition-colors group-hover:bg-background group-hover:text-foreground",
                   view === "grid" ? "w-9 h-9" : "w-8 h-8"
                 )}>
                   {getTypeIcon(item.note_type, 14)}
                 </div>
-
+                {view !== "grid" && (
+                  <h4 className="text-xs text-start font-bold truncate group-hover:text-foreground  transition-colors mr-auto">
+                    {item.name || t("Untitled Note")}
+                  </h4>
+                )}
                 <div className="flex items-center gap-1.5 text-muted-foreground/80">
                   <Folder size={12} strokeWidth={2.5} />
                   <span className="text-[10px] font-bold uppercase tracking-widest transition-colors group-hover:text-muted-foreground">

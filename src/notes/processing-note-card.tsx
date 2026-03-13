@@ -17,7 +17,9 @@ const ProcessingNoteCard = ({ view, id }) => {
     )}>
       
       {/* 1. HEADER: Semantic Placeholders */}
-      <div className="flex items-center justify-between w-full mb-6 relative z-10">
+      <div className={cn("flex items-center justify-between w-full relative z-10",
+        view === "grid" ? "mb-6" : "mb-0"
+      )}>
         {/* Icon placeholder using bg-muted */}
         <div className="w-9 h-9 rounded-md bg-muted/80 border border-border/50" />
 
@@ -29,12 +31,18 @@ const ProcessingNoteCard = ({ view, id }) => {
       <div className="flex-1 space-y-4 relative z-10">
         <div className="space-y-2">
           {/* Title and Subtitle placeholders */}
-          <div className="h-4 w-3/4 bg-muted rounded-md" />
+          {
+            view === "list" ? null : (
+              <div className="h-4 w-3/4 bg-muted rounded-md" />
+            )
+          }
           <div className="h-3 w-1/2 bg-muted/60 rounded-md" />
         </div>
 
         {/* STATUS: Using Shadcn Foreground for High Contrast */}
-        <div className="pt-6 flex items-center gap-2">
+        <div className={cn("flex items-center gap-2",
+          view === "list" ? "pt-0" : "pt-6"
+        )}>
           <div className="relative flex h-1.5 w-1.5">
             {/* The pulse uses the foreground (Black in light mode) */}
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-foreground/20 opacity-75"></span>

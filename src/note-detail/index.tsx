@@ -475,26 +475,30 @@ const NoteDetailBase = () => {
                   label={t("Language")}
                   value={getNoteLanguageIso(note?.language)}
                 />
-                <MetaItem
-                  icon={<Paperclip size={12} />}
-                  label={t("Attachments")}
-                  value={`${attachmentCount} items`}
-                  onClick={() =>
-                    attachmentCount > 0
-                      ? setIsMediaExpanded(!isMediaExpanded)
-                      : null
-                  }
-                  active={isMediaExpanded}
-                  iconEnd={
-                    attachmentCount ? (
-                      isMediaExpanded ? (
-                        <ChevronUp />
-                      ) : (
-                        <ChevronDown />
-                      )
-                    ) : null
-                  }
-                />
+                {
+                  !note?.youtube_url && (
+                      <MetaItem
+                        icon={<Paperclip size={12} />}
+                        label={t("Attachments")}
+                        value={`${attachmentCount} items`}
+                        onClick={() =>
+                          attachmentCount > 0
+                            ? setIsMediaExpanded(!isMediaExpanded)
+                            : null
+                        }
+                        active={isMediaExpanded}
+                        iconEnd={
+                          attachmentCount ? (
+                            isMediaExpanded ? (
+                              <ChevronUp />
+                            ) : (
+                              <ChevronDown />
+                            )
+                          ) : null
+                        }
+                      />
+                  )
+                }
                 <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
                 <Tooltip>
                   <TooltipContent>
@@ -536,7 +540,7 @@ const NoteDetailBase = () => {
             {
               isMediaExpanded && hasMedia &&  !note?.youtube_url && (
                 <>
-                  <div className="w-full h-full flex flex-col px-6 py-4">
+                  <div className="w-full flex flex-col px-6 py-4">
                     {/* The Video Area */}
                     <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
                       <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
@@ -602,7 +606,7 @@ const NoteDetailBase = () => {
               )
             }
           <PanelGroup direction="vertical">
-            {note?.youtube_url  && (
+            {note?.youtube_url  && isMediaExpanded && (
               <>
             {/* PANEL 1: MEDIA TRAY */}
                 <Panel

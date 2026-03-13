@@ -1,4 +1,6 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +12,6 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   SidebarSeparator,
-  useSidebar, // Import hook to check state
 } from "@/components/ui/sidebar";
 import {
   Home,
@@ -19,13 +20,10 @@ import {
   Bell,
   FileText,
   Shield,
-  ChevronRight,
 } from "lucide-react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { NavUser } from "./nav-user";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import CatLogo from "@/note-detail/assets/cat-logo";
 import { FoldersPanel } from "./folders-panel";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
@@ -33,23 +31,24 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@/components/ui/tooltip"; // Ensure you have this component
+} from "@/components/ui/tooltip";
 
-// --- SIDEBAR SALE CARD (Smart: Handles Full & Mini Modes) ---
+// --- SIDEBAR SALE CARD ---
 const SidebarSaleCard = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
-  const { targetDate } = useOfferCountdown();
+  const { targetDate, hasPromo, discountPercent } = useOfferCountdown();
+
 
   useEffect(() => {
     setMounted(true);
-    if (!targetDate) return;
+    if (!targetDate || !hasPromo) return;
 
     const calculateTime = () => {
-      const formattedTargetDate = new Date(targetDate).getTime();
       const now = new Date().getTime();
-      const distance = formattedTargetDate - now;
+      const distance = targetDate.getTime() - now;
 
       if (distance < 0) {
         setTimeLeft({ d: 0, h: 0, m: 0, s: 0 });
@@ -66,10 +65,10 @@ const SidebarSaleCard = () => {
     calculateTime();
     const interval = setInterval(calculateTime, 1000);
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, [targetDate, hasPromo]);
 
-  // Don't render server-side to avoid hydration mismatch
-  if (!mounted || !targetDate) return null;
+  // Don't render if not mounted or no active promo
+  if (!mounted || !hasPromo || !targetDate) return null;
 
   return (
     <>
@@ -89,7 +88,7 @@ const SidebarSaleCard = () => {
         className="hidden group-data-[state=expanded]:block cursor-pointer pt-2 pb-1 w-full"
       >
         <div className="group relative w-full overflow-hidden rounded-lg box-border transition-transform hover:scale-[1.02] active:scale-[0.98] duration-200">
-          <div className="relative h-full w-full rounded-lg bg-gradient-to-r from-indigo-700 via-purple-700 to-pink-700 animate-gradient-flow shadow-md p-[1px]">
+          <div className="relative h-full w-full rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 animate-gradient-flow shadow-md p-[1px]">
             {/* Inner Content */}
             <div className="relative z-10 flex flex-row justify-between items-center px-3 py-2 bg-black/10 backdrop-blur-[1px] rounded-lg">
               <div className="flex items-center gap-2">
@@ -108,20 +107,21 @@ const SidebarSaleCard = () => {
       </div>
 
       {/* --- 2. MINI ICON (Visible when Collapsed) --- */}
-      {/* This ensures the user still sees the "Fire" even when sidebar is thin */}
       <div
         role="button"
         onClick={() => navigate("/price-page")}
-        className="hidden group-data-[state=collapsed]:flex justify-center items-center py-2 cursor-pointer"
+        className="hidden group-data-[state=collapsed]:flex justify-center items-center py-2 cursor-pointer w-full"
       >
         <Tooltip>
-          <TooltipTrigger>
+          <TooltipTrigger asChild>
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-indigo-600 to-pink-600 flex items-center justify-center shadow-md animate-pulse">
               <span className="text-base">🔥</span>
             </div>
           </TooltipTrigger>
           <TooltipContent side="right">
-            <p>Limited Offer: {timeLeft.d}d {timeLeft.h}h left!</p>
+            <p>
+              {discountPercent > 0 ? `-${discountPercent}%` : "Offer"} expires in: {timeLeft.d}d {timeLeft.h}h!
+            </p>
           </TooltipContent>
         </Tooltip>
       </div>
@@ -133,8 +133,6 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  // useSidebar hook allows us to check isMobile or state programmatically if needed
-  const { state, isMobile } = useSidebar(); 
 
   const items = [
     { title: t("Notes"), icon: Home, key: "/notes" },
@@ -150,7 +148,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
       {...props}
     >
       <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 group-data-[collapsible=icon]:px-2 py-7 gap-3 transition-all">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 shadow-sm cursor-pointer" onClick={()=> navigate('/')}>
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 shadow-sm cursor-pointer" onClick={() => navigate('/')}>
           <CatLogo size={18} />
         </div>
         <span className="text-[14px] font-bold tracking-tighter text-zinc-900 dark:text-zinc-50 group-data-[collapsible=icon]:hidden whitespace-nowrap overflow-hidden">
@@ -162,12 +160,18 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1 relative">
-              <div className="px-3 mb-2 group-data-[collapsible=icon]:hidden transition-opacity duration-200">
+        
+             
+              <div className="px-3 mb-2 mt-4 group-data-[collapsible=icon]:hidden transition-opacity duration-200">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">
                   {t("Library")}
                 </span>
               </div>
-
+             <SidebarMenuItem>
+                <SidebarSaleCard />
+              </SidebarMenuItem>
+              
+              
               {items.map((item) => {
                 const isActive =
                   pathname === item.key ||
@@ -175,9 +179,8 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    {/* Tooltip wrapper for collapsed state */}
                     <Tooltip>
-                      <TooltipTrigger className="w-full">
+                      <TooltipTrigger asChild>
                         <SidebarMenuButton
                           onClick={() => navigate(item.key)}
                           className={cn(
@@ -187,29 +190,19 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                               : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200"
                           )}
                         >
-                          {/* Active Background Animation */}
                           {isActive && (
                             <motion.div
                               layoutId="activeNav"
                               className="absolute inset-0 bg-zinc-100 dark:bg-zinc-900 z-0 rounded-md w-full"
-                              transition={{
-                                type: "spring",
-                                stiffness: 380,
-                                damping: 30,
-                              }}
+                              transition={{ type: "spring", stiffness: 380, damping: 30 }}
                             />
                           )}
-                          {/* Active Border Indicator */}
                           {isActive && (
                             <motion.div
                               layoutId="activeIndicator"
                               className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full z-10"
-                              style={{ backgroundColor: "currentColor" }} // Adapts to theme
-                              transition={{
-                                type: "spring",
-                                stiffness: 380,
-                                damping: 30,
-                              }}
+                              style={{ backgroundColor: "currentColor" }}
+                              transition={{ type: "spring", stiffness: 380, damping: 30 }}
                             />
                           )}
                           
@@ -233,23 +226,18 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                           </div>
                         </SidebarMenuButton>
                       </TooltipTrigger>
-                      {/* Only show tooltip if collapsed (optional logic, or just let Radix handle it) */}
-                      <TooltipContent side="right" className="hidden group-data-[collapsible=icon]:block">
+                      <TooltipContent side="right">
                         {item.title}
                       </TooltipContent>
                     </Tooltip>
                   </SidebarMenuItem>
                 );
               })}
-
-              {/* SidebarSaleCard handles its own collapsed/expanded state */}
-              <SidebarMenuItem>
-                <SidebarSaleCard />
-              </SidebarMenuItem>
-
+                    
+              {/* Promo Card Positioned Here */}
+              
               <SidebarSeparator className="my-2 group-data-[collapsible=icon]:hidden" />
 
-              {/* Secondary Menu (Terms/Privacy) */}
               <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
                 <SidebarMenuButton
                   onClick={() => navigate("/terms")}

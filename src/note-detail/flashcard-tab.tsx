@@ -32,7 +32,6 @@ export function FlashcardsTab({ noteId }) {
     posthog.capture('flashcards_tab_viewed', { note_id: noteId });
   }, [posthog, noteId]);
 
-
   const noteQuestionsQuery = useQuery({
     queryKey: [`notes-${noteId}-questions`],
     queryFn: async () => {
@@ -73,11 +72,6 @@ export function FlashcardsTab({ noteId }) {
 
   // Safety check for empty or missing data
   if (!flashcards.current || flashcards.current.length === 0) {
-
-    useEffect(() => {
-        posthog.capture('flashcards_empty_state_shown', { note_id: noteId });
-    }, []);
-
     return (
       <div className="flex flex-col items-center justify-center text-center p-8 border rounded-lg bg-muted/50 h-64">
         <h3 className="text-lg font-semibold text-muted-foreground">{t("No Flashcards Available")}</h3>

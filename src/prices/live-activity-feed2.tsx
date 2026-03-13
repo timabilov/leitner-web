@@ -70,15 +70,17 @@ const getActionConfig = (rawAction: string) => {
 // ── MAIN COMPONENT ───────────────────────────────────────
 const LiveActivityFeed2 = () => {
   const posthog = usePostHog();
-  const { companyId } = useUserStore() || { companyId: 169 };
-
+  const store = useUserStore();
+  const companyId = store?.companyId || 169;
+  console.log("companyId", companyId);
   const [currentActivity, setCurrentActivity] = useState<ActivityItem | null>(null);
   const [activityQueue, setActivityQueue] = useState<ActivityItem[]>([]);
 
   useQuery({
-    queryKey: ["liveActivityChatStyle", companyId],
+    queryKey: ["liveActivityChatStyle", !!companyId],
     queryFn: async () => {
       try {
+        console.log("Fetching live activity for companyId:", companyId);
         const response = await axiosInstance.get(
           `${API_BASE_URL}/company/${companyId}/notes/activity/live`
         );
@@ -157,7 +159,7 @@ const SystemMessagePill = ({ item }: { item: ActivityItem }) => {
 
   return (
     <motion.div
-      key={item.id}
+      key={item.id + item.user}
       initial={{ opacity: 0, y: 15, scale: 0.9, originX: 0 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.9, transition: { duration: 0.2 } }}

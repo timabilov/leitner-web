@@ -176,7 +176,7 @@ export const RisingBubbles = React.memo(() => {
 
   const bubbles = useMemo(() => {
     return Array.from({ length: 15 }).map((_, i) => ({
-      id: i,
+      id: i + Math.random(),
       size: Math.floor(Math.random() * 1) + 9,
       left: Math.floor(Math.random() * 100),
       duration: Math.floor(Math.random() * 15) + 15,
@@ -186,9 +186,9 @@ export const RisingBubbles = React.memo(() => {
 
   return (
     <div className="absolute inset-0 z-1 overflow-hidden pointer-events-none">
-      {bubbles.map((bubble) => (
+      {bubbles.map((bubble, index) => (
         <motion.div
-          key={bubble.id}
+          key={bubble.id + " _" + index}
           className="absolute rounded-full bg-transparent"
           style={{
             left: `${bubble.left}%`,
@@ -324,7 +324,7 @@ const LoginBase = () => {
   const { t } = useTranslation();
   const posthog = usePostHog();
   const navigate = useNavigate();
-
+  const tempData = useRef({});
   const setAccessToken = useUserStore((state) => state.setAccessToken);
   const setRefreshToken = useUserStore((state) => state.setRefreshToken);
   const setUserData = useUserStore((state) => state.setUserData);
@@ -335,26 +335,23 @@ const LoginBase = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [sessionData, setSessionData] = useState<any>(null);
-  console.log(accessToken)
-   useEffect(() => {
+  useEffect(() => {
     posthog.capture("login_page_viewed");
   }, [posthog]);
-
 
   const googleVerifyMutation = useMutation({
     mutationFn: (newUser: any) => {
       return axiosInstance.post(
         API_BASE_URL + "/auth/google/v2?verify=true",
-        newUser
+        newUser,
       );
     },
     onSuccess: async (response, variables) => {
       const data = response.data;
-       posthog.capture("login_success", { 
-        provider: "google", 
-        is_new_user: data?.new 
-      })
-
+      posthog.capture("login_success", {
+        provider: "google",
+        is_new_user: data?.new,
+      });
       // Essential: Set tokens immediately so the /finish call is authorized
       setAccessToken(data.access_token);
       setRefreshToken(data.refresh_token);
@@ -365,13 +362,17 @@ const LoginBase = () => {
             accessToken: data.access_token,
             refreshToken: data.refresh_token,
           },
-        })
+        }),
       );
+      tempData.current = {
+        ...data,
+        ...variables,
+      };
       posthog.identify(data.id, {
         email: variables.user.email,
         new_user: data?.new,
       });
-      if (/*data?.new*/ true ) {
+      if (/*data?.new*/ true) {
         setSessionData({
           id: data.id,
           idToken: variables.idToken,
@@ -386,7 +387,10 @@ const LoginBase = () => {
           fullAdmin: data?.company?.full_admin_access || false,
         });
         setShowOnboarding(true);
-        posthog.identify(data.id, { email: variables.user.email, new_user: true });
+        posthog.identify(data.id, {
+          email: variables.user.email,
+          new_user: true,
+        });
       } else {
         // Existing user flow
         setUserData(
@@ -400,7 +404,7 @@ const LoginBase = () => {
             new Date(data.company.trial_started_date),
           data?.company?.trial_days,
           variables?.user?.photo,
-          data?.company?.full_admin_access || false
+          data?.company?.full_admin_access || false,
         );
         navigate("/notes", { replace: true });
       }
@@ -411,28 +415,28 @@ const LoginBase = () => {
       posthog.capture("login_failed", {
         provider: "google",
         error_message: error?.message,
-        status: error?.response?.status
+        status: error?.response?.status,
       });
       toast.error(t("An error occurred during sign-in."));
       setIsGoogleLoading(false);
     },
   });
 
-  const handleFinishOnboarding = async () => {
+  const handleFinishOnboarding = async (isClaimOffer?: boolean) => {
     if (!sessionData) return;
 
     setIsFinishing(true);
     const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
     try {
       // 1. Call the finish endpoint
       const response = await axiosInstance.post(
-        API_BASE_URL + "/auth/apple/finish",
+        API_BASE_URL + "/auth/google/v2",
         {
           platform: "web",
           idToken: sessionData.idToken,
           email: sessionData.email,
           name: sessionData.name,
+          company: sessionData.name,
           photo: sessionData.photo,
           utm_source: "web_onboarding",
           time_zone: userTimeZone,
@@ -448,7 +452,6 @@ const LoginBase = () => {
 
       // 3. Update the global store (Wait for visual satisfaction)
 
-      // console.log()
       setUserData(
         response?.data?.id,
         sessionData.name,
@@ -463,11 +466,13 @@ const LoginBase = () => {
       );
       setTimeout(() => {
         // 4. Force the redirect
-        navigate("/notes", { replace: true });
-      }, 1800); // Give user time to see the "Success" state
+        if (isClaimOffer)
+          navigate("/price-page?sale=true", { replace: true });
+        else navigate("/notes", { replace: true });
+      }, 1800);
     } catch (error) {
       console.error("Error finishing onboarding:", error);
-      Sentry.captureException(error)
+      Sentry.captureException(error);
       posthog.capture("onboarding_failed", { error: error });
       setIsFinishing(false);
       toast.error(t("Failed to finalize profile. Please try again."));
@@ -496,11 +501,11 @@ const LoginBase = () => {
   // 1. Define messages here so the useEffect can find it
   const messages = useMemo(
     () => [
-      "Record, edit and learn smart",
-      "Create quizzes from your notes",
-      "Flashcards for better memory",
+      t("Record, edit and learn smart"),
+      t("Create quizzes from your notes"),
+      t("Flashcards for better memory"),
     ],
-    []
+    [],
   );
 
   useEffect(() => {
@@ -528,121 +533,120 @@ const LoginBase = () => {
         <div className="absolute top-8 right-8 z-[101]">
           <LanguageSwitcher />
         </div>
-      <OnboardingModal
-        isOpen={showOnboarding}
-        t={t}
-        isFinishing={isFinishing}
-        isSuccess={isSuccess}
-        onFinish={handleFinishOnboarding}
-      />
-        <FloatingBlobs />
-        <RisingBubbles />
-  
-        
-
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-[10%] top-[20%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-40"></div>
-        <div className="absolute right-[15%] top-[30%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-30"></div>
-      </div>
-
-      <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10">
       
-      </header>
-        {/* {
+      <FloatingBlobs />
+      { !showOnboarding &&  <RisingBubbles /> }
+      {showOnboarding ? (
+        <OnboardingModal
+          isOpen={showOnboarding}
+          t={t}
+          isFinishing={isFinishing}
+          isSuccess={isSuccess}
+          onFinish={handleFinishOnboarding}
+        />
+      ) : (
+        <>
+          <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute left-[10%] top-[20%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-40"></div>
+            <div className="absolute right-[15%] top-[30%] h-0.5 w-0.5 rounded-full bg-slate-400 opacity-30"></div>
+          </div>
+
+          <header className="flex w-full items-center justify-between p-6 md:p-8 relative z-10"></header>
+          {/* {
           accessToken ? null : ( */}
-            <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
-              <div className="mb-2 flex flex-col items-center gap-2">
-                <div className="flex items-center justify-center text-white ">
-                  <CatPenIcon
-                    className="h-30 w-30 animate-slow-bounce"
-                    strokeWidth={2.5}
-                  />
-                  {/* <AiOrbitAnimation /> */}
-                </div>
-                <h3 className="text-4xl font-bold  text-slate-700  tracking-tighter  dark:text-zinc-50">
-                  Bycat AI
-                </h3>
+          <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
+            <div className="mb-2 flex flex-col items-center gap-2">
+              <div className="flex items-center justify-center text-white ">
+                <CatPenIcon
+                  className="h-30 w-30 animate-slow-bounce"
+                  strokeWidth={2.5}
+                />
+                {/* <AiOrbitAnimation /> */}
               </div>
+              <h3 className="text-4xl font-bold  text-slate-700  tracking-tighter  dark:text-zinc-50">
+                Bycat AI
+              </h3>
+            </div>
 
-              <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
-                <AnimatePresence mode="wait">
-                  <motion.h1
-                    key={index}
-                    initial={{ y: 20, opacity: 0, filter: "blur(10px)" }}
-                    animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
-                    exit={{ y: -20, opacity: 0, filter: "blur(10px)" }}
-                    transition={{ duration: 0.5, ease: "easeOut" }}
-                    className="text-4xl font-bold tracking-tight text-slate-700 md:text-4xl leading-[1.1] max-w-3xl mx-auto"
-                  >
-                    {t(messages[index])}
-                    <span className="inline-block ml-3 align-middle">
-                      <SparkleHot className="w-8 h-8 md:w-8 md:h-8" />
-                    </span>
-                  </motion.h1>
-                </AnimatePresence>
-              </div>
-
-              <div className="w-full max-w-sm space-y-4 flex flex-col items-center">
-                <button
-                  disabled={isGoogleLoading}
-                  onClick={() => {}}
-                  className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300"
+            <div className="relative mb-8 w-full max-w-4xl min-h-[140px] flex items-center justify-center">
+              <AnimatePresence mode="wait">
+                <motion.h1
+                  key={index}
+                  initial={{ y: 20, opacity: 0, filter: "blur(10px)" }}
+                  animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
+                  exit={{ y: -20, opacity: 0, filter: "blur(10px)" }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="text-4xl font-bold tracking-tight text-slate-700 md:text-4xl leading-[1.1] max-w-3xl mx-auto"
                 >
-                  {isGoogleLoading ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900"></div>
-                  ) : (
-                    <GoogleColoredIcon className="h-7 w-7" />
-                  )}
-                  <div className="absolute inset-0 z-10 opacity-0 overflow-hidden flex items-center justify-center">
-                    {/* 
+                  {t(messages[index])}
+                  <span className="inline-block ml-3 align-middle">
+                    <SparkleHot className="w-8 h-8 md:w-8 md:h-8" />
+                  </span>
+                </motion.h1>
+              </AnimatePresence>
+            </div>
+
+            <div className="w-full max-w-sm space-y-4 flex flex-col items-center">
+              <button
+                disabled={isGoogleLoading}
+                onClick={() => {}}
+                className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300"
+              >
+                {isGoogleLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-900"></div>
+                ) : (
+                  <GoogleColoredIcon className="h-7 w-7" />
+                )}
+                <div className="absolute inset-0 z-10 opacity-0 overflow-hidden flex items-center justify-center">
+                  {/* 
                       Google buttons have a max-width. We perform a CSS transform scale 
                       to force the iframe to cover the entire width of your custom button 
                       so there are no 'dead zones' for the touch event.
                     */}
-                    <div className="scale-[2.0] w-full h-full flex items-center justify-center">
-                      <GoogleLogin shape="square" onSuccess={signIn} />
-                    </div>
+                  <div className="scale-[2.0] w-full h-full flex items-center justify-center">
+                    <GoogleLogin shape="square" onSuccess={signIn} />
                   </div>
-                  {t("Continue with Google")}
-                </button>
+                </div>
+                {t("Continue with Google")}
+              </button>
 
-                <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
-                  <AppleLogo className="h-7 w-7 text-foreground" />
-                  {t("Continue with Apple")}
-                </button>
-              </div>
+              <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
+                <AppleLogo className="h-7 w-7 text-foreground" />
+                {t("Continue with Apple")}
+              </button>
+            </div>
 
-              <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
-                <Trans i18nKey="auth.agreement">
-                    {t("By signing in, you agree to our")}{" "}
-        <Link
-          to="/terms"
-          className="underline decoration-slate-300 underline-offset-2 text-slate-900"
-        >
-         {t("Terms of use")}
-        </Link>{" "}
-        and{" "}
-        <Link
-          to="/privacy"
-          className="underline decoration-slate-300 underline-offset-2 text-slate-900"
-        >
-           {t("Privacy Policy")}
-        </Link>
-      </Trans>
+            <p className="mt-8 max-w-xs text-center text-xs text-slate-500">
+              <Trans i18nKey="auth.agreement">
+                {t("By signing in, you agree to our")}{" "}
+                <Link
+                  to="/terms"
+                  className="underline decoration-slate-300 underline-offset-2 text-slate-900"
+                >
+                  {t("Terms of use")}
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="/privacy"
+                  className="underline decoration-slate-300 underline-offset-2 text-slate-900"
+                >
+                  {t("Privacy Policy")}
+                </Link>
+              </Trans>
+            </p>
+          </main>
+        </>
+      )}
 
-               
-              </p>
-            </main>
-          {/* )
+      {/* )
         } */}
     </div>
   );
 };
 
-
 const LoginErrorFallback = () => {
   const { t } = useTranslation();
-  
+
   return (
     <div className="flex h-screen w-full items-center justify-center">
       {t("Error loading login. Please refresh")}.
@@ -650,14 +654,11 @@ const LoginErrorFallback = () => {
   );
 };
 
-
 // 3. Export with Sentry Wrappers
 const Login = Sentry.withProfiler(
   Sentry.withErrorBoundary(LoginBase, {
-    fallback: (
-       <LoginErrorFallback />
-    ),
-  })
+    fallback: <LoginErrorFallback />,
+  }),
 );
 
 export default Login;

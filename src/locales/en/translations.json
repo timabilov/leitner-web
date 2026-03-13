@@ -324,5 +324,7 @@
   "subscription.highlight.monthly": "Monthly",
   "subscription.highlight.annual": "Annual",
   "subscription.highlight.weekly": "Weekly",
-  "subscription.highlight.pro_annual": "Pro Annual"
+  "subscription.highlight.pro_annual": "Pro Annual",
+  "Select plan": "Select plan",
+  "Claim offer": "Claim offer"
 }

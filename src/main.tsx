@@ -1,24 +1,30 @@
-import React, { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import React, { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.tsx";
 import { BrowserRouter } from "react-router-dom";
-import './i18n'; // Import the i18next configuration
+import "./i18n"; // Import the i18next configuration
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, RefreshCcw, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   createRoutesFromChildren,
   matchRoutes,
   useLocation,
   useNavigationType,
 } from "react-router-dom";
-import { PostHogProvider } from 'posthog-js/react';
-import posthog from 'posthog-js'
+import { PostHogProvider } from "posthog-js/react";
+import posthog from "posthog-js";
 import * as Sentry from "@sentry/react";
-import PostHogPageview from './components/posthog-page-view.tsx';
-import { ThemeProvider } from './components/theme-provider.tsx';
+import PostHogPageview from "./components/posthog-page-view.tsx";
+import { ThemeProvider } from "./components/theme-provider.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // tsc -b && ===> build command
@@ -30,7 +36,7 @@ Sentry.init({
   environment: import.meta.env.MODE,
   debug: false, // If `true`, Sentry will try to print out useful debugging information if something goes wrong with sending the event. Set it to `false` in production
   integrations: [
-     Sentry.reactRouterV6BrowserTracingIntegration({
+    Sentry.reactRouterV6BrowserTracingIntegration({
       useEffect: React.useEffect,
       useLocation,
       useNavigationType,
@@ -38,23 +44,22 @@ Sentry.init({
       matchRoutes,
     }),
   ],
-  enabled: import.meta.env.MODE !== 'development',
+  enabled: import.meta.env.MODE !== "development",
   enableLogs: true,
 });
 
-
 if (import.meta.env.PROD) {
   posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
-    api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com',
-    autocapture: import.meta.env.PROD, 
+    api_host: import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com",
+    autocapture: import.meta.env.PROD,
     capture_pageview: false,
-    enable_recording_console_log: true, 
+    enable_recording_console_log: true,
     session_recording: {
       maskAllInputs: true,
-      blockClass: 'ph-no-capture',
-      maskTextClass: 'ph-mask',
-    }
-  })
+      blockClass: "ph-no-capture",
+      maskTextClass: "ph-mask",
+    },
+  });
 }
 
 const queryClient = new QueryClient({
@@ -65,24 +70,25 @@ const queryClient = new QueryClient({
   },
 });
 
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-     <PostHogProvider client={posthog}>
-      <Sentry.ErrorBoundary fallback={ErrorFallback} onReset={() => window.location.reload()}>
+createRoot(document.getElementById("root")!).render(
+    // <StrictMode>
+    <PostHogProvider client={posthog}>
+      <Sentry.ErrorBoundary
+        fallback={ErrorFallback}
+        onReset={() => window.location.reload()}
+      >
         <BrowserRouter>
-             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
-                  <QueryClientProvider client={queryClient}>
-                      <App />
-                  </QueryClientProvider>
-              </ThemeProvider>
-            <PostHogPageview />
+          <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+            <QueryClientProvider client={queryClient}>
+              <App />
+            </QueryClientProvider>
+          </ThemeProvider>
+          <PostHogPageview />
         </BrowserRouter>
       </Sentry.ErrorBoundary>
-     </PostHogProvider>
-  </StrictMode>
-)
-
+    </PostHogProvider>
+    // </StrictMode>
+);
 
 interface ErrorFallbackProps {
   error: Error;
@@ -90,7 +96,10 @@ interface ErrorFallbackProps {
   eventId: string | null;
 }
 
-export default function ErrorFallback({ resetError, eventId }: ErrorFallbackProps) {
+export default function ErrorFallback({
+  resetError,
+  eventId,
+}: ErrorFallbackProps) {
   const { t } = useTranslation();
 
   const handleReportFeedback = () => {
@@ -110,10 +119,12 @@ export default function ErrorFallback({ resetError, eventId }: ErrorFallbackProp
             {t("Something went wrong")}
           </CardTitle>
         </CardHeader>
-        
+
         <CardContent className="text-center space-y-4">
           <p className="text-sm text-neutral-500">
-            {t("We apologize for the inconvenience. The error has been logged and we are working on a fix.")}
+            {t(
+              "We apologize for the inconvenience. The error has been logged and we are working on a fix.",
+            )}
           </p>
 
           {/* Technical Error Details (Collapsible or Small) */}
@@ -130,8 +141,8 @@ export default function ErrorFallback({ resetError, eventId }: ErrorFallbackProp
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2 sm:flex-row justify-center">
-          <Button 
-            onClick={resetError} 
+          <Button
+            onClick={resetError}
             className="w-full sm:w-auto bg-neutral-900 hover:bg-neutral-800"
           >
             <RefreshCcw className="mr-2 h-4 w-4" />
@@ -139,8 +150,8 @@ export default function ErrorFallback({ resetError, eventId }: ErrorFallbackProp
           </Button>
 
           {eventId && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleReportFeedback}
               className="w-full sm:w-auto"
             >
