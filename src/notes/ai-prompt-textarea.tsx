@@ -52,6 +52,7 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
   const startTimeRef = useRef(0);
   const accumulatedTimeRef = useRef(0);
   const mimeTypeRef = useRef("audio/webm");
+  const shouldSaveRef = useRef(true); 
 
   const getDevices = async (requestPerms = false) => {
     setIsFetching(true);
@@ -85,6 +86,7 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
 
       mediaRecorderRef.current = new MediaRecorder(mediaStream, { mimeType });
       chunksRef.current = [];
+      shouldSaveRef.current = true; 
 
       mediaRecorderRef.current.ondataavailable = (e) => {
         if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
@@ -92,9 +94,12 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
 
       mediaRecorderRef.current.onstop = () => {
         clearInterval(timerRef.current!);
-        const type = mediaRecorderRef.current?.mimeType || mimeTypeRef.current;
-        const blob = new Blob(chunksRef.current, { type });
-        if (blob.size > 0) onStopCallback(blob);
+       if (shouldSaveRef.current) {
+          const type = mediaRecorderRef.current?.mimeType || mimeTypeRef.current;
+          const blob = new Blob(chunksRef.current, { type });
+          if (blob.size > 0) onStopCallback(blob);
+        }
+        chunksRef.current = [];
         setStatus("idle");
         setStream(null);
         setElapsedTime(0);
@@ -138,6 +143,7 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
   };
 
   const stop = (shouldSave = true) => {
+    shouldSaveRef.current = shouldSave;
     if (!shouldSave) chunksRef.current = [];
     if (mediaRecorderRef.current?.state !== "inactive") {
       mediaRecorderRef.current?.stop();
