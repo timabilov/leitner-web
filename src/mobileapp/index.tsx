@@ -26,11 +26,11 @@ const MobileApp = () => {
               <Smartphone className="h-12 w-12 text-white" />
             </div>
             <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
-              {t("Get Leitner AI on iOS")}
+              {t("Get Bycat AI on iOS")}
             </h1>
             <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-md">
               {t(
-                "Take your smart notes and learning on the go. Download the Leitner AI mobile app and study anywhere, anytime."
+                "Take your smart notes and learning on the go. Download the Bycat AI mobile app and study anywhere, anytime."
               )}
             </p>
           </div>

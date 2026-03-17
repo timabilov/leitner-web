@@ -152,7 +152,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
           <CatLogo size={18} />
         </div>
         <span className="text-[14px] font-bold tracking-tighter text-zinc-900 dark:text-zinc-50 group-data-[collapsible=icon]:hidden whitespace-nowrap overflow-hidden">
-          Leitner AI
+          Bycat AI
         </span>
       </SidebarHeader>
 
@@ -171,7 +171,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                 <SidebarSaleCard />
               </SidebarMenuItem>
               
-              
+
               {items.map((item) => {
                 const isActive =
                   pathname === item.key ||
