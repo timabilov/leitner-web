@@ -16,9 +16,11 @@ import { AnimatedGrid, FloatingBlobs } from "@/login";
 
 export default function PrivacyPolicy() {
   return (
-    <main className="bg-background text-foreground min-h-screen w-full flex flex-col relative overflow-hidden">
-      <AnimatedGrid />
-      <FloatingBlobs />
+    <main className="bg-background text-foreground min-h-screen w-full flex flex-col relative">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <AnimatedGrid />
+        <FloatingBlobs />
+      </div>
 
       <section className="py-12 md:py-24 relative z-10">
         <div className="container mx-auto max-w-4xl px-4">

@@ -10,9 +10,11 @@ import { AnimatedGrid, FloatingBlobs } from "@/login";
 
 export default function TermsAndConditions() {
   return (
-    <main className="bg-background text-foreground min-h-screen w-full">
-      <AnimatedGrid />
-      <FloatingBlobs />
+    <main className="bg-background text-foreground min-h-screen w-full relative">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <AnimatedGrid />
+        <FloatingBlobs />
+      </div>
 
       <section className="py-12 md:py-24 relative z-10">
         <div className="container max-w-4xl mx-auto px-4">
