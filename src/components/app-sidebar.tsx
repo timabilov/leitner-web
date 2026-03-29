@@ -240,7 +240,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
 
               <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
                 <SidebarMenuButton
-                  onClick={() => navigate("/terms")}
+                  onClick={() => window.open("https://bycat.ai/terms-conditions", "_blank")}
                   className="text-zinc-500 hover:text-zinc-900"
                 >
                   <FileText className="size-4 opacity-70" />
@@ -252,7 +252,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
 
               <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
                 <SidebarMenuButton
-                  onClick={() => navigate("/privacy")}
+                  onClick={() => window.open("https://bycat.ai/privacy-policy", "_blank")}
                   className="text-zinc-500 hover:text-zinc-900"
                 >
                   <Shield className="size-4 opacity-70" />

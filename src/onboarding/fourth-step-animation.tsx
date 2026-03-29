@@ -38,7 +38,7 @@ const FEEDBACKS = [
 
 
 
-const FourthStepAnimation = ({ t, finishSignup }: { t: any, finishSignup: () => void }) => {
+const FourthStepAnimation = ({ t, finishSignup, hasPromo }: { t: any, finishSignup: () => void, hasPromo?: boolean }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -123,21 +123,25 @@ const FourthStepAnimation = ({ t, finishSignup }: { t: any, finishSignup: () => 
           </div>
         </div>
         
-        <h3 className="text-xl font-bold text-slate-900 tracking-tighter leading-none mb-2">
+        {/* <h3 className="text-xl font-bold text-slate-900 tracking-tighter leading-none mb-2">
           {t("Learning is better")}<br />
           <span className="text-slate-400 font-semibold text-lg mt-1 inline-block tracking-tight">
             {t("when collective.")}
           </span>
-        </h3>
+        </h3> */}
 
         {/* Claim Button (Banner is now globally in the modal header, so we just show the button here) */}
        
  <div className="flex flex-col items-center justify-center gap-4 w-full pt-2">
-          <OnboardingBanner step={3}/>
-          
-          <div className='flex justify-center w-full'>
+          <OnboardingBanner step={3} hasPromo={hasPromo}/>
+          {
+            hasPromo && (
+              <div className='flex justify-center w-full'>
             <ClaimButton t={t} onClick={finishSignup}/>
           </div>
+            )
+          }
+          
         </div>
 
       </div>

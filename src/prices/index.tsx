@@ -145,7 +145,7 @@ const PricingCard = ({
           <div className="flex flex-col gap-1">
           <div className="flex justify-between items-start gap-2">
               <h3 className="text-lg font-bold leading-none">{t(tier.name)}</h3>
-                {isSpecialAnnual && (
+                {isSpecialAnnual && isPromo && (
                   <span className=" inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-inset ring-pink-500/20 whitespace-nowrap">
                     🎁 {t(claimOffer)}
                   </span>
@@ -263,7 +263,7 @@ export default function PricingSection() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>("pro_monthly");
   const [prices, setPrices] = useState<Record<string, string>>({});
-  const { targetDate } = useOfferCountdown();
+  const { targetDate, hasPromo } = useOfferCountdown();
   const [searchParams] = useSearchParams();
  const isPromoLink = searchParams.get("sale") === "true";
 
@@ -403,7 +403,7 @@ export default function PricingSection() {
         <div className="relative w-full px-6  flex flex-col items-center text-center z-10">
           {/* --- SPINNING BORDER OFFER --- */}
           {
-            isPromoLink && (
+            isPromoLink && hasPromo && (
               <div className="mx-auto flex justify-center mt-2">
                 <div className="group relative inline-flex overflow-hidden rounded-xl p-[2px] shadow-lg shadow-pink-500/10">
                   <span className="relative inline-flex h-full w-full items-center justify-center rounded-xl bg-background px-4 py-2 text-sm font-medium text-foreground backdrop-blur-3xl">
@@ -429,7 +429,7 @@ export default function PricingSection() {
         </div>
         {/* --- PRICING GRID --- */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3 w-full max-w-4xl px-4 z-20 justify-items-center items-stretch">
-          {(isPromoLink ? PRICING_TIERS_CLAIM : PRICING_TIERS).map((tier) => (
+          {(isPromoLink && hasPromo? PRICING_TIERS_CLAIM : PRICING_TIERS).map((tier) => (
             <PricingCard
               key={tier.id}
               tier={tier}
@@ -441,7 +441,7 @@ export default function PricingSection() {
               onCheckout={() => openCheckout(tier.priceId, tier.discountId)}
               isLoading={loadingPriceId === tier.priceId}
               displayPrice={tier.originalPrice}
-              isPromo={isPromoLink} 
+              isPromo={isPromoLink && hasPromo} 
               isSpecialAnnual={isPromoLink}
               claimOffer={tier.claimOffer}
             />

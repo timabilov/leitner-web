@@ -9,11 +9,9 @@ import * as Sentry from "@sentry/react";
 import ThirdStepAnimation from "./third-step-animation";
 import { cn } from "@/lib/utils";
 import LiveActivityFeed2 from "@/prices/live-activity-feed2";
-import ShopAnimation from "./assets/shop.json";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
-import Lottie from "lottie-react";
 import OnboardingBanner from "./onboarding-banner"; // <-- Your newly created banner!
-import { useLocation } from "react-router";
+
 
 export const ClaimButton = ({
   onClick,
@@ -24,7 +22,8 @@ export const ClaimButton = ({
 }) => {
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [mounted, setMounted] = useState(false);
-  const { targetDate } = useOfferCountdown();
+  const { targetDate} = useOfferCountdown();
+
 
   useEffect(() => {
     setMounted(true);
@@ -113,6 +112,7 @@ const OnboardingModal = ({
   const TOTAL_STEPS = 4;
   const posthog = usePostHog();
   const [step, setStep] = useState(0);
+  const { hasPromo } = useOfferCountdown();
 
   useEffect(() => {
     if (isOpen) {
@@ -251,7 +251,7 @@ const OnboardingModal = ({
                     {
                       step!== 3 && (
                         <div className="w-full flex justify-center">
-                          <OnboardingBanner step={step} />
+                          <OnboardingBanner step={step} hasPromo={hasPromo}/>
                         </div>
                       )
                     }
@@ -273,7 +273,7 @@ const OnboardingModal = ({
                       {step === 1 && <SecondStepAnimation t={t} />}
                       {step === 2 && <ThirdStepAnimation t={t} />}
                       {step === 3 && (
-                        <FourthStepAnimation t={t} finishSignup={() => nextStep(true)} />
+                        <FourthStepAnimation t={t} finishSignup={() => nextStep(true)} hasPromo={hasPromo} />
                       )}
                     </motion.div>
                   )}
@@ -300,7 +300,7 @@ const OnboardingModal = ({
                       )}
                     >
                       <span className="relative z-10 flex items-center gap-2">
-                        {step === TOTAL_STEPS - 1 ? t("Skip Discount 😌") : t("Continue")}
+                        {step === TOTAL_STEPS - 1 && hasPromo ? t("Skip Discount 😌") : t("Continue")}
                       </span>
                     </button>
                   </div>

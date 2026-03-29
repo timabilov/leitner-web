@@ -4,7 +4,7 @@ import AIIcon from "@/note-detail/assets/ai-icon";
 import { cn } from "@/lib/utils";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 
-const OnboardingBanner = ({ className, step }: { className: string; step?: number }) => {
+const OnboardingBanner = ({ className, step, hasPromo }: { className: string; step?: number, hasPromo?: boolean }) => {
   const [timeLeft, setTimeLeft] = useState({ m: 0, s: 0, h: 0, d: 0 });
   const [mounted, setMounted] = useState(false);
  const { targetDate } = useOfferCountdown();
@@ -41,28 +41,28 @@ const OnboardingBanner = ({ className, step }: { className: string; step?: numbe
     switch (step) {
       case 0:
         return {
-          title: "Complete setup for 50% Off",
-          sub: "Exclusive onboarding reward",
+          title: hasPromo ? "Complete setup for 50% Off" : "Set up your workspace today and get rewarded.",
+          sub: hasPromo ? "Exclusive onboarding reward" : "Complete the full onboarding process to apply your discount.",
           icon: <Gift className="size-4" />,
         };
       case 1:
         return {
-          title: "You're on your way! 🚀",
-          sub: "Keep going to unlock your promo",
+          title: hasPromo ? "You're on your way! 🚀" : "Great start! You're officially on your way.🚀",
+          sub: hasPromo ? "Keep going to unlock your promo" : "Keep going to apply your discount.",
           icon: <Rocket className="size-4" />,
         };
       case 2:
         return {
-          title: "Almost there! ✨",
-          sub: "Just one more step for 50% Off",
+          title: hasPromo ? "Almost there! ✨" : "Almost there! Your discount is waiting. ⏳",
+          sub: hasPromo ? "Just one more step for 50% Off" : "Just one more step to apply your discount.",
           icon: <AIIcon className="size-4" />,
         };
       case 3:
       default:
         return {
-          title: "Promo Unlocked! 🎉",
-          sub: "Your 50% Off Annual is ready",
-          icon: <PartyPopper className="size-4" />,
+          title: hasPromo ? "Promo Unlocked! 🎉" : "All Set! Enjoy Your Welcome Discount. ✨",
+          sub: "Exclusive onboarding reward",
+          icon: <Gift className="size-4" />,
         };
     }
   };
@@ -119,12 +119,16 @@ const OnboardingBanner = ({ className, step }: { className: string; step?: numbe
                   <ArrowDown strokeWidth={2} className="size-4" />
                 </div>
               )}
-        <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-100 px-3 py-1.5 rounded-full shadow-sm">
-          <Timer className="size-3.5 text-pink-500 animate-wiggle" />
-          <span className="font-mono text-[13px] font-bold text-slate-700 tabular-nums tracking-tight">
-            {format(timeLeft.d)}d:{format(timeLeft.h)}h:{format(timeLeft.m)}m:{format(timeLeft.s)}s
-          </span>
-        </div>
+              {
+                hasPromo && (
+                  <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-100 px-3 py-1.5 rounded-full shadow-sm">
+                    <Timer className="size-3.5 text-pink-500 animate-wiggle" />
+                    <span className="font-mono text-[13px] font-bold text-slate-700 tabular-nums tracking-tight">
+                      {format(timeLeft.d)}d:{format(timeLeft.h)}h:{format(timeLeft.m)}m:{format(timeLeft.s)}s
+                    </span>
+                  </div>
+                )
+              }
 
       
       </div>

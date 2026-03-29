@@ -21,7 +21,7 @@ import { useInitPromo } from "./store/use-init-promo";
 function App() {
     const { t } = useTranslation();
     console.log("App rendered");
-     useInitPromo();
+    useInitPromo();
 
   return (
       <TooltipProvider>
