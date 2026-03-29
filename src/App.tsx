@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import "./App.css";
 import Notes from "./notes";
 import Login from "./login";
+import Privacy from "./privacy";
+import Terms from "./terms";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Route, Routes } from "react-router";
 import { Toaster } from "sonner";
@@ -37,6 +39,8 @@ function App() {
                 <Route path="/" element={<Login />} />
               </Route> */}
             <Route path="/" element={<Login />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
               {/* --- PROTECTED ROUTES (Only accessible if logged in) --- */}
               <Route element={<ProtectedRoute />}>
                <Route element={<Layout />}>
