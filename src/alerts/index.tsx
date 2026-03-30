@@ -2,7 +2,7 @@ import { useUserStore } from "@/store/userStore";
 import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
-import { Bell, CircleAlert } from "lucide-react";
+import { Bell, CircleAlert, Download } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
@@ -74,8 +74,17 @@ const Alerts = ({ children }: any) => {
                 </AlertTitle>
                 <AlertDescription>
                   {t(
-                    "Showing only notes with enabled alerts. You will receive personalized quizzes for these items based on your learning curve.",
+                    "Showing only notes with enabled alerts. You will receive personalized quizzes on the mobile app based on your learning curve.",
                   )}
+                  <a
+                    href="https://apps.apple.com/us/app/leitner-ai-note-quiz-alerts/id6747087851"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 ml-1 font-medium text-primary hover:underline"
+                  >
+                    <Download className="w-3 h-3" />
+                    {t("Get the app")}
+                  </a>
                 </AlertDescription>
               </div>
               <CircleAlert />
