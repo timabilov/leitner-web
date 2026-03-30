@@ -17,11 +17,15 @@ import * as Sentry from "@sentry/react"
 
 type Tab = 'account' | 'subscription' | 'preferences';
 
-const SettingsDialog = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolean) => void }) => {
+const SettingsDialog = ({ isOpen, setIsOpen, defaultTab }: { isOpen: boolean, setIsOpen: (v: boolean) => void, defaultTab?: Tab }) => {
   const { t } = useTranslation();
   const posthog = usePostHog();
   const { clearStore } = useUserStore();
-  const [activeTab, setActiveTab] = useState<Tab>('account');
+  const [activeTab, setActiveTab] = useState<Tab>(defaultTab ?? 'account');
+
+  useEffect(() => {
+    if (defaultTab) setActiveTab(defaultTab);
+  }, [defaultTab]);
 
    useEffect(() => {
     if (isOpen) {

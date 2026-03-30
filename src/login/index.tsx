@@ -328,16 +328,22 @@ const LoginBase = () => {
   const setAccessToken = useUserStore((state) => state.setAccessToken);
   const setRefreshToken = useUserStore((state) => state.setRefreshToken);
   const setUserData = useUserStore((state) => state.setUserData);
-  const { accessToken } = useUserStore();
+  const { accessToken, userId } = useUserStore();
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(!!accessToken || false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const [sessionData, setSessionData] = useState<any>(null);
   useEffect(() => {
+    // Already signed in AND finished onboarding → go to app
+    // TODO fix to no have flicker  from login to home(now for a moment it goes to login then immediately to home)
+    if (accessToken && userId) {
+      navigate("/notes", { replace: true });
+      return;
+    }
     posthog.capture("login_page_viewed");
-  }, [posthog]);
+  }, [accessToken, userId, navigate, posthog]);
 
   const googleVerifyMutation = useMutation({
     mutationFn: (newUser: any) => {

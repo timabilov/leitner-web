@@ -12,8 +12,23 @@ import LiveActivityFeed2 from "./live-activity-feed2";
 import CountdownTimer from "@/components/countdown-timer";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 import { useSearchParams } from "react-router-dom";
-import { Trans } from "react-i18next"; 
+import { Trans } from "react-i18next";
 import { usePostHog } from "posthog-js/react";
+import SettingsDialog from "@/settings/settings-dialog2";
+import { useQuery } from "@tanstack/react-query";
+import { axiosInstance } from "@/services/auth";
+import { API_BASE_URL } from "@/services/config";
+
+const INTERVAL_TO_PLAN: Record<string, "weekly" | "monthly" | "annual"> = {
+  week: "weekly",
+  month: "monthly",
+  year: "annual",
+};
+
+const fetchSubscription = async () => {
+  const res = await axiosInstance.get(`${API_BASE_URL}/subscription/get`);
+  return res.data;
+};
 
 // --- COMPONENT: Trust & Organic Data (Bottom Section) ---
 export const TrustStats = () => {
@@ -95,7 +110,9 @@ const PricingCard = ({
   isLoading,
   isPromo,
   isSpecialAnnual,
-  claimOffer
+  claimOffer,
+  activePlanKey,
+  onManage
 }: {
   tier: (typeof PRICING_TIERS)[0];
   isSelected: boolean;
@@ -105,8 +122,11 @@ const PricingCard = ({
   displayPrice: string | null;
   isPromo?: boolean;
   isSpecialAnnual: boolean;
-  claimOffer: string
+  claimOffer: string;
+  activePlanKey: string | null;
+  onManage: () => void;
 }) => {
+  const isActivePlan = activePlanKey === tier.key;
   const { t } = useTranslation();
 
   return (
@@ -137,14 +157,16 @@ const PricingCard = ({
             {tier.discount}
           </div>
         )}
-         {/* Badge Logic */}
-  
-
         {/* Content Section */}
         <div className="flex flex-col gap-4 relative z-10 flex-1" style={{ transform: "translateZ(20px)" }}>
           <div className="flex flex-col gap-1">
-          <div className="flex justify-between items-start gap-2">
+          <div className="flex justify-between items-center gap-2">
               <h3 className="text-lg font-bold leading-none">{t(tier.name)}</h3>
+              {isActivePlan && (
+                <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
+                  {t("Active")}
+                </span>
+              )}
                 {isSpecialAnnual && isPromo && (
                   <span className=" inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-inset ring-pink-500/20 whitespace-nowrap">
                     🎁 {t(claimOffer)}
@@ -221,11 +243,11 @@ const PricingCard = ({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onCheckout();
+              isActivePlan ? onManage() : onCheckout();
             }}
             disabled={isLoading}
             style={
-              isSelected
+              isSelected && !isActivePlan
                 ? {
                     backgroundImage:
                       "linear-gradient(to right, #000000, #404040, #000000, #404040)",
@@ -236,18 +258,20 @@ const PricingCard = ({
             }
             className={cn(
               `
-              inline-flex shrink-0 items-center justify-center gap-2 text-xs font-bold whitespace-nowrap 
-              transition-all duration-500 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 
-              disabled:pointer-events-none disabled:opacity-50 
+              inline-flex shrink-0 items-center justify-center gap-2 text-xs font-bold whitespace-nowrap
+              transition-all duration-500 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50
+              disabled:pointer-events-none disabled:opacity-50
               h-10 px-4 w-full rounded-lg border shadow-sm
               active:scale-[0.98] cursor-pointer
               `,
-              isSelected
-                ? "text-white border-transparent shadow-md hover:shadow-xl"
-                : "bg-background text-slate-900 dark:text-white border-neutral-200 hover:border-neutral-300 hover:bg-slate-50",
+              isActivePlan
+                ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30"
+                : isSelected
+                  ? "text-white border-transparent shadow-md hover:shadow-xl"
+                  : "bg-background text-slate-900 dark:text-white border-neutral-200 hover:border-neutral-300 hover:bg-slate-50",
             )}
           >
-            {isLoading ? <Loader2 className="animate-spin h-3 w-3" /> : "Purchase now"}
+            {isLoading ? <Loader2 className="animate-spin h-3 w-3" /> : isActivePlan ? t("Manage subscription") : t("Purchase now")}
           </button>
         </div>
       </motion.div>
@@ -258,14 +282,35 @@ const PricingCard = ({
 // --- Main Component ---
 export default function PricingSection() {
   const { t } = useTranslation();
-  const { userId, email } = useUserStore();
+  const { userId, email, subscriptionStatus } = useUserStore();
   const [paddle, setPaddle] = useState<any>(null);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>("pro_monthly");
   const [prices, setPrices] = useState<Record<string, string>>({});
   const { targetDate, hasPromo } = useOfferCountdown();
   const [searchParams] = useSearchParams();
- const isPromoLink = searchParams.get("sale") === "true";
+  const isPromoLink = searchParams.get("sale") === "true";
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const hasActivePlan = subscriptionStatus !== 'free';
+
+  const { data: subscriptionData, error: subscriptionError } = useQuery({
+    queryKey: ["subscription"],
+    queryFn: fetchSubscription,
+    enabled: hasActivePlan,
+  });
+
+  const activePlanKey = subscriptionData?.data?.billing_cycle?.interval
+    ? INTERVAL_TO_PLAN[subscriptionData.data.billing_cycle.interval] ?? null
+    : null;
+
+  useEffect(() => {
+    if (subscriptionData) {
+      console.log("[Subscription] Response:", JSON.stringify(subscriptionData, null, 2));
+    }
+    if (subscriptionError) {
+      console.error("[Subscription] Error:", subscriptionError);
+    }
+  }, [subscriptionData, subscriptionError]);
 
    const posthog = usePostHog();
 
@@ -394,6 +439,11 @@ export default function PricingSection() {
                   <Wallet className="text-zinc-800 dark:text-zinc-100" />
                 </span>
                 <span>{t("Select plan")}</span>
+                {hasActivePlan && (
+                  <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
+                    {t("Active")}
+                  </span>
+                )}
               </h1>
    
             
@@ -441,9 +491,11 @@ export default function PricingSection() {
               onCheckout={() => openCheckout(tier.priceId, tier.discountId)}
               isLoading={loadingPriceId === tier.priceId}
               displayPrice={tier.originalPrice}
-              isPromo={isPromoLink && hasPromo} 
+              isPromo={isPromoLink && hasPromo}
               isSpecialAnnual={isPromoLink}
               claimOffer={tier.claimOffer}
+              activePlanKey={activePlanKey}
+              onManage={() => setSettingsOpen(true)}
             />
           ))}
         </div>
@@ -453,6 +505,7 @@ export default function PricingSection() {
   
 
       </div>
+      <SettingsDialog isOpen={settingsOpen} setIsOpen={setSettingsOpen} defaultTab="subscription" />
       </>
   );
 }
