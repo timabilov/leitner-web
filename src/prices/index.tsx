@@ -112,6 +112,7 @@ const PricingCard = ({
   isSpecialAnnual,
   claimOffer,
   activePlanKey,
+  isCanceling,
   onManage
 }: {
   tier: (typeof PRICING_TIERS)[0];
@@ -124,6 +125,7 @@ const PricingCard = ({
   isSpecialAnnual: boolean;
   claimOffer: string;
   activePlanKey: string | null;
+  isCanceling?: boolean;
   onManage: () => void;
 }) => {
   const isActivePlan = activePlanKey === tier.key;
@@ -165,6 +167,11 @@ const PricingCard = ({
               {isActivePlan && (
                 <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
                   {t("Active")}
+                </span>
+              )}
+              {isActivePlan && isCanceling && (
+                <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20">
+                  {t("Canceling")}
                 </span>
               )}
                 {isSpecialAnnual && isPromo && (
@@ -304,14 +311,16 @@ export default function PricingSection() {
     ? INTERVAL_TO_PLAN[subscriptionData.data.billing_cycle.interval] ?? null
     : null;
 
-  // useEffect(() => {
-  //   if (subscriptionData) {
-  //     console.log("[Subscription] Response:", JSON.stringify(subscriptionData, null, 2));
-  //   }
-  //   if (subscriptionError) {
-  //     console.error("[Subscription] Error:", subscriptionError);
-  //   }
-  // }, [subscriptionData, subscriptionError]);
+  const isCanceling = subscriptionData?.data?.scheduled_change?.action === "cancel";
+
+  useEffect(() => {
+    if (subscriptionData) {
+      console.log("[Subscription] Response:", JSON.stringify(subscriptionData, null, 2));
+    }
+    if (subscriptionError) {
+      console.error("[Subscription] Error:", subscriptionError);
+    }
+  }, [subscriptionData, subscriptionError]);
 
    const posthog = usePostHog();
 
@@ -472,6 +481,11 @@ export default function PricingSection() {
                     {t("Active")}
                   </span>
                 )}
+                {hasActivePlan && isCanceling && (
+                  <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20">
+                    {t("Canceling")}
+                  </span>
+                )}
               </h1>
    
             
@@ -523,6 +537,7 @@ export default function PricingSection() {
               isSpecialAnnual={isPromoLink}
               claimOffer={tier.claimOffer}
               activePlanKey={activePlanKey}
+              isCanceling={isCanceling}
               onManage={() => setSettingsOpen(true)}
             />
           ))}

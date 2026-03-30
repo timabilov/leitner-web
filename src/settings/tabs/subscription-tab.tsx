@@ -302,7 +302,7 @@ const SubscriptionTab = () => {
             />
           </>
         )}
-        {is_cancelled && (
+        {/* Later handle {is_cancelled && (
           <>
              <Separator className="bg-zinc-200 dark:bg-zinc-800" />
             <SettingsItem
@@ -319,7 +319,7 @@ const SubscriptionTab = () => {
               }
             />
           </>
-        )}
+        )} */}
       </div>
     </div>
   );
