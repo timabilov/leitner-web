@@ -15,7 +15,7 @@ import { useSearchParams } from "react-router-dom";
 import { Trans } from "react-i18next";
 import { usePostHog } from "posthog-js/react";
 import SettingsDialog from "@/settings/settings-dialog2";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 
@@ -282,6 +282,7 @@ const PricingCard = ({
 // --- Main Component ---
 export default function PricingSection() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const { userId, email, subscriptionStatus } = useUserStore();
   const [paddle, setPaddle] = useState<any>(null);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
@@ -303,14 +304,14 @@ export default function PricingSection() {
     ? INTERVAL_TO_PLAN[subscriptionData.data.billing_cycle.interval] ?? null
     : null;
 
-  useEffect(() => {
-    if (subscriptionData) {
-      console.log("[Subscription] Response:", JSON.stringify(subscriptionData, null, 2));
-    }
-    if (subscriptionError) {
-      console.error("[Subscription] Error:", subscriptionError);
-    }
-  }, [subscriptionData, subscriptionError]);
+  // useEffect(() => {
+  //   if (subscriptionData) {
+  //     console.log("[Subscription] Response:", JSON.stringify(subscriptionData, null, 2));
+  //   }
+  //   if (subscriptionError) {
+  //     console.error("[Subscription] Error:", subscriptionError);
+  //   }
+  // }, [subscriptionData, subscriptionError]);
 
    const posthog = usePostHog();
 
@@ -330,9 +331,36 @@ export default function PricingSection() {
           environment: import.meta.env.VITE_PADDLE_ENV,
           token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN,
           eventCallback: (event) => {
-            if (event.name === "checkout.closed") setLoadingPriceId(null);
+            if (event.name === "checkout.closed") {
+              setLoadingPriceId(null);
+              toast.success(t("You cancelled the payment"));
+            }
+            if (event.name === "checkout.updated") {
+              console.log("Checkout Updated Event:", event);
+            }
             if (event.name === "checkout.completed") {
-              toast.success(t("Payment Successful! Welcome aboard."));
+              console.log("Checkout Completed Event:", event);
+              posthog.capture("pricing_checkout_completed", {
+                is_promo: isPromoLink,
+                selected_tier: selectedId
+              });
+              // IMPORTANT!!! Delay to ensure backend has processed the subscription update
+              setTimeout(() => {
+                toast.success(t("Payment Successful! Welcome aboard."));
+                queryClient.invalidateQueries({ queryKey: ["subscription"] });
+                queryClient.invalidateQueries({ queryKey: ["me"] });
+                queryClient.invalidateQueries({ queryKey: ["profile"] });
+              }, 2400); 
+            } else {
+              if (event.name === "checkout.payment.initiated") {
+                return
+              }
+              posthog.capture("pricing_checkout_failed", {
+                is_promo: isPromoLink,
+                event_name: event.name,
+              });
+              console.log("Checkout Event:", event);
+              toast.success(t("There was some issue with payment event. Please contact support if you think this is an error."));
             }
           },
         });
