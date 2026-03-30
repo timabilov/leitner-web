@@ -453,9 +453,9 @@ export default function PricingSection() {
 
       {/* Live Activity Feed */}
       <div className="relative  z-[9999]">
-          <div className="absolute right-2 top-0 z-9999">
+          {/* TURNED OFF ON PURPOSE WILL BE ENABLED <div className="absolute right-2 top-0 z-9999">
             <LiveActivityFeed2 />
-          </div>
+          </div> */}
         </div>
 
       <div className="relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground">
