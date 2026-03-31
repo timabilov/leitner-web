@@ -364,12 +364,15 @@ export default function PricingSection() {
               if (event.name === "checkout.payment.initiated") {
                 return
               }
-              posthog.capture("pricing_checkout_failed", {
-                is_promo: isPromoLink,
-                event_name: event.name,
-              });
+              if (event.name === "checkout.error") {
+                posthog.capture("pricing_checkout_failed", {
+                  is_promo: isPromoLink,
+                  event_name: event.name,
+                });
+                toast.success(t("There was some issue with payment event. Please contact support if you think this is an error."));
+                return
+              } 
               console.log("Checkout Event:", event);
-              toast.success(t("There was some issue with payment event. Please contact support if you think this is an error."));
             }
           },
         });
