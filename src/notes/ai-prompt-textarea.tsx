@@ -398,7 +398,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
         { duration: Infinity }
     );
     flowContext.current.toastId = id;
-     flowContext.current.name = t("New Recording");
+    flowContext.current.name = t("New Note");
 
     try {
       startSimulatedProgress(t("Compressing files..."), 0);
@@ -415,7 +415,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
       
       draftNoteMutation.mutate({ 
           note_type: "multi", 
-          name: t("New Recording"), 
+          name: "New Note", 
           file_name: zip.fileName, 
           transcript: t("Not transcribed yet"), 
           language: "en", 

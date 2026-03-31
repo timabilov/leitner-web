@@ -367,6 +367,7 @@ export default function PricingSection() {
                 posthog.capture("pricing_checkout_failed", {
                   is_promo: isPromoLink,
                   event_name: event.name,
+                  email: email
                 });
                 toast.success(t("There was some issue with payment event. Please contact support if you think this is an error."));
                 return

@@ -102,6 +102,7 @@ const MarkdownView = ({
   }, []);
 
   const handleAction = (action: 'explain' | 'quiz') => {
+    console.log("Action:", action, "Text:", selectionMenu.text);  
     if (action === 'explain' && onExplain) onExplain(selectionMenu.text);
     if (action === 'quiz' && onQuiz) onQuiz(selectionMenu.text);
     setSelectionMenu(prev => ({ ...prev, show: false }));
@@ -164,12 +165,20 @@ const MarkdownView = ({
             top: selectionMenu.y,
             transform: 'translate(10px, 10px)' 
           }}
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={(e) =>{
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          }
         >
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => handleAction('explain')}
+            onClick={(e) => {
+               e.preventDefault();
+              e.stopPropagation();
+              handleAction('explain')
+            }}
             className="h-8 px-3 rounded-md cursor-pointer text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
           >
             {t("Ask")} 
@@ -181,10 +190,15 @@ const MarkdownView = ({
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => handleAction('quiz')}
+            onClick={(e) => {
+               e.preventDefault();
+              e.stopPropagation();
+              handleAction('quiz')
+            }
+            }
             className="h-8 cursor-pointer px-3 rounded-md text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
           >
-            Generate quiz
+            {t("Generate quiz")}
             <span className="text-rose-500">
               <QuizPenIcon className="w-4 h-4" /> 
             </span>

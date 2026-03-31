@@ -6,17 +6,20 @@ import { cn } from "@/lib/utils";
 import Lottie from "lottie-react";
 import successAnimation from './assets/done.json';
 import sadCat from './assets/sad-cat.jpeg';
+import { useTranslation } from "react-i18next";
 
 interface NoteCreationToastProps {
   step: string;
   progress: number;
   status: "loading" | "success" | "error";
   noteId?: string | number;
-  name?: string | null
+  name?: string;
   onClick?: () => void;
 }
 
-export function NoteCreationToast({ step, progress, status, name, onClick }: NoteCreationToastProps) {
+export function NoteCreationToast({ step, progress, status, name = "New Note", onClick }: NoteCreationToastProps) {
+  const { t } = useTranslation();
+
   return (
     <div 
       className={cn(
@@ -64,7 +67,7 @@ export function NoteCreationToast({ step, progress, status, name, onClick }: Not
           {/* Text Content */}
           <div className="flex flex-col gap-1 overflow-hidden w-full">
             <span onClick={onClick} className={`w-full text-sm font-semibold leading-none tracking-tight ${status === "success" ? "underline cursor-pointer" : ""}`}>
-              {status === "success" ? <div className=" w-full flex justify-between items-center">{`Analyzing ${name}`}  <ExternalLink className="w-3 h-3 ml-2" /> </div> : status === "error" ? "Error" : "Creating Note"}
+              {status === "success" ? <div className=" w-full flex justify-between items-center">{`Analyzing ${t(name)}`}  <ExternalLink className="w-3 h-3 ml-2" /> </div> : status === "error" ? "Error" : "Creating Note"}
             </span>
             <span className="text-xs text-muted-foreground truncate">
               {step}
