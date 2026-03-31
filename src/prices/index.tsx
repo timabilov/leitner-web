@@ -342,7 +342,6 @@ export default function PricingSection() {
           eventCallback: (event) => {
             if (event.name === "checkout.closed") {
               setLoadingPriceId(null);
-              toast.success(t("You cancelled the payment"));
             }
             if (event.name === "checkout.updated") {
               console.log("Checkout Updated Event:", event);
