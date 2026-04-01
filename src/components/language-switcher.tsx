@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 import {
@@ -20,8 +20,7 @@ import { Check, Languages, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ISO_TO_LANGUAGE } from "@/services/config";
 import { usePostHog } from 'posthog-js/react';
-// Assume ISO_TO_LANGUAGE is imported from your config file
-
+import { useSettingsStore } from '@/store/settingsStore'; 
 
 // --- Prepare the language options from your object ---
 // We convert the object into an array and filter out duplicates by lng_code
@@ -38,12 +37,26 @@ export function LanguageSwitcher() {
   const [open, setOpen] = useState(false);
   const posthog = usePostHog();
   // Find the currently selected language's full data object
-  const selectedLanguage = languageOptions.find(lang => lang.lng_code === i18n.language) || languageOptions.find(lang => lang.lng_code === 'en');
+  // const selectedLanguage = languageOptions.find(lang => lang.lng_code === i18n.language) || languageOptions.find(lang => lang.lng_code === 'en');
+ const { language, setLanguage } = useSettingsStore();
 
+ useEffect(() => {
+    if (language && i18n.language !== language) {
+      i18n.changeLanguage(language);
+    }
+  }, [language, i18n]);
+
+  const selectedLanguage = languageOptions.find(lang => lang.lng_code === language) 
+    || languageOptions.find(lang => lang.lng_code === 'en');
+
+    
   const handleLanguageChange = (lngCode) => {
-    posthog.capture("lang_changed", {lngCode})
-    i18n.changeLanguage(lngCode);
-    setOpen(false); // Close the dropdown after selection
+    posthog.capture("lang_changed", { lngCode });
+    
+    i18n.changeLanguage(lngCode); // Changes language immediately
+    setLanguage(lngCode);         // Saves it to Zustand / LocalStorage permanently
+    
+    setOpen(false); 
   };
 
   return (

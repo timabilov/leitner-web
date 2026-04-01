@@ -124,7 +124,9 @@
     "AI-powered study tools from your notes": "Qeydlərinizdən süni intellekt dəstəkli tədris vasitələri",
     "Select folder...": "Qovluq seçin...",
     "All folders": "Bütün qovluqlar",
-    "Search folder...": "Qovluq axtar...",
+    "Search folders...": "Qovluqları axtar...",
+    "New Folder": "Yeni Qovluq",
+    "Organize your learning materials into collections.": "Tədris materiallarınızı kolleksiyalarda saxlayın.",
     "No folders found.": "Heç bir qovluq tapılmadı.",
     "Examples": "Nümunələr",
     "Your browser does not support embedded PDFs. Please use the download button.": "Brauzeriniz daxili PDF-ləri dəstəkləmir. Lütfən yükləmə düyməsindən istifadə edin.",
@@ -234,5 +236,7 @@
     "subscription.highlight.weekly": "Həftəlik",
     "subscription.highlight.pro_annual": "Pro İllik",
     "Select plan": "Planı seç",
-    "Claim offer": "Endirim təklifi"
+    "Claim offer": "Endirim təklifi",
+    "notes": "qeyd",
+    "Rename": "Yenidən adlandır"
 }

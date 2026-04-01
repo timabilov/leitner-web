@@ -20,6 +20,9 @@ import {
   Bell,
   FileText,
   Shield,
+  Handshake,
+  Glasses,
+  HatGlasses,
 } from "lucide-react";
 import { NavUser } from "./nav-user";
 import { cn } from "@/lib/utils";
@@ -243,7 +246,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                   onClick={() => window.open("https://bycat.ai/terms-conditions", "_blank")}
                   className="text-zinc-500 hover:text-zinc-900"
                 >
-                  <FileText className="size-4 opacity-70" />
+                  <Handshake className="size-4 opacity-70" />
                   <span className="text-sm font-medium opacity-80">
                     {t("Terms of use")}
                   </span>
@@ -255,7 +258,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                   onClick={() => window.open("https://bycat.ai/privacy-policy", "_blank")}
                   className="text-zinc-500 hover:text-zinc-900"
                 >
-                  <Shield className="size-4 opacity-70" />
+                  <HatGlasses className="size-4 opacity-70" />
                   <span className="text-sm font-medium opacity-80">
                     {t("Privacy policy")}
                   </span>

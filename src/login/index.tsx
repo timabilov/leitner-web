@@ -616,10 +616,10 @@ const LoginBase = () => {
                 {t("Continue with Google")}
               </button>
 
-              <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
+              {/* <button className="relative flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-background px-4 text-base font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300">
                 <AppleLogo className="h-7 w-7 text-foreground" />
                 {t("Continue with Apple")}
-              </button>
+              </button> */}
             </div>
 
             <p className="mt-8 max-w-xs text-center text-xs text-slate-500">

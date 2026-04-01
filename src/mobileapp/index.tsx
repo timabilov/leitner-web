@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
 import QRCode from "react-qr-code";
-import { Smartphone, Download } from "lucide-react";
+import { Smartphone, Download, CatIcon } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { useEffect } from "react";
+import CatPenIcon from "@/notes/assets/cat-pen-icon";
 
 const MobileApp = () => {
   const { t } = useTranslation();
@@ -22,13 +23,13 @@ const MobileApp = () => {
         <div className="w-full max-w-2xl">
           {/* Header Section */}
           <div className="flex flex-col items-center text-center mb-12">
-            <div className="mb-6 p-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-              <Smartphone className="h-12 w-12 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
+            {/* <div className="mb-6 p-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg"> */}
+              <CatPenIcon className="h-12 w-12 text-white" />
+            {/* </div> */}
+            <h1 className=" line-clamp-1 min-h-4 font-medium tracking-tight flex-1 text-xl">
               {t("Get Bycat AI on iOS")}
             </h1>
-            <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-md">
+            <p className="text-muted-foreground  justify-items-start  [&_p]:leading-relaxed text-xl">
               {t(
                 "Take your smart notes and learning on the go. Download the Bycat AI mobile app and study anywhere, anytime."
               )}
