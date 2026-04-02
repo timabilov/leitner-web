@@ -11,11 +11,6 @@ export const useInitPromo = () => {
       // This gets the current value but DOES NOT subscribe to changes.
       const { lastFetched, setPromoFromApi } = useOfferStore.getState();
 
-      const FIVE_MINUTES = 5 * 60 * 1000;
-      if (Date.now() - lastFetched < FIVE_MINUTES) {
-        return; 
-      }
-
       try {
         const response = await axiosInstance.get(`${API_BASE_URL}/auth/promo/active`);
         

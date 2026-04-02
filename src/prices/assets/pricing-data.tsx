@@ -8,8 +8,8 @@ export const PRICING_TIERS_CLAIM = [
     defaultPrice: 5.99,
     originalPrice: 0,
     description: "Perfect for short-term projects.",
-    discountId: "dsc_01kj5c3fkwfqcq1wdhect5nr19",
-    priceId: "pri_01kaxbbdytvqamegsd7e486r59", 
+    discountId: "dsc_01kn732qx3f2tk2pdpvjj2dav5",
+    priceId: "pri_01kn72e7s269tnzcakpvf9fvs5", 
     features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
   },
   {
@@ -23,7 +23,7 @@ export const PRICING_TIERS_CLAIM = [
     discount: "50% OFF",
     description: "Recommended for ongoing usage.",
     discountId: 'dsc_01kjt6watya70vrj8ctk8mbqpd',
-    priceId: "pri_01kjzazeat2rnb5vbaq9swatss", 
+    priceId: "pri_01kn72r9q9rxq8sa54n4xe51w6", 
     features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
     isPopular: true, // Helper flag for default selection
   },
@@ -38,7 +38,7 @@ export const PRICING_TIERS_CLAIM = [
     claimOffer: "+2 month free",
     montly_price: 65.89,
     discountId: 'dsc_01kjt7062j64y950pwkfxttr8s',
-    priceId: "pri_01kjzb2btfc48bwr1s3jwjfc73",
+    priceId: "pri_01kn72whp6q7grp3jhzadkhnny",
     description: "Best value. Save significantly.",
     features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
   },
@@ -53,7 +53,7 @@ export const PRICING_TIERS = [
     name: "Weekly",
     originalPrice: 5.99,
     description: "Perfect for short-term projects.",
-    priceId: "pri_01kaxbbdytvqamegsd7e486r59", 
+    priceId: "pri_01kn72e7s269tnzcakpvf9fvs5", 
     features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
   },
   {
@@ -63,10 +63,10 @@ export const PRICING_TIERS = [
     name: "Monthly",
     defaultPrice: 34.99,
     originalPrice: 11.99,
-    discountId: 'dsc_01kbaks5he1g277bedvg06xs1m',
+    discountId: 'dsc_01kn728x05nvebcaadtwavjyjv',
     discount: "50% OFF",
     description: "Recommended for ongoing usage.",
-    priceId: "pri_01kaxb9tc7q2kqmh0c3rhda462", 
+    priceId: "pri_01kn72g7y1k1was8fy04fnk5pr", 
     features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
     isPopular: true, // Helper flag for default selection
   },
@@ -78,9 +78,9 @@ export const PRICING_TIERS = [
     defaultPrice: 239.99,
     originalPrice: 79.99, //239 dan endirime claimsiz gelende
     discount: "80% OFF",
-    discountId: 'dsc_01kbaksng47cf7gsr4wht0xrdq',
+    discountId: 'dsc_01kn7312xn4mas8fn4bbybkadp',
     description: "Best value. Save significantly.",
-    priceId: "pri_01kaxb7rjs3vkn4dtjrk8x7hmh",
+    priceId: "pri_01kn72nntvwtbx9fxpjq1sjyh2",
     features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
   },
 ];
