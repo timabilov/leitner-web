@@ -304,7 +304,7 @@ export default function PricingSection() {
   const { data: subscriptionData, error: subscriptionError } = useQuery({
     queryKey: ["subscription"],
     queryFn: fetchSubscription,
-    enabled: hasActivePlan,
+    enabled: !!userId,
   });
 
   const activePlanKey = subscriptionData?.data?.billing_cycle?.interval
@@ -427,7 +427,7 @@ export default function PricingSection() {
       paddle.Checkout.open({
         items: [{ priceId: priceId, quantity: 1 }],
         discountId: discountId,
-        customData: { internal_user_id: userId, internal_email: email, internal_use_promo: isPromoLink ?  "true" : null},
+        customData: { internal_user_id: userId, internal_email: email, internal_use_promo: isPromoLink ?  "true" : "false"},
         settings: {
           displayMode: "overlay",
           theme: "system",
