@@ -22,7 +22,7 @@ export const PRICING_TIERS_CLAIM = [
     originalPrice: 6.99,
     discount: "50% OFF",
     description: "Recommended for ongoing usage.",
-    discountId: 'dsc_01kjt6watya70vrj8ctk8mbqpd',
+    discountId: 'dsc_01kn733smjmmk9y4qhyhymvrfe',
     priceId: "pri_01kn72r9q9rxq8sa54n4xe51w6", 
     features: ['Unlimited notes', 'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
     isPopular: true, // Helper flag for default selection
