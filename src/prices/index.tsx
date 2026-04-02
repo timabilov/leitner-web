@@ -427,7 +427,7 @@ export default function PricingSection() {
       paddle.Checkout.open({
         items: [{ priceId: priceId, quantity: 1 }],
         discountId: discountId,
-        customData: { internal_user_id: userId, internal_email: email, internal_use_promo: isPromoLink ?  "true" : "false"},
+        customData: { internal_user_id: userId, internal_email: email /*, internal_use_promo: isPromoLink ?  "true" : "false"*/},
         settings: {
           displayMode: "overlay",
           theme: "system",
@@ -464,11 +464,11 @@ export default function PricingSection() {
       </style>
 
       {/* Live Activity Feed */}
-      <div className="relative  z-[9999]">
+      {/* <div className="relative  z-[9999]">
           <div className="absolute right-2 top-0 z-9999">
             <LiveActivityFeed2 />
           </div>
-        </div>
+        </div> */}
 
       <div className="relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground">
          <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 w-full">
