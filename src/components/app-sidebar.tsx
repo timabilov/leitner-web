@@ -141,7 +141,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
     { title: t("Notes"), icon: Home, key: "/notes" },
     { title: t("Folders"), icon: FolderOpen, key: "/folders" },
     { title: t("Alerts"), icon: Bell, key: "/alerts" },
-    { title: t("App"), icon: Smartphone, key: "/app" },
+    { title: t("Mobile App"), icon: Smartphone, key: "/app" },
   ];
 
   return (
