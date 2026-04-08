@@ -216,26 +216,8 @@ const PricingCard = ({
                 )}
               </div>
 
-<<<<<<< Updated upstream
               {/* 🟢 FIXED: Safe default/strikethrough math */}
               {finalDefault && Number(finalDefault) > 0 && (
-=======
-          {item.highlightKey && (
-            <span
-              className={cn(
-                "font-bold text-[13px] whitespace-nowrap",
-                "text-transparent bg-clip-text",
-                "bg-gradient-to-r from-emerald-600 to-green-500",
-                "dark:from-emerald-400 dark:to-green-400"
-              )}
-            >
-              {t(item.highlightKey)}
-            </span>
-          )}
-
-
-              {tier.defaultPrice && (
->>>>>>> Stashed changes
                 <div className="flex flex-col justify-end ml-1">
                   <span className="text-sm font-medium line-through text-foreground decoration-1 opacity-70">
                     ${tier.key === "annual" ? (Number(finalDefault || 0) / 12).toFixed(2) : Number(finalDefault || 0).toFixed(2)}
@@ -265,10 +247,6 @@ const PricingCard = ({
             </div>
           </div>
         </div>
-<<<<<<< Updated upstream
-=======
-          console,log("a lot of menasiz code setrleri")
->>>>>>> Stashed changes
 
         {/* Footer / Button */}
         <div className="pt-2 mt-auto" style={{ transform: "translateZ(20px)" }}>
