@@ -392,6 +392,7 @@ const LoginBase = () => {
           trialDays: data?.company?.trial_days,
           fullAdmin: data?.company?.full_admin_access || false,
         });
+        console.log("he sore?")
         setShowOnboarding(true);
         posthog.identify(data.id, {
           email: variables.user.email,

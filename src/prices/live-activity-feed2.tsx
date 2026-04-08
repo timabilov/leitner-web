@@ -69,7 +69,6 @@ const getActionConfig = (rawAction: string) => {
 
 // ── MAIN COMPONENT ───────────────────────────────────────
 const LiveActivityFeed2 = () => {
-  const posthog = usePostHog();
   const store = useUserStore();
   const companyId = store?.companyId || 169;
   console.log("companyId", companyId);
@@ -84,7 +83,7 @@ const LiveActivityFeed2 = () => {
         const response = await axiosInstance.get(
           `${API_BASE_URL}/company/${companyId}/notes/activity/live`
         );
-
+        console.log("should be removed after recording", activityQueue);
         if (response.data && response.data.activities) {
           const mapped: ActivityItem[] = response.data.activities.map((item: any) => {
             const config = getActionConfig(item.action);
@@ -152,7 +151,7 @@ const LiveActivityFeed2 = () => {
 };
 
 // ── SUB-COMPONENT ────────────────────────────────────────
-const SystemMessagePill = ({ item }: { item: ActivityItem }) => {
+const SystemMessagePill = ({ item, timeoutId }: { item: ActivityItem }) => {
   const { t } = useTranslation();
 
   const initial = item.user ? item.user.charAt(0).toUpperCase() : "?";
@@ -195,6 +194,7 @@ const SystemMessagePill = ({ item }: { item: ActivityItem }) => {
         <div className="flex justify-between items-baseline w-full">
           <span className="font-bold text-foreground hover:underline cursor-pointer decoration-muted-foreground/50 underline-offset-2">
             {item.user}
+            user also will bve deleted
           </span>
           <span className="ml-2 text-[10px] text-muted-foreground font-mono whitespace-nowrap">
             {item.time}

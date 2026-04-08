@@ -18,12 +18,19 @@ import SettingsDialog from "@/settings/settings-dialog2";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
+import user1 from "./assets/user1.png"; // Adjust the path to wherever your images are
+import user2 from "./assets/user2.png";
+import user3 from "./assets/user3.png";
+import user4 from "./assets/user4.png";
+import user5 from "./assets/user5.png";
 
 const INTERVAL_TO_PLAN: Record<string, "weekly" | "monthly" | "annual"> = {
   week: "weekly",
   month: "monthly",
   year: "annual",
 };
+
+const userImages =[user1, user2, user3, user4, user5];
 
 const fetchSubscription = async () => {
   const res = await axiosInstance.get(`${API_BASE_URL}/subscription/get`);
@@ -34,7 +41,7 @@ const fetchSubscription = async () => {
 export const TrustStats = () => {
   const { t } = useTranslation();
   
-  const stats = [
+  const stats =[
     { icon: ShieldCheck, text: "Bank-level security", sub: "256-bit encryption" },
     { icon: Zap, text: "Cancel anytime", sub: "No hidden fees" },
     { icon: Globe, text: "Global community", sub: "Learners from 120+ countries" },
@@ -63,14 +70,14 @@ export const SocialProof = () => (
     <div className="flex flex-wrap justify-center items-center gap-4 bg-muted/30 p-3 rounded-2xl border border-border/40 backdrop-blur-sm">
       {/* Avatars Stack */}
       <div className="flex -space-x-3">
-        {[1, 2, 3, 4, 5].map((i) => (
+       {userImages.map((imgSrc, i) => (
           <div
             key={i}
             className="h-8 w-8 overflow-hidden rounded-full border-2 border-background shadow-sm"
           >
             <img
-              alt={`User ${i}`}
-              src={`https://i.pravatar.cc/100?img=${i + 10}`} 
+              alt={`User ${i + 1}`}
+              src={imgSrc} // <--- Use the imported variable directly!
               className="h-full w-full object-cover"
             />
           </div>
@@ -92,7 +99,7 @@ export const SocialProof = () => (
                 i18nKey="trusted_by_students"
                 defaults="Trusted by <bold>20k+</bold> students"
                 components={{
-                  bold: <span className="text-foreground font-bold" />, // Applies styles to <bold> content
+                  bold: <span className="text-foreground font-bold" />, 
                 }}
               />
             </span>
@@ -108,6 +115,8 @@ const PricingCard = ({
   onSelect,
   onCheckout,
   isLoading,
+  finalOriginal,
+  finalDefault,
   isPromo,
   isSpecialAnnual,
   claimOffer,
@@ -120,10 +129,11 @@ const PricingCard = ({
   onSelect: () => void;
   onCheckout: () => void;
   isLoading: boolean;
-  displayPrice: string | null;
+  finalOriginal: number | string;
+  finalDefault: number | string | null | undefined;
   isPromo?: boolean;
   isSpecialAnnual: boolean;
-  claimOffer: string;
+  claimOffer?: string;
   activePlanKey: string | null;
   isCanceling?: boolean;
   onManage: () => void;
@@ -133,36 +143,35 @@ const PricingCard = ({
 
   return (
     <div
-      // CHANGED: Reduced max-w to 260px for a more compact look
       className="h-full w-full max-w-[300px] mx-auto perspective-1000"
       onClick={onSelect}
       style={{ perspective: 1000 }}
     >
       <motion.div
         animate={{
-          scale: isSelected ? 1.03 : 1, // Reduced scale slightly for subtlety
+          scale: isSelected ? 1.03 : 1,
         }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
         className={cn(
-          // CHANGED: Reduced padding (py-6 px-4)
           "relative flex flex-col gap-4 rounded-xl py-6 px-4 h-full bg-background transition-colors duration-300",
           isSelected
             ? "border-2 border-primary shadow-2xl z-20"
             : "border border-border shadow-md z-0",
         )}
       >
-        {tier.discount && (
+        {(tier as any).discount && (
           <div
             className="absolute -top-2 -right-2 px-3 py-1 rounded-full font-bold text-[10px] text-white shadow-sm bg-primary dark:bg-neutral-600 z-30"
             style={{ transform: "translateZ(30px)" }}
           >
-            {tier.discount}
+            {(tier as any).discount}
           </div>
         )}
+        
         {/* Content Section */}
         <div className="flex flex-col gap-4 relative z-10 flex-1" style={{ transform: "translateZ(20px)" }}>
           <div className="flex flex-col gap-1">
-          <div className="flex justify-between items-center gap-2">
+            <div className="flex justify-between items-center gap-2">
               <h3 className="text-lg font-bold leading-none">{t(tier.name)}</h3>
               {isActivePlan && (
                 <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
@@ -174,22 +183,20 @@ const PricingCard = ({
                   {t("Canceling")}
                 </span>
               )}
-                {isSpecialAnnual && isPromo && (
-                  <span className=" inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-inset ring-pink-500/20 whitespace-nowrap">
-                    🎁 {t(claimOffer)}
-                  </span>
-                  )}
-            
+              {isSpecialAnnual && isPromo && claimOffer && (
+                <span className=" inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-inset ring-pink-500/20 whitespace-nowrap">
+                  🎁 {t(claimOffer)}
+                </span>
+              )}
             </div>
 
             <div className="flex items-baseline gap-2 flex-wrap">
               <div className="relative">
-                {/* CHANGED: Smaller price text (text-3xl) */}
+                {/* 🟢 FIXED: Safe math that works for Annual, Monthly, and Weekly */}
                 <span className="text-3xl font-bold tracking-tight">
-                  {`$${tier.key === "annual" ? (tier.originalPrice/12).toFixed(2): tier.originalPrice}`}
+                  ${tier.key === "annual" ? (Number(finalOriginal || 0) / 12).toFixed(2) : Number(finalOriginal || 0).toFixed(2)}
                 </span>
-                 <span className="text-md font-bold tracking-tight opacity-70" >{`/${tier.unit}`}</span>
-              
+                <span className="text-md font-bold tracking-tight opacity-70" >{`/${tier.unit}`}</span>
               
                 {isSelected && (
                   <svg
@@ -209,10 +216,29 @@ const PricingCard = ({
                 )}
               </div>
 
+<<<<<<< Updated upstream
+              {/* 🟢 FIXED: Safe default/strikethrough math */}
+              {finalDefault && Number(finalDefault) > 0 && (
+=======
+          {item.highlightKey && (
+            <span
+              className={cn(
+                "font-bold text-[13px] whitespace-nowrap",
+                "text-transparent bg-clip-text",
+                "bg-gradient-to-r from-emerald-600 to-green-500",
+                "dark:from-emerald-400 dark:to-green-400"
+              )}
+            >
+              {t(item.highlightKey)}
+            </span>
+          )}
+
+
               {tier.defaultPrice && (
+>>>>>>> Stashed changes
                 <div className="flex flex-col justify-end ml-1">
                   <span className="text-sm font-medium line-through text-foreground decoration-1 opacity-70">
-                    ${tier.key === "annual" ? (tier.defaultPrice/12).toFixed(2) : tier.defaultPrice}
+                    ${tier.key === "annual" ? (Number(finalDefault || 0) / 12).toFixed(2) : Number(finalDefault || 0).toFixed(2)}
                   </span>
                 </div>
               )}
@@ -222,18 +248,14 @@ const PricingCard = ({
               {tier.description}
             </p>
 
-            {/* --- FEATURES BLOCK (Re-enabled & Compacted) --- */}
+            {/* Features Block */}
             <div className="space-y-3 pt-4 border-t border-border mt-2">
-              {/* <h4 className="text-[10px] font-bold text-foreground/70 uppercase tracking-widest">
-                {t("Includes")}:
-              </h4> */}
               <div className="space-y-3">
                 {tier.features.map((feature, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <div className="bg-neutral-600 rounded-full h-4 w-4 flex justify-center items-center shadow-sm shrink-0 mt-1">
                       <Check className="h-2.5 w-2.5 shrink-0 text-white" />
                     </div>
-                    {/* CHANGED: Smaller feature text */}
                     <span className="text-sm font-medium text-foreground leading-snug">
                       {feature}
                     </span>
@@ -243,7 +265,10 @@ const PricingCard = ({
             </div>
           </div>
         </div>
-          
+<<<<<<< Updated upstream
+=======
+          console,log("a lot of menasiz code setrleri")
+>>>>>>> Stashed changes
 
         {/* Footer / Button */}
         <div className="pt-2 mt-auto" style={{ transform: "translateZ(20px)" }}>
@@ -294,7 +319,9 @@ export default function PricingSection() {
   const [paddle, setPaddle] = useState<any>(null);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>("pro_monthly");
-  const [prices, setPrices] = useState<Record<string, string>>({});
+  
+  const[prices, setPrices] = useState<Record<string, { current: number; original: number | null }>>({});
+  
   const { targetDate, hasPromo } = useOfferCountdown();
   const [searchParams] = useSearchParams();
   const isPromoLink = searchParams.get("sale") === "true";
@@ -322,16 +349,50 @@ export default function PricingSection() {
     }
   }, [subscriptionData, subscriptionError]);
 
-   const posthog = usePostHog();
+  const posthog = usePostHog();
 
-    useEffect(() => {
+  useEffect(() => {
     posthog.capture("pricing_page_viewed", {
       is_promo: isPromoLink,
       source: "web_app"
     });
-  }, [posthog, isPromoLink]);
+  },[posthog, isPromoLink]);
 
+  // 🟢 Move fetchPrices ABOVE the useEffect that uses it
+  const fetchPrices = async (paddleInstance: any) => {
+    const activeTiers = isPromoLink && hasPromo ? PRICING_TIERS_CLAIM : PRICING_TIERS;
 
+    try {
+      const previewPromises = activeTiers.map((tier: any) => {
+        return paddleInstance.PricePreview({
+          items:[{ priceId: tier.priceId, quantity: 1 }],
+          discountId: tier.discountId || undefined, 
+        });
+      });
+
+      const results = await Promise.all(previewPromises);
+      
+      const newPrices: Record<string, { current: number; original: number | null }> = {};
+
+      results.forEach((result: any) => {
+        const item = result.data.details.lineItems[0]; 
+        
+        const currentNum = parseInt(item.formattedTotals.total.replace(/[^0-9]/g, ""), 10) / 100;
+        const subtotalNum = parseInt(item.formattedTotals.subtotal.replace(/[^0-9]/g, ""), 10) / 100;
+        
+        newPrices[item.price.id] = {
+          current: currentNum,
+          original: subtotalNum !== currentNum ? subtotalNum : null,
+        };
+      });
+      console.log("Fetched Prices:", newPrices);
+      setPrices(newPrices);
+      
+    } catch (error: any) {
+      console.error("Price Preview Error", error);
+      Sentry.captureException(error);
+    }
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -343,43 +404,32 @@ export default function PricingSection() {
             if (event.name === "checkout.closed") {
               setLoadingPriceId(null);
             }
-            if (event.name === "checkout.updated") {
-              console.log("Checkout Updated Event:", event);
-            }
             if (event.name === "checkout.completed") {
               console.log("Checkout Completed Event:", event);
               posthog.capture("pricing_checkout_completed", {
                 is_promo: isPromoLink,
                 selected_tier: selectedId
               });
-              // IMPORTANT!!! Delay to ensure backend has processed the subscription update
               setTimeout(() => {
                 toast.success(t("Payment Successful! Welcome aboard."));
                 queryClient.invalidateQueries({ queryKey: ["subscription"] });
                 queryClient.invalidateQueries({ queryKey: ["me"] });
                 queryClient.invalidateQueries({ queryKey: ["profile"] });
               }, 2400); 
-            } else {
-              if (event.name === "checkout.payment.initiated") {
-                return
-              }
-              if (event.name === "checkout.error") {
+            } else if (event.name === "checkout.error") {
                 posthog.capture("pricing_checkout_failed", {
                   is_promo: isPromoLink,
                   event_name: event.name,
                   email: email
                 });
-                toast.success(t("There was some issue with payment event. Please contact support if you think this is an error."));
-                return
-              } 
-              console.log("Checkout Event:", event);
+                toast.error(t("There was an issue with payment. Please contact support."));
             }
           },
         });
 
         if (paddleInstance) {
           setPaddle(paddleInstance);
-          fetchPrices(paddleInstance);
+          fetchPrices(paddleInstance); // <--- Called safely here
         }
       } catch (error) {
         console.error("Paddle Init Error:", error);
@@ -387,28 +437,7 @@ export default function PricingSection() {
       }
     };
     init();
-  }, [t]);
-
-  const fetchPrices = (paddleInstance: any) => {
-    const itemsToPreview = PRICING_TIERS.map((t) => ({
-      quantity: 1,
-      priceId: t.priceId,
-    }));
-
-    paddleInstance
-      .PricePreview({ items: itemsToPreview })
-      .then((result: any) => {
-        const newPrices: Record<string, string> = {};
-        result.data.details.lineItems.forEach((item: any) => {
-          newPrices[item.price.id] = item.formattedTotals.total;
-        });
-        setPrices(newPrices);
-      })
-      .catch((error: any) => {
-        console.error("Price Preview Error", error);
-        Sentry.captureException(error);
-      });
-  };
+  }, [t, isPromoLink, hasPromo]);
 
   const openCheckout = (priceId: string, discountId?: string) => {
     if (!paddle) {
@@ -425,9 +454,13 @@ export default function PricingSection() {
 
     try {
       paddle.Checkout.open({
-        items: [{ priceId: priceId, quantity: 1 }],
+        items:[{ priceId: priceId, quantity: 1 }],
         discountId: discountId,
-        customData: { internal_user_id: userId, internal_email: email /*, internal_use_promo: isPromoLink ?  "true" : "false"*/},
+        customData: { 
+          internal_user_id: userId ? userId.toString() : "", 
+          internal_email: email ? email.toString() : "", 
+          internal_use_promo: isPromoLink ? "true" : "false" 
+        },
         settings: {
           displayMode: "overlay",
           theme: "system",
@@ -463,13 +496,6 @@ export default function PricingSection() {
         `}
       </style>
 
-      {/* Live Activity Feed */}
-      {/* <div className="relative  z-[9999]">
-          <div className="absolute right-2 top-0 z-9999">
-            <LiveActivityFeed2 />
-          </div>
-        </div> */}
-
       <div className="relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground">
          <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 w-full">
           <div className="flex justify-start w-full flex-col ">
@@ -490,12 +516,11 @@ export default function PricingSection() {
                   </span>
                 )}
               </h1>
-   
-            
           </div>
         </div>
+        
         {/* --- HEADER --- */}
-        <div className="relative w-full px-6  flex flex-col items-center text-center z-10">
+        <div className="relative w-full px-6 flex flex-col items-center text-center z-10">
           {/* --- SPINNING BORDER OFFER --- */}
           {
             isPromoLink && hasPromo && (
@@ -522,36 +547,50 @@ export default function PricingSection() {
           }
           <SocialProof />
         </div>
+        
         {/* --- PRICING GRID --- */}
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3 w-full max-w-4xl px-4 z-20 justify-items-center items-stretch">
-          {(isPromoLink && hasPromo? PRICING_TIERS_CLAIM : PRICING_TIERS).map((tier) => (
-            <PricingCard
-              key={tier.id}
-              tier={tier}
-              isSelected={selectedId === tier.id}
-              onSelect={() => {
-                posthog.capture("pricing_plan_selected", { plan_id: tier.id });
-                setSelectedId(tier.id)
-              }}
-              onCheckout={() => openCheckout(tier.priceId, tier.discountId)}
-              isLoading={loadingPriceId === tier.priceId}
-              displayPrice={tier.originalPrice}
-              isPromo={isPromoLink && hasPromo}
-              isSpecialAnnual={isPromoLink}
-              claimOffer={tier.claimOffer}
-              activePlanKey={activePlanKey}
-              isCanceling={isCanceling}
-              onManage={() => setSettingsOpen(true)}
-            />
-          ))}
-        </div>
-           <div className="w-full max-w-4xl px-4 mt-10 flex flex-col gap-8 z-10">
-            <TrustStats />
-          </div>
-  
+          {(isPromoLink && hasPromo ? PRICING_TIERS_CLAIM : PRICING_TIERS).map((tier) => {
+            
+            // 🟢 FIXED: Extremely safe variable extraction.
+            // If liveData is missing (because Paddle is still loading), it pulls the default original/defaultPrice.
+            const liveData = prices[(tier as any).priceId];
+            
+            const fallbackOriginal = (tier as any).original !== undefined ? (tier as any).original : (tier as any).defaultPrice;
+            const finalOriginal = liveData ? liveData.current : fallbackOriginal;
+            
+            const finalDefault = liveData && liveData.original ? liveData.original : (tier as any).defaultPrice;
 
+            return (
+              <PricingCard
+                key={tier.id}
+                tier={tier}
+                isSelected={selectedId === tier.id}
+                onSelect={() => {
+                  posthog.capture("pricing_plan_selected", { plan_id: tier.id });
+                  setSelectedId(tier.id)
+                }}
+                onCheckout={() => openCheckout((tier as any).priceId, (tier as any).discountId)}
+                isLoading={loadingPriceId === (tier as any).priceId}
+                finalOriginal={finalOriginal}
+                finalDefault={finalDefault}
+                isPromo={isPromoLink && hasPromo}
+                isSpecialAnnual={isPromoLink}
+                claimOffer={(tier as any).claimOffer}
+                activePlanKey={activePlanKey}
+                isCanceling={isCanceling}
+                onManage={() => setSettingsOpen(true)}
+              />
+            );
+          })}
+        </div>
+           
+        <div className="w-full max-w-4xl px-4 mt-10 flex flex-col gap-8 z-10">
+          <TrustStats />
+        </div>
       </div>
+      
       <SettingsDialog isOpen={settingsOpen} setIsOpen={setSettingsOpen} defaultTab="subscription" />
-      </>
+    </>
   );
 }

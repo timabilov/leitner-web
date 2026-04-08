@@ -71,7 +71,7 @@ const TimeUnit = ({
             initial={{ y: "100%", opacity: 0, filter: "blur(5px)" }}
             animate={{ y: 0, opacity: 1, filter: "blur(0px)" }}
             exit={{ y: "-100%", opacity: 0, filter: "blur(5px)" }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            transition={{ type: "tween", ease: "easeInOut", duration: 0.3  }}
             className="absolute inset-0 flex items-center justify-center"
           >
             {formattedValue}
