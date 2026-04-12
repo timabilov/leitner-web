@@ -12,6 +12,7 @@ import { getTypeIcon, getNoteLanguageIso } from "./note-utils";
 import ProcessingNoteCard from './processing-note-card';
 import { GradientProgress } from '@/components/gradient-progress';
 import { useFolders } from '@/hooks/use-folders';
+import { useSidebar } from '@/components/ui/sidebar';
 
 // --- HELPER: Track Previous State ---
 function usePrevious(value) {
@@ -61,6 +62,7 @@ export const NoteCard = ({ item, view }) => {
   const { data = [] } = useFolders(); // Uses cached data if available
   const navigate = useNavigate();
   const { t } = useTranslation();
+const { setOpen } = useSidebar()
 
   const isProcessing = item?.status !== "failed" && item?.status !== "transcribed" && item?.status !== "draft";
   const hasError = !!item?.processing_error_message;
@@ -95,7 +97,10 @@ export const NoteCard = ({ item, view }) => {
             <motion.div
               layout
               key="content"
-              onClick={() => navigate(`/notes/${item.id}`)}
+              onClick={() => {
+                setOpen(false)
+                navigate(`/notes/${item.id}`)
+              }}
               
               // Only animate if we just finished processing
               initial={justFinished ? "hidden" : false}

@@ -63,7 +63,7 @@ const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) =>
       <AppSidebar photo={photo} fullName={fullName} email={email} />
       
       <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
-        <Header processingNotes={processingNotesCount} onProcessingClick={triggerFocusNotes} />
+        {/* <Header processingNotes={processingNotesCount} onProcessingClick={triggerFocusNotes} /> */}
         
         <main 
           ref={containerRef}
@@ -73,7 +73,7 @@ const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) =>
           )}
         >
           <ArchitecturalBackground />
-          <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-1 flex-col">
+          <div className="relative z-10 w-full max-w-8xl mx-auto flex flex-1 flex-col">
             <Outlet />
           </div>
         </main>

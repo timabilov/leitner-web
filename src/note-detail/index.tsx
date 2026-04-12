@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,12 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import { StudyMaterials } from "./study-materials";
@@ -43,6 +49,9 @@ import {
   CornerDownLeft,
   Loader2,
   GripHorizontal,
+  ImageIcon,
+  FileAudioIcon,
+  FileTextIcon,
 } from "lucide-react";
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
 import AIIcon from "./assets/ai-icon";
@@ -52,28 +61,35 @@ import { toast } from "sonner";
 import { usePostHog } from "posthog-js/react";
 
 // --- Sub-Components ---
-const MetaItem = ({ icon, label, value, onClick, active, iconEnd }: any) => (
-  <div
-    onClick={onClick}
-    className={cn(
-      "flex items-center gap-2 px-2 py-1 rounded-md transition-colors whitespace-nowrap",
-      onClick
-        ? "hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-        : "cursor-default",
-      active && "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50",
-      "hover:bg-zinc-100 dark:hover:bg-zinc-800  bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50",
-    )}
-  >
-    <span className="text-zinc-400">{icon}</span>
-    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-      {label}
-    </span>
-    <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
-      {value}
-    </span>
-    {iconEnd}
-  </div>
+
+// 🟢 Wrap MetaItem in forwardRef so it works perfectly with Shadcn's DropdownMenuTrigger asChild
+const MetaItem = React.forwardRef<HTMLDivElement, any>(
+  ({ icon, label, value, onClick, active, iconEnd, ...props }, ref) => (
+    <div
+      ref={ref}
+      onClick={onClick}
+      {...props}
+      className={cn(
+        "flex items-center gap-2 px-2 py-1 transition-colors whitespace-nowrap  rounded-full border ",
+        onClick || props.onClick
+          ? "hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
+          : "cursor-default",
+        active &&
+          "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50",
+      )}
+    >
+      <span className="text-zinc-400">{icon}</span>
+      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+        {label}
+      </span>
+      <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
+        {value}
+      </span>
+      {iconEnd}
+    </div>
+  ),
 );
+MetaItem.displayName = "MetaItem";
 
 const StudioTabTrigger = ({ value, icon, label }: any) => (
   <TabsTrigger
@@ -189,12 +205,10 @@ const NoteDetailBase = () => {
           query.state?.data?.data?.status !== "failed" &&
           query.state?.data?.data?.status !== "transcribed" &&
           query.state?.data?.data?.status !== "draft";
-        return (isPolling && quiz_status === "in_progress"  ) ||
-          isNoteProcessing
+        return (isPolling && quiz_status === "in_progress") || isNoteProcessing
           ? 3000
           : false;
       } catch (e) {
-        // Capture logic errors in polling condition
         Sentry.captureException(e, { tags: { area: "note_polling_logic" } });
         return false;
       }
@@ -203,7 +217,6 @@ const NoteDetailBase = () => {
 
   useEffect(() => {
     if (isPolling) {
-      console.log("isPolling", isPolling)
       refetch();
     }
   }, [isPolling, refetch]);
@@ -214,7 +227,6 @@ const NoteDetailBase = () => {
       noteQueryResponse?.data?.status !== "transcribed" &&
       noteQueryResponse?.data?.status !== "draft"
     ) {
-      console.log("isPolling111", isPolling)
       setIsPolling(true);
       return true;
     } else if (!isPolling) {
@@ -299,14 +311,22 @@ const NoteDetailBase = () => {
             const rawBlob = await entry.async("blob");
             const name = entry.name.toLowerCase();
             if (/\.(jpg|jpeg|png|webp|gif)$/.test(name))
-              imgs.push({ name: entry.name, url: URL.createObjectURL(rawBlob) });
+              imgs.push({
+                name: entry.name,
+                url: URL.createObjectURL(rawBlob),
+              });
             else if (/\.(mp3|wav|m4a|ogg|webm)$/.test(name))
-              auds.push({ name: entry.name, url: URL.createObjectURL(rawBlob) });
-            else if (name.endsWith(".pdf")){
+              auds.push({
+                name: entry.name,
+                url: URL.createObjectURL(rawBlob),
+              });
+            else if (name.endsWith(".pdf")) {
               const pdfBlob = new Blob([rawBlob], { type: "application/pdf" });
-              pdfs.push({ name: entry.name, url: URL.createObjectURL(pdfBlob)  });
-            }
-            else if (name.endsWith(".txt"))
+              pdfs.push({
+                name: entry.name,
+                url: URL.createObjectURL(pdfBlob),
+              });
+            } else if (name.endsWith(".txt"))
               txt += (await entry.async("string")) + "\n";
           })(),
         );
@@ -316,14 +336,13 @@ const NoteDetailBase = () => {
       setAudioPaths(auds);
       setPdfPaths(pdfs);
       setTextContent(txt);
-    } 
-    catch(error) {
-       Sentry.captureException(error, { 
+    } catch (error) {
+      Sentry.captureException(error, {
         tags: { action: "unzip_files" },
-        extra: { noteId, url }
+        extra: { noteId, url },
       });
       toast.error(t("Failed to load attachments"));
-    }finally {
+    } finally {
       setProcessingFiles(false);
     }
   };
@@ -334,8 +353,6 @@ const NoteDetailBase = () => {
     pdfPaths.length +
     (textContent ? 1 : 0);
 
-  const hasMedia = attachmentCount > 0 || note?.youtube_url;
-
   return (
     <>
       <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden bg-transparent">
@@ -344,7 +361,7 @@ const NoteDetailBase = () => {
           <div className="px-6 py-4">
             <div className="mx-auto">
               <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2 text-zinc-400 max-w-3xl">
+                <div className="flex items-center gap-2 text-zinc-400">
                   <Link
                     to="/notes"
                     className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
@@ -439,8 +456,141 @@ const NoteDetailBase = () => {
                         </TooltipTrigger>
                       </Tooltip>
                     )}
+                    
                   </div>
+                  
                 </div>
+                <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto no-scrollbar">
+                      <MetaItem
+                        icon={<Calendar size={12} />}
+                        label={t("Created")}
+                        value={new Date(note?.created_at).toLocaleDateString()}
+                      />
+                      <MetaItem
+                        icon={<Globe size={12} />}
+                        label={t("Language")}
+                        value={getNoteLanguageIso(note?.language)}
+                      />
+
+                      {/* 🟢 NEW: SHADCN ATTACHMENTS DROPDOWN */}
+                      {!note?.youtube_url && attachmentCount > 0 ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <MetaItem
+                              icon={<Paperclip size={12} />}
+                              label={t("Attachments")}
+                              value={`${attachmentCount} items`}
+                              iconEnd={
+                                <ChevronDown size={14} className="opacity-50" />
+                              }
+                              className="cursor-pointer"
+                            />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="start"
+                            sideOffset={8}
+                            className="w-64 p-1 rounded-xl shadow-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800"
+                          >
+                            {pdfPaths.map((pdf, i) => (
+                              <DropdownMenuItem
+                                key={`pdf-${i}`}
+                                onClick={() => setPreviewFile(pdf)}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
+                              >
+                                <ScrollText
+                                  size={16}
+                                  className="text-red-500 shrink-0"
+                                />
+                                <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
+                                  {pdf.name}
+                                </span>
+                              </DropdownMenuItem>
+                            ))}
+                            {imagePaths.map((img, i) => (
+                              <DropdownMenuItem
+                                key={`img-${i}`}
+                                onClick={() => window.open(img.url, "_blank")}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
+                              >
+                                <ImageIcon
+                                  size={16}
+                                  className="text-blue-500 shrink-0"
+                                />
+                                <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
+                                  {img.name}
+                                </span>
+                              </DropdownMenuItem>
+                            ))}
+                            {audioPaths.map((aud, i) => (
+                              <DropdownMenuItem
+                                key={`aud-${i}`}
+                                onClick={() => window.open(aud.url, "_blank")}
+                                className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
+                              >
+                                <FileAudioIcon
+                                  size={16}
+                                  className="text-amber-500 shrink-0"
+                                />
+                                <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
+                                  {aud.name}
+                                </span>
+                              </DropdownMenuItem>
+                            ))}
+                            {textContent && (
+                              <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors">
+                                <FileTextIcon
+                                  size={16}
+                                  className="shrink-0 text-zinc-400"
+                                />
+                                <span className="truncate text-zinc-500 dark:text-zinc-400 font-medium">
+                                  Extracted Text
+                                </span>
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        !note?.youtube_url && (
+                          <MetaItem
+                            icon={<Paperclip size={12} />}
+                            label={t("Attachments")}
+                            value={`0 items`}
+                          />
+                        )
+                      )}
+
+                      <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+                      <Tooltip>
+                        <TooltipContent>
+                          <p>
+                            {note?.quiz_alerts_enabled
+                              ? t("Quiz reminders enabled")
+                              : t("Quiz reminders disabled")}
+                          </p>
+                        </TooltipContent>
+                        <TooltipTrigger>
+                          <div
+                            className={cn(
+                              "flex items-center gap-2 px-3 py-1 rounded-full border transition-all shrink-0",
+                              note?.quiz_alerts_enabled
+                                ? "bg-zinc-900 border-zinc-900 text-white"
+                                : "bg-white border-zinc-200 text-zinc-400",
+                            )}
+                          >
+                            {note?.quiz_alerts_enabled ? (
+                              <BellRing size={12} strokeWidth={3} />
+                            ) : (
+                              <BellOff size={12} />
+                            )}
+                            <span className="text-[10px] font-black uppercase tracking-widest">
+                              {note?.quiz_alerts_enabled
+                                ? t("Alerts On")
+                                : t("Alerts Off")}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                      </Tooltip>
+                    </div>
                 {note?.youtube_url && (
                   <Tooltip>
                     <TooltipTrigger>
@@ -464,182 +614,38 @@ const NoteDetailBase = () => {
               </div>
 
               {/* Meta Stats Row */}
-              <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar">
-                <MetaItem
-                  icon={<Calendar size={12} />}
-                  label={t("Created")}
-                  value={new Date(note?.created_at).toLocaleDateString()}
-                />
-                <MetaItem
-                  icon={<Globe size={12} />}
-                  label={t("Language")}
-                  value={getNoteLanguageIso(note?.language)}
-                />
-                {
-                  !note?.youtube_url && (
-                      <MetaItem
-                        icon={<Paperclip size={12} />}
-                        label={t("Attachments")}
-                        value={`${attachmentCount} items`}
-                        onClick={() =>
-                          attachmentCount > 0
-                            ? setIsMediaExpanded(!isMediaExpanded)
-                            : null
-                        }
-                        active={isMediaExpanded}
-                        iconEnd={
-                          attachmentCount ? (
-                            isMediaExpanded ? (
-                              <ChevronUp />
-                            ) : (
-                              <ChevronDown />
-                            )
-                          ) : null
-                        }
-                      />
-                  )
-                }
-                <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" />
-                <Tooltip>
-                  <TooltipContent>
-                    <p>
-                      {note?.quiz_alerts_enabled
-                        ? t("Quiz reminders enabled")
-                        : t("Quiz reminders disabled")}
-                    </p>
-                  </TooltipContent>
-                  <TooltipTrigger>
-                    <div
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-1 rounded-full border transition-all shrink-0",
-                        note?.quiz_alerts_enabled
-                          ? "bg-zinc-900 border-zinc-900 text-white"
-                          : "bg-white border-zinc-200 text-zinc-400",
-                      )}
-                    >
-                      {note?.quiz_alerts_enabled ? (
-                        <BellRing size={12} strokeWidth={3} />
-                      ) : (
-                        <BellOff size={12} />
-                      )}
-                      <span className="text-[10px] font-black uppercase tracking-widest">
-                        {note?.quiz_alerts_enabled
-                          ? t("Alerts On")
-                          : t("Alerts Off")}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                </Tooltip>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* --- RESIZABLE PANEL GROUP --- */}
+        {/* --- MAIN CONTENT & RESIZABLE PANELS --- */}
         <div className="flex-1 min-h-0 flex flex-col">
-            {
-              isMediaExpanded && hasMedia &&  !note?.youtube_url && (
-                <>
-                  <div className="w-full flex flex-col px-6 py-4">
-                    {/* The Video Area */}
-                    <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
-                      <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
-                        {/* 
-                           UPDATED CSS for YOUTUBE VIDEO:
-                           We use 'h-full', 'w-auto' and 'max-w-full' along with aspect-video.
-                           This ensures that as the panel gets taller (drag down), the video height increases,
-                           and the width scales accordingly.
-                        */}
-                       
-                        {/* Attachments at bottom of tray (fixed height) */}
-                        {(imagePaths.length > 0 ||
-                          audioPaths.length > 0 ||
-                          pdfPaths.length > 0 ||
-                          textContent) && (
-                          <div className="shrink-0 h-full max-h-[250px] overflow-y-auto space-y-2 pr-2 pt-2 border-t border-zinc-200/50">
-                            {imagePaths.length > 0 && (
-                              <div className="flex bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                                {imagePaths.map((img, i) => (
-                                  <Zoom key={i}>
-                                    <img
-                                      src={img.url}
-                                      className="aspect-square object-cover rounded-md border border-zinc-200 h-[120px] mr-1"
-                                    />
-                                  </Zoom>
-                                ))}
-                              </div>
-                            )}
-                            <div className="flex flex-wrap gap-2">
-                              {audioPaths.map((aud, i) => (
-                                <div key={i} className="min-w-[200px]">
-                                  <AudioPlayer audio={aud} />
-                                </div>
-                              ))}
-                              {pdfPaths.map((pdf, i) => (
-                                <button
-                                  key={i}
-                                  onClick={() => setPreviewFile(pdf)}
-                                  className="flex items-center gap-3 p-2 rounded-xl border border-zinc-200 bg-white hover:border-zinc-400 transition-all"
-                                >
-                                  <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
-                                    <ScrollText size={16} />
-                                  </div>
-                                  <span className="text-sm font-semibold truncate max-w-[150px]">
-                                    {pdf.name}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                            {textContent && (
-                              <div className="mt-2 p-3 bg-zinc-50 border rounded-lg">
-                                <pre className="text-xs whitespace-pre-wrap">
-                                  {textContent}
-                                </pre>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )
-            }
           <PanelGroup direction="vertical">
-            {note?.youtube_url  && isMediaExpanded && (
+            {/* PANEL 1: MEDIA TRAY (Only for YouTube now) */}
+            {note?.youtube_url && isMediaExpanded && (
               <>
-            {/* PANEL 1: MEDIA TRAY */}
                 <Panel
-                  defaultSize={note?.youtube_url ? 40 : 15}
+                  defaultSize={40}
                   minSize={15}
                   maxSize={80}
                   order={1}
                   className="bg-zinc-50/50 dark:bg-zinc-900/20 border-b border-zinc-200/50"
                 >
                   <div className="w-full h-full flex flex-col px-6 py-4">
-                    {/* The Video Area */}
                     <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
                       <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
-                        {/* 
-                           UPDATED CSS for YOUTUBE VIDEO:
-                           We use 'h-full', 'w-auto' and 'max-w-full' along with aspect-video.
-                           This ensures that as the panel gets taller (drag down), the video height increases,
-                           and the width scales accordingly.
-                        */}
-                        {note?.youtube_url && (
-                          <div className="flex-1 min-h-0 flex items-center justify-center">
-                            <div className="relative h-full w-auto max-w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black mx-auto">
-                              <iframe
-                                className="w-full h-full"
-                                src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`}
-                                allowFullScreen
-                                title="YouTube Video"
-                              />
-                            </div>
+                        <div className="flex-1 min-h-0 flex items-center justify-center">
+                          <div className="relative h-full w-auto max-w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black mx-auto">
+                            <iframe
+                              className="w-full h-full"
+                              src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`}
+                              allowFullScreen
+                              title="YouTube Video"
+                            />
                           </div>
-                        )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
                   </div>
                 </Panel>
 
@@ -712,7 +718,8 @@ const NoteDetailBase = () => {
                               backgroundClip: "text",
                               WebkitBackgroundClip: "text",
                               color: "transparent",
-                              animation: "gradient-flow-text 4s linear infinite",
+                              animation:
+                                "gradient-flow-text 4s linear infinite",
                             }}
                           >
                             {t("Processing")}

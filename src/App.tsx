@@ -17,6 +17,7 @@ import MobileApp from "./mobileapp";
 import Layout from "./components/layout";
 import { useTranslation } from "react-i18next";
 import { useInitPromo } from "./store/use-init-promo";
+import NoteDetailBase from "./note-detail/note-base2";
 
 function App() {
     const { t } = useTranslation();
@@ -45,7 +46,7 @@ function App() {
               <Route element={<ProtectedRoute />}>
                <Route element={<Layout />}>
                   <Route path="/notes" element={<Notes />} />
-                  <Route path="/notes/:noteId" element={<NoteDetail />} />
+                  <Route path="/notes/:noteId" element={<NoteDetailBase />} />
                   <Route path="/price-page" element={<PricingPage />} />
                   <Route path="/alerts" element={<Alerts />} />
                   <Route path="/folders" element={<Folders />} />

@@ -31,7 +31,7 @@ const Header = ({ processingNotes, onProcessingClick }: any) => {
         {/* LEFT: Sidebar Toggle */}
         {/* Added z-10 to ensure buttons stay clickable if screen is small and timer overlaps */}
         <div className="flex items-center gap-2 z-10">
-          <SidebarTrigger className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100" />
+        
         </div>
 
         {/* CENTER: Countdown Timer */}

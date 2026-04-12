@@ -12,6 +12,8 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   SidebarSeparator,
+  SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   Home,
@@ -23,6 +25,7 @@ import {
   Handshake,
   Glasses,
   HatGlasses,
+  MoreVertical,
 } from "lucide-react";
 import { NavUser } from "./nav-user";
 import { cn } from "@/lib/utils";
@@ -35,6 +38,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useUserStore } from "@/store/userStore";
 
 // --- SIDEBAR SALE CARD ---
 const SidebarSaleCard = () => {
@@ -43,7 +47,6 @@ const SidebarSaleCard = () => {
   const [mounted, setMounted] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const { targetDate, hasPromo, discountPercent } = useOfferCountdown();
-
 
   useEffect(() => {
     setMounted(true);
@@ -136,7 +139,9 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-
+  const { subscriptionStatus } = useUserStore();
+  const { open, openMobile, setOpen, setOpenMobile, toggleSidebar } = useSidebar();
+  
   const items = [
     { title: t("Notes"), icon: Home, key: "/notes" },
     { title: t("Folders"), icon: FolderOpen, key: "/folders" },
@@ -151,12 +156,26 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
       {...props}
     >
       <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 group-data-[collapsible=icon]:px-2 py-7 gap-3 transition-all">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 shadow-sm cursor-pointer" onClick={() => navigate('/')}>
-          <CatLogo size={18} />
-        </div>
-        <span className="text-[14px] font-bold tracking-tighter text-zinc-900 dark:text-zinc-50 group-data-[collapsible=icon]:hidden whitespace-nowrap overflow-hidden">
-          Bycat AI
-        </span>
+        
+        {
+          open ? (
+            <div className="flex justify-between items-center w-full">
+              <div className="flex justify-between items-center">
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-950 dark:bg-zinc-50 text-zinc-50 dark:text-zinc-950 shadow-sm cursor-pointer" onClick={() => navigate('/')}>
+                  <CatLogo size={18} />
+                </div>
+                <span className="text-[14px] font-bold tracking-tighter text-zinc-900 dark:text-zinc-50 group-data-[collapsible=icon]:hidden whitespace-nowrap overflow-hidden ml-2">
+                  Bycat AI
+                </span>
+              </div>
+               <SidebarTrigger  className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 justify-self-end" />
+            </div>
+          ): (
+            <SidebarTrigger className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100" />
+          )
+        }
+       
+       
       </SidebarHeader>
 
       <SidebarContent className="px-2 group-data-[collapsible=icon]:px-1 pt-4 gap-0 overflow-x-hidden scrollbar-none">
@@ -170,10 +189,14 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                   {t("Library")}
                 </span>
               </div>
-             <SidebarMenuItem>
-                <SidebarSaleCard />
-              </SidebarMenuItem>
-              
+              {
+                subscriptionStatus === 'free' && (
+                  <SidebarMenuItem>
+                    <SidebarSaleCard />
+                  </SidebarMenuItem>
+                )
+              }
+
 
               {items.map((item) => {
                 const isActive =
