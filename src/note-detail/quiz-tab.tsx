@@ -173,24 +173,26 @@ const LevelCard = ({
 
 export default LevelCard;
 
-
-export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
- const { companyId, userId, email, fullName } = useUserStore();
-  const { t } = useTranslation(); // Initialize hook
+export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }: any) {
+  const { companyId, userId, email } = useUserStore();
+  const { t } = useTranslation();
   const posthog = usePostHog();
-  const [activeQuestions, setActiveQuestions] = useState([]);
+  const queryClient = useQueryClient();
+
+  const [activeQuestions, setActiveQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
-  const queryClient = useQueryClient();
+  
+  // 🟢 State to track their answers locally during the quiz session
+  const [userAnswersArray, setUserAnswersArray] = useState<string[]>([]);
 
-   useEffect(() => {
+  useEffect(() => {
     posthog.capture("quiz_tab_viewed", { note_id: noteId });
   }, [posthog, noteId]);
 
-  
   const getLastAnsweredDate = (questions: any[]) => {
     const answeredDates = questions
       .filter((q: any) => q.user_answered_date)
@@ -201,14 +203,14 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
   };
 
   const quizLevels = useMemo(() => {
-    const levels = {
+    const levels: Record<string, any> = {
       easy: { count: 0, lastScore: null, questions: [], lastTaken: null },
-      hard: { count: 0, lastScore: null, questions: [], lastTaken: null  },
-      bonus: { count: 0, lastScore: null, questions: [], lastTaken: null  },
+      hard: { count: 0, lastScore: null, questions: [], lastTaken: null },
+      bonus: { count: 0, lastScore: null, questions: [], lastTaken: null },
     };
     if (!Array.isArray(quizData)) return levels;
 
-    const groups = quizData.reduce((acc, q) => {
+    const groups: Record<string, any> = quizData.reduce((acc: any, q: any) => {
       const level = q.complexity_level;
       if (!acc[level]) acc[level] = { questions: [], correct: 0, answered: 0 };
       acc[level].questions.push(q);
@@ -226,43 +228,37 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
         levels[level].questions = group.questions;
         levels[level].lastTaken = getLastAnsweredDate(group.questions);
         if (group.answered > 0) {
-          levels[level].lastScore = {
-            correct: group.correct,
-            total: group.count,
-          };
+          levels[level].lastScore = Math.round((group.correct / group.answered) * 100);
         }
       }
     }
     return levels;
   }, [quizData, t]);
 
-  const easyQuestions = quizData?.filter(
-    (question: any) => question.complexity_level === "easy"
-  );
-  const hardQuestions = quizData?.filter(
-    (question: any) => question.complexity_level === "hard"
-  );
+  const easyQuestions = quizData?.filter((q: any) => q.complexity_level === "easy");
+  const hardQuestions = quizData?.filter((q: any) => q.complexity_level === "hard");
 
   const progressEasy = (easyQuestions || [])?.filter(
-    (q) => q.user_answer !== "" && q.user_answer === q.answer
+    (q: any) => q.user_answer !== "" && String(q.user_answer) === String(q.answer)
   ).length;
   const progressHard = (hardQuestions || [])?.filter(
-    (q) => q.user_answer !== "" && q.user_answer === q.answer
+    (q: any) => q.user_answer !== "" && String(q.user_answer) === String(q.answer)
   ).length;
 
   const totalProgress =
     (progressEasy + progressHard) /
     ((easyQuestions?.length || 0) + (hardQuestions?.length || 0));
+  
   const canProceedWithAdvancedQuiz = totalProgress >= 0.7;
 
-  const handleLevelSelect = (level) => {
+  const handleLevelSelect = (level: string) => {
     const questionsForLevel = quizLevels[level]?.questions || [];
     if (questionsForLevel.length > 0) {
-    posthog.capture('quiz_level_selected', { 
-            note_id: noteId, 
-            level: level,
-            question_count: questionsForLevel.length 
-          });
+      posthog.capture('quiz_level_selected', { 
+        note_id: noteId, 
+        level: level,
+        question_count: questionsForLevel.length 
+      });
       setQuizLevel(level);
       setActiveQuestions(questionsForLevel);
       setCurrentQuestionIndex(0);
@@ -270,60 +266,13 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
       setScore(0);
       setIsFinished(false);
       setShowFeedback(false);
+      setUserAnswersArray(new Array(questionsForLevel.length).fill(null));
     }
   };
 
   const handleBackToSelection = () => {
     setQuizLevel(null);
     queryClient.invalidateQueries({ queryKey: [`notes-${noteId}`] });
-  }
-
-  const totalQuestions = activeQuestions.length;
-  const currentQuestion = activeQuestions[currentQuestionIndex];
-  const correctAnswer =
-    currentQuestion?.options[parseInt(currentQuestion?.answer)];
-  const isCorrect = selectedAnswer === correctAnswer;
-  const progressValue = (currentQuestionIndex / totalQuestions) * 100;
-
-  const handleCheckAnswer = (option, index) => {
-     posthog.capture('quiz_question_answered', { 
-        note_id: noteId,
-        level: quizLevel,
-        question_index: currentQuestionIndex,
-        is_correct: isCorrect 
-      });
-    setSelectedAnswer(option)
-    if (option) {
-      setShowFeedback(true);
-      answerQuestionMutation.mutate({ questionId: currentQuestion?.id , answer: index})
-      if (option === correctAnswer) {
-        setScore(score + 1);
-      }
-    }
-  };
-
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < totalQuestions - 1) {
-      posthog.capture('next_question_clicked', { userId, email });
-      setCurrentQuestionIndex((prev) => prev + 1);
-      setSelectedAnswer(null);
-      setShowFeedback(false);
-      
-    } else {
-        posthog.capture('quiz_completed', { 
-        note_id: noteId,
-        level: quizLevel,
-        final_score: score + (selectedAnswer === correctAnswer ? 1 : 0), // Add 1 if last was correct
-        total_questions: totalQuestions
-      });
-      setIsFinished(true);
-    }
-  };
-
-  const handleRestartQuiz = () => {
-    posthog.capture('quiz_restart_clicked', { userId, email });
-    queryClient.invalidateQueries({ queryKey: [`notes-${noteId}`] });
-    handleLevelSelect(quizLevel);
   }
 
   const answerQuestionMutation = useMutation({
@@ -334,53 +283,44 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
       );
     },
     onSuccess: (response) => console.log("Answer submitted", response.data),
-    onError: (error, variables) => {
+    onError: (error: any, variables) => {
       Sentry.captureException(error, { 
         tags: { action: 'submit_quiz_answer' },
         extra: { noteId, questionId: variables.questionId, userId, email }
       });
-      console.error("Error submitting answer:", error.response?.data)
+      console.error("Error submitting answer:", error.response?.data);
     }
   });
 
+  // --- EMPTY STATE CHECK ---
+  // Must happen before quizLevel checks, but must not trap the level selector!
   if (!quizData || quizData.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center text-center p-8 border rounded-lg bg-muted/50 h-64">
-        <h3 className="text-lg font-semibold text-muted-foreground">
+      <div className="flex flex-col items-center justify-center text-center p-8 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/30 h-64 mt-4 w-full max-w-sm mx-auto">
+        <div className="h-12 w-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+          <CircleAlert size={20} className="text-zinc-400" />
+        </div>
+        <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
           {t("No Quiz Available")}
         </h3>
-        <p className="text-sm text-muted-foreground mt-2">
-          {t("AI has not generated a quiz for this note yet.")}
+        <p className="text-sm text-muted-foreground mt-2 max-w-[250px]">
+          {t("AI has not generated a quiz for this note yet. Try summarizing more text first.")}
         </p>
       </div>
     );
   }
 
- if (!quizLevel) {
+  // --- LEVEL SELECTION STATE ---
+  if (!quizLevel) {
     return (
-      <div className="w-full max-w-full mx-auto flex flex-col gap-6">
-        
-        {/* Intro Alert */}
-        <Alert className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border border-border/50 bg-zinc-50/50 dark:bg-zinc-900/50">
-          <Avatar className="rounded-xl h-12 w-12 bg-black flex items-center justify-center shrink-0">
-            <CatLogo />
-          </Avatar>
-          <div className="flex-1 flex flex-col justify-center">
-            <AlertTitle className="text-sm font-bold tracking-tight mb-1">{t("Learning Experience!")}</AlertTitle>
-            <AlertDescription className="text-xs text-muted-foreground leading-snug">
-              {t("Our app boosts learning with personalized quiz alerts, analyzing performance to send reminders for challenging questions.")}
-            </AlertDescription>
-          </div>
-        </Alert>
-
-        {/* Level Cards List (Vertical Stack) */}
-        <div className="flex flex-col gap-3">
+      <div className="w-full max-w-full mx-auto flex flex-col gap-6 pb-20">
+        <div className="flex flex-col gap-3 mt-4">
           <LevelCard
             level="easy"
             title={t("Easy")}
             description={t("Quick questions to test core concepts.")}
             count={quizLevels.easy.count}
-            lastScore={progressEasy}
+            lastScore={quizLevels.easy.lastScore}
             onSelect={handleLevelSelect}
             lastTakenDate={quizLevels.easy.lastTaken}
             isLocked={false}
@@ -390,7 +330,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
             title={t("Hard")}
             description={t("In-depth questions requiring more thought.")}
             count={quizLevels.hard.count}
-            lastScore={progressHard}
+            lastScore={quizLevels.hard.lastScore}
             onSelect={handleLevelSelect}
             lastTakenDate={quizLevels.hard.lastTaken}
             isLocked={false}
@@ -400,7 +340,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
             title={t("Advanced")}
             description={t("Challenging questions connecting multiple ideas.")}
             count={quizLevels.bonus.count}
-            lastScore={0} 
+            lastScore={quizLevels.bonus.lastScore} 
             onSelect={handleLevelSelect}
             lastTakenDate={quizLevels.bonus.lastTaken}
             isLocked={!canProceedWithAdvancedQuiz}
@@ -410,103 +350,209 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
     );
   }
 
+  // --- SAFEGUARD FOR ACTIVE QUESTIONS ---
+  const totalQuestions = activeQuestions.length;
+  const currentQuestion = activeQuestions[currentQuestionIndex];
+  
+  if (!currentQuestion) return null;
+
+  const correctAnswer = currentQuestion.options[parseInt(currentQuestion.answer)];
+  const isCorrect = selectedAnswer === correctAnswer;
+  const progressValue = (currentQuestionIndex / totalQuestions) * 100;
+
+  // --- QUESTION HANDLERS ---
+  const handleCheckAnswer = (option: string, index: number) => {
+    if (showFeedback) return;
+
+    posthog.capture('quiz_question_answered', { 
+      note_id: noteId,
+      level: quizLevel,
+      question_index: currentQuestionIndex,
+      is_correct: option === correctAnswer 
+    });
+    
+    setSelectedAnswer(option);
+    setShowFeedback(true);
+    
+    const newAnswers = [...userAnswersArray];
+    newAnswers[currentQuestionIndex] = option;
+    setUserAnswersArray(newAnswers);
+
+    answerQuestionMutation.mutate({ questionId: currentQuestion.id , answer: index});
+    
+    if (option === correctAnswer) {
+      if (userAnswersArray[currentQuestionIndex] !== correctAnswer) {
+        setScore((s) => s + 1);
+      }
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < totalQuestions - 1) {
+      posthog.capture('next_question_clicked', { userId, email });
+      
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      
+      const previouslyAnswered = userAnswersArray[nextIndex];
+      if (previouslyAnswered !== null) {
+        setSelectedAnswer(previouslyAnswered);
+        setShowFeedback(true);
+      } else {
+        setSelectedAnswer(null);
+        setShowFeedback(false);
+      }
+    } else {
+      posthog.capture('quiz_completed', { 
+        note_id: noteId,
+        level: quizLevel,
+        final_score: score, 
+        total_questions: totalQuestions
+      });
+      setIsFinished(true);
+    }
+  };
+
+  const handlePrevQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      const prevIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(prevIndex);
+      
+      const previouslyAnswered = userAnswersArray[prevIndex];
+      if (previouslyAnswered !== null) {
+        setSelectedAnswer(previouslyAnswered);
+        setShowFeedback(true);
+      } else {
+        setSelectedAnswer(null);
+        setShowFeedback(false);
+      }
+    }
+  };
+
+  const handleRestartQuiz = () => {
+    posthog.capture('quiz_restart_clicked', { userId, email });
+    queryClient.invalidateQueries({ queryKey: [`notes-${noteId}`] });
+    handleLevelSelect(quizLevel);
+  };
+
+  // --- QUIZ COMPLETED STATE ---
   if (isFinished) {
     const finalPercentage = Math.round((score / totalQuestions) * 100);
     return (
-      <Card className="w-full max-w-2xl mx-auto text-center">
-        <CardHeader>
-          <CardTitle className="text-2xl">{t("Quiz Completed!")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-4xl font-bold">
-            {score} / {totalQuestions}
+      <div className="w-full flex flex-col items-center justify-center p-6 h-[70vh] text-center">
+        <div className="h-16 w-16 bg-primary/10 text-primary rounded-full flex items-center justify-center mb-6">
+          <Trophy size={32} />
+        </div>
+        <h2 className="text-2xl font-bold mb-2 tracking-tight">{t("Quiz Completed!")}</h2>
+        <div className="space-y-3 mb-10 w-full">
+          <p className="text-4xl font-bold text-foreground">
+            {score} <span className="text-muted-foreground text-2xl font-semibold">/ {totalQuestions}</span>
           </p>
-          <p className="text-2xl font-semibold text-primary">
+          <p className="text-xl font-bold text-primary">
             {finalPercentage}%
           </p>
-            <GradientProgress value={finalPercentage} className="w-full" />
-        </CardContent>
-        <CardFooter className="flex-col sm:flex-row gap-2">
-          <Button onClick={handleRestartQuiz} className="w-full sm:flex-1">
+          <GradientProgress value={finalPercentage} className="w-full max-w-xs mx-auto mt-4 h-2" />
+        </div>
+        <div className="flex flex-col w-full max-w-xs gap-3">
+          <Button onClick={handleRestartQuiz} className="w-full h-12 rounded-xl font-bold" size="lg">
             <RotateCw className="h-4 w-4 mr-2" /> {t("Try Again")}
           </Button>
-          <Button
-            variant="ghost"
-            onClick={handleBackToSelection}
-            className="w-full sm:flex-1 cursor-pointer"
-          >
+          <Button variant="ghost" onClick={handleBackToSelection} className="w-full h-12 rounded-xl font-semibold text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4 mr-2" /> {t("Change Difficulty")}
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     );
   }
   
+  // --- ACTIVE QUIZ QUESTION STATE ---
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col gap-6">
-      <div className="flex flex-row justify-between">
-        <Button
-          variant="outline"
-          onClick={handleBackToSelection}
-          className="self-start text-muted-foreground cursor-pointer"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" /> {t("Change Difficulty")}
-        </Button>
-        {showFeedback ? (
-        <div className="flex flex-col items-center gap-4">
-          <Button onClick={handleNextQuestion} className="w-full sm:w-auto cursor-pointer">
-            {currentQuestionIndex === totalQuestions - 1
-              ? t("Finish Quiz")
-              : t("Next")}
-            <ArrowRight className="h-4 w-4 ml-2" />
+    <div className="w-full flex flex-col h-full gap-4 pb-20">
+      
+      <div className="flex flex-col gap-4 mb-2 shrink-0 mt-2">
+        
+        {/* Top Navigation Row */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleBackToSelection}
+            className="text-muted-foreground hover:text-foreground h-8 px-2 -ml-2 shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1.5" /> 
+            <span className="hidden sm:inline">{t("Difficulty")}</span>
+            <span className="sm:hidden">{t("Back")}</span>
           </Button>
-        </div>
-      ) : (
-        <Button
-          onClick={() => handleCheckAnswer(selectedAnswer, currentQuestion.options.indexOf(selectedAnswer))}
-          disabled={selectedAnswer === null}
-          className="w-full sm:w-auto self-center"
-        >
-          {t("Check Answer")}
-        </Button>
-      )}
 
-      </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between text-sm font-medium text-muted-foreground">
-          <span>
-            {t("Question {{current}} of {{total}}", { current: currentQuestionIndex + 1, total: totalQuestions })}
-          </span>
-          <span>{t("Score: {{score}}", { score })}</span>
+          {/* Action Buttons */}
+          <div className="shrink-0 flex items-center gap-2">
+            {currentQuestionIndex > 0 && (
+              <Button 
+                variant="outline"
+                onClick={handlePrevQuestion} 
+                size="sm"
+                className="h-8 shadow-sm transition-all"
+              >
+                <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+                <span className="hidden sm:inline">{t("Prev")}</span>
+              </Button>
+            )}
+
+            {/* Next Button is disabled if they haven't picked an answer */}
+            <Button 
+              onClick={handleNextQuestion} 
+              size="sm"
+              className="h-8 shadow-sm transition-all"
+            >
+              {currentQuestionIndex === totalQuestions - 1 ? t("Finish") : t("Next")}
+              <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+            </Button>
+          </div>
         </div>
-        <GradientProgress value={progressValue} className="w-full" />
+
+        {/* Progress Bar Row */}
+        <div className="flex flex-col gap-2 bg-zinc-50/50 dark:bg-zinc-900/30 p-3 rounded-lg border border-border/50">
+          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <span>
+              {t("Q")} {currentQuestionIndex + 1} <span className="opacity-50">/ {totalQuestions}</span>
+            </span>
+            <span className="text-primary flex items-center gap-1">
+              <Trophy size={12} className="text-yellow-500" />
+              {score}
+            </span>
+          </div>
+          <GradientProgress value={progressValue} className="h-1.5 w-full bg-zinc-200 dark:bg-zinc-800" />
+        </div>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl leading-relaxed">
+
+      <Card className="border-0 shadow-none bg-transparent">
+        <CardHeader className="px-0 pt-0 pb-6">
+          <CardTitle className="text-lg sm:text-xl leading-relaxed text-foreground font-bold">
             {currentQuestion.question_text}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {currentQuestion.options.map((option, index) => {
+        
+        <CardContent className="px-0 space-y-3">
+          {currentQuestion.options.map((option: string, index: number) => {
             const isSelected = selectedAnswer === option;
             const isAnswerCorrect = correctAnswer === option;
+            
             return (
               <button
                 key={index}
-                onClick={() => setSelectedAnswer(option)}
+                onClick={() => {
+                  if (!showFeedback) {
+                    handleCheckAnswer(option, index);
+                  }
+                }}
                 disabled={showFeedback}
                 className={cn(
-                  "w-full text-left p-4 border rounded-lg transition-all text-sm font-medium",
-                  "hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-70",
-                  isSelected && !showFeedback && "ring-2 ring-primary",
-                  showFeedback &&
-                    isAnswerCorrect &&
-                    "bg-green-100 dark:bg-green-900/30 border-green-500 ring-2 ring-green-500 text-green-800 dark:text-green-300",
-                  showFeedback &&
-                    isSelected &&
-                    !isAnswerCorrect &&
-                    "bg-red-100 dark:bg-red-900/30 border-red-500 ring-2 ring-red-500 text-red-800 dark:text-red-300"
+                  "w-full text-left p-4 border rounded-xl transition-all duration-200 text-sm font-medium leading-snug outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  !showFeedback && "border-zinc-200 dark:border-zinc-800 hover:border-primary/50 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 hover:shadow-sm",
+                  showFeedback && "cursor-default opacity-90",
+                  showFeedback && isAnswerCorrect && "bg-green-100 dark:bg-green-900/30 border-green-500 ring-2 ring-green-500/20 text-green-900 dark:text-green-300 shadow-sm",
+                  showFeedback && isSelected && !isAnswerCorrect && "bg-red-100 dark:bg-red-900/30 border-red-500 ring-2 ring-red-500/20 text-red-900 dark:text-red-300 shadow-sm",
+                  showFeedback && !isSelected && !isAnswerCorrect && "opacity-40 border-zinc-200 dark:border-zinc-800 bg-transparent"
                 )}
               >
                 {option}
@@ -515,11 +561,13 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
           })}
         </CardContent>
       </Card>
+
+      {/* Hint Alert */}
       {showFeedback && !isCorrect && (
-        <Alert className="border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400">
-          <Lightbulb />
-          <AlertTitle>{t("Hint")}</AlertTitle>
-          <AlertDescription className="text-amber-600/80 dark:text-amber-400/80">
+        <Alert className="mt-2 border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/30 mb-8">
+          <Lightbulb className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+          <AlertTitle className="text-amber-800 dark:text-amber-400 font-bold text-sm">{t("Hint")}</AlertTitle>
+          <AlertDescription className="text-amber-700/90 dark:text-amber-300/90 text-xs mt-1.5 leading-relaxed">
             {currentQuestion.explanation}
           </AlertDescription>
         </Alert>

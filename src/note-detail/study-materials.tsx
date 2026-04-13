@@ -7,6 +7,7 @@ import * as Sentry from "@sentry/react";
 import { toast } from "sonner";
 import { 
   ArrowLeft, 
+  Loader2, 
   Sparkles
 } from "lucide-react";
 import typingAnimation from './assets/typing.json';
@@ -158,19 +159,49 @@ export const StudyMaterials = ({
     if (isLoading || showSuccess) return null;
 
     return (
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center text-primary gap-2">
-            {view === "quiz" ? t("AI Quiz") : view === 'flash' ? t("Flashcards") : t("AI Study Tools")}
+     <div className="flex flex-col gap-4 mb-6">
+        
+        {/* 🟢 Back Button (Moved to the top for easy navigation in a narrow sidebar) */}
+        {(view || quizLevel) && (
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="w-fit -ml-2 text-muted-foreground hover:text-foreground h-8 px-2"
+            onClick={() => {
+              if (quizLevel) setQuizLevel(null);
+              else setView(undefined);
+            }}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            {view === "quiz" && quizLevel ? t("Levels") : t("Tools")}
+          </Button>
+        )}
+
+        {/* 🟢 Title & Switch Area */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="text-xl sm:text-2xl font-bold flex items-center text-primary gap-2 leading-tight">
+              {view === "quiz" ? t("AI Quiz") : view === 'flash' ? t("Flashcards") : t("AI Study Tools")}
+            </h2>
+
+            {/* Compact Switch for Quiz Alerts */}
             {view === 'quiz' && (
-               <div className="flex items-center gap-2 ml-4">
-                 <Switch checked={alertEnabled} onCheckedChange={value => noteAlertsMutation.mutate(value)} />
-                 <span className="text-sm font-normal text-muted-foreground">{alertEnabled ? t("Alerts On") : t("Alerts Off")}</span>
-                 {noteAlertsMutation.isPending && <Spinner className="h-4 w-4" />}
+               <div className="flex items-center gap-2 bg-zinc-50 dark:bg-zinc-900 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-800">
+                 <Switch 
+                   checked={alertEnabled} 
+                   onCheckedChange={value => noteAlertsMutation.mutate(value)} 
+                   className="scale-75 origin-left" // Shrinks the switch slightly to save space
+                 />
+                 <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">
+                    {alertEnabled ? t("Alerts On") : t("Alerts Off")}
+                 </span>
+                 {noteAlertsMutation.isPending && <Loader2 className="h-3 w-3 animate-spin text-zinc-400" />}
                </div>
             )}
-          </h2>
-          <p className="text-muted-foreground">
+          </div>
+          
+          {/* Description */}
+          <p className="text-sm text-muted-foreground leading-snug">
             {view === 'quiz' 
               ? t("Test your knowledge with personalized questions.") 
               : view === 'flash' 
@@ -178,20 +209,6 @@ export const StudyMaterials = ({
                 : t("Choose a tool to enhance your learning.")}
           </p>
         </div>
-
-        {/* Back Button Logic */}
-        {(view || quizLevel) && (
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              if (quizLevel) setQuizLevel(null);
-              else setView(undefined);
-            }}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {view === "quiz" && quizLevel ? t("Back to Levels") : t("Back to Tools")}
-          </Button>
-        )}
       </div>
     );
   };
