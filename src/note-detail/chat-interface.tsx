@@ -380,34 +380,43 @@ const ChatInterface = ({
               { short: t("Explain like i'm 5"), full: t("Can you explain like i'm 5?"), id: 2 },
               { short: t("Quiz me"), full: t("Can you generate hard quiz for me?") , id: 3},
             ].map(({ short, full, id }, index) => (
-              <button
-                key={full}
-                type="button"
-                onClick={() => {
-                  posthog.capture("chat_quick_action_clicked", { action_id: id });
-                  executeSendMessage(full)
-                }}
-                disabled={isLoading}
-                className={`
-                  items-center gap-1.5 px-3.5 py-1.5 text-[13px] rounded-2xl
-                  bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10
-                  dark:from-cyan-500/20 dark:via-blue-500/20 dark:to-indigo-500/20
-                  border border-blue-200/50 dark:border-blue-500/30
-                  text-blue-700 dark:text-blue-300
-                  hover:from-cyan-500/20 hover:via-blue-500/20 hover:to-indigo-500/20
-                  dark:hover:from-cyan-500/30 dark:hover:via-blue-500/30 dark:hover:to-indigo-500/30
-                  hover:border-blue-300/70 dark:hover:border-blue-400/50
-                  hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]
-                  transition-all duration-300
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  min-w-0 shrink
-                  ${index === 0 ? "hidden sm:inline-flex" : "inline-flex"}
-                `}
-              >
-                <MessageCircle className="h-3 w-3 opacity-50 shrink-0" />
-                <span className="truncate sm:hidden">{short}</span>
-                <span className="truncate hidden sm:inline">{full}</span>
-              </button>
+              <Tooltip  key={full}>
+                <TooltipContent>{full}</TooltipContent>
+                <TooltipTrigger 
+                 className={`
+                  min-w-0 shrink  ${index === 0 ? "hidden sm:inline-flex" : "inline-flex"}
+                  `}
+                  >
+                <button
+                  key={full}
+                  type="button"
+                  onClick={() => {
+                    posthog.capture("chat_quick_action_clicked", { action_id: id });
+                    executeSendMessage(full)
+                  }}
+                  disabled={isLoading}
+                  className={`
+                    items-center gap-1.5 px-3.5 py-1.5 text-[13px] rounded-2xl
+                    bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-indigo-500/10
+                    dark:from-cyan-500/20 dark:via-blue-500/20 dark:to-indigo-500/20
+                    border border-blue-200/50 dark:border-blue-500/30
+                    text-blue-700 dark:text-blue-300
+                    hover:from-cyan-500/20 hover:via-blue-500/20 hover:to-indigo-500/20
+                    dark:hover:from-cyan-500/30 dark:hover:via-blue-500/30 dark:hover:to-indigo-500/30
+                    hover:border-blue-300/70 dark:hover:border-blue-400/50
+                    hover:shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)]
+                    transition-all duration-300
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    min-w-0 shrink
+                    ${index === 0 ? "hidden sm:inline-flex" : "inline-flex"}
+                  `}
+                >
+                  <MessageCircle className="h-3 w-3 opacity-50 shrink-0" />
+                  <span className="truncate sm:hidden">{short}</span>
+                  <span className="truncate hidden sm:inline">{full}</span>
+                </button>
+                </TooltipTrigger>
+              </Tooltip>
             ))}
           </div>
         )}

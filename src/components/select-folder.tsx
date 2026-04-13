@@ -36,7 +36,7 @@ import { API_BASE_URL } from "@/services/config";
 
 
 
-const FolderSelect = ({ data }: any) => {
+const FolderSelect = ({ data, variant = "outline", size="sm" }: any) => {
   const posthog = usePostHog();
   const { t } = useTranslation();
   const setSelectedFolder = useUserStore((store) => store.setSelectedFolder);
@@ -72,15 +72,15 @@ const FolderSelect = ({ data }: any) => {
       }}>
         <PopoverTrigger>
           <Button
-            variant="outline"
+            variant={variant}
             role="combobox"
             aria-label={t("Select folder...")}
             aria-expanded={open}
-            className="flex-1 justify-between md:max-w-[200px] lg:max-w-[300px]"
+            className="flex-1 justify-between md:max-w-[200px] lg:max-w-[300px] cursor-pointer"
           >
             <div className="flex items-center gap-2">
               <Folder className="h-4 w-4" />
-              <span>{selectedFolder?.id ? selectedFolder.name : t("All folders")}</span>
+              <span className={`text-${size === "sm" ? "sm" : "lg"}`}>{selectedFolder?.id ? selectedFolder.name : t("All folders")}</span>
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>

@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { ISO_TO_LANGUAGE } from "@/services/config";
 import { useTheme } from "@/components/theme-provider";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 const PreferencesTab = () => {
     const { t, i18n } = useTranslation();
@@ -26,18 +27,7 @@ const PreferencesTab = () => {
                 <SettingsItem 
                     label={t("Language")}
                     action={
-                        <Select value={i18n.language} onValueChange={(val) => i18n.changeLanguage(val)}>
-                            <SelectTrigger className="w-[140px] h-8 text-xs border-zinc-200 dark:border-zinc-800 dark:bg-zinc-900">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="dark:bg-zinc-950 dark:border-zinc-800">
-                                {Object.entries(ISO_TO_LANGUAGE).map(([iso, data]) => (
-                                    <SelectItem key={iso} value={iso}>
-                                        {data.flag} {data.language}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <LanguageSwitcher />
                     }
                 />
 

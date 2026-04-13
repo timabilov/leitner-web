@@ -26,6 +26,8 @@ import {
   Glasses,
   HatGlasses,
   MoreVertical,
+  Menu,
+  X,
 } from "lucide-react";
 import { NavUser } from "./nav-user";
 import { cn } from "@/lib/utils";
@@ -155,7 +157,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
       className="border-r border-zinc-200/50 bg-white dark:bg-zinc-950 dark:border-zinc-800/50"
       {...props}
     >
-      <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4 group-data-[collapsible=icon]:px-2 py-7 gap-3 transition-all">
+      <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4  py-7 gap-3 transition-all">
         
         {
           open ? (
@@ -168,10 +170,10 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                   Bycat AI
                 </span>
               </div>
-               <SidebarTrigger  className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 justify-self-end" />
+               <X  onClick={() => setOpen(!open)} className="cursor-pointer h-4 w-4 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 justify-self-end" />
             </div>
           ): (
-            <SidebarTrigger className="h-8 w-8 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100" />
+            <Menu onClick={() => setOpen(!open)} className=" cursor-pointer h-4 w-4 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 " />
           )
         }
        

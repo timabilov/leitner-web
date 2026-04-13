@@ -355,7 +355,7 @@ const NoteDetailBase = () => {
 
   return (
     <>
-      <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden bg-transparent">
+      <div className="flex flex-col  overflow-hidden bg-transparent">
         {/* --- FIXED HEADER --- */}
         <div className="flex-none bg-white dark:bg-zinc-950 z-40 border-b border-zinc-200/50">
           <div className="px-6 py-4">

@@ -29,6 +29,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import { NoteCard } from "./note-card";
 import { cn } from "@/lib/utils";
+import FolderSelect from "@/components/select-folder";
+import CreateFolder from "@/components/create-folder";
+import { useFolders } from "@/hooks/use-folders";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -52,6 +55,7 @@ const Notes = ({ children }: any) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [files, setFiles] = useState<any[]>([]);
   const [loadingNoteIds, setProcessingNoteIds] = useState<number[]>([]);
+  const { data } = useFolders();
 
   const { t } = useTranslation(); // Translation hook
 
@@ -310,7 +314,7 @@ const Notes = ({ children }: any) => {
             />
           </div>
           <div className="sm:flex justify-between p-4 mt-4">
-            <h3
+            {/* <h3
               className="scroll-m-20 text-2xl font-semibold tracking-tight flex items-center"
               ref={notesListRef}
             >
@@ -320,7 +324,14 @@ const Notes = ({ children }: any) => {
                 <Folders className="h-5 w-5 mr-2" />
               )}
               {selectedFolder ? selectedFolder?.name : t("All notes")}
-            </h3>
+            </h3> */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* <CreateFolder /> */}
+              <div className="">
+                <FolderSelect data={data?.folders || []}  variant="ghost" size="md" />
+              </div>
+            </div> 
+            
             <ButtonGroup
               orientation="horizontal"
               aria-label="Media controls"
@@ -355,6 +366,7 @@ const Notes = ({ children }: any) => {
                 <List className="h-4 w-4" />
               </Button>
             </ButtonGroup>
+            
           </div>
           {/* ADAPTED SEARCH BLOCK */}
           <div className="px-4 relative w-full flex flex-row justify-start mb-6 group">

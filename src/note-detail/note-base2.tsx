@@ -56,7 +56,7 @@ import {
   X,
   PanelLeft,
   MessageCircle,
-  YoutubeIcon
+  YoutubeIcon,
 } from "lucide-react";
 import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
 import AIIcon from "./assets/ai-icon";
@@ -80,7 +80,8 @@ const MetaItem = React.forwardRef<HTMLDivElement, any>(
         onClick || props.onClick
           ? "hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
           : "cursor-default",
-        active && "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50"
+        active &&
+          "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50",
       )}
     >
       <span className="text-zinc-400">{icon}</span>
@@ -92,7 +93,7 @@ const MetaItem = React.forwardRef<HTMLDivElement, any>(
       </span>
       {iconEnd}
     </div>
-  )
+  ),
 );
 MetaItem.displayName = "MetaItem";
 
@@ -145,7 +146,7 @@ const NoteDetailBase = () => {
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [noteName, setNoteName] = useState<string>("");
   const [editNameMode, toggleEditNameMode] = useState<boolean>(false);
-const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: State for the Sidebar's internal 
+  const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: State for the Sidebar's internal
   // File State
   const [imagePaths, setImagePaths] = useState<any[]>([]);
   const [audioPaths, setAudioPaths] = useState<any[]>([]);
@@ -165,7 +166,13 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
   useEffect(() => {
     if (activeTab === "chat") {
       setIsChatSidebarOpen(true);
-      setSearchParams((prev) => { prev.set("tab", "overview"); return prev; }, { replace: true });
+      setSearchParams(
+        (prev) => {
+          prev.set("tab", "overview");
+          return prev;
+        },
+        { replace: true },
+      );
     }
   }, [activeTab, setSearchParams]);
 
@@ -212,8 +219,7 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
           query.state?.data?.data?.status !== "failed" &&
           query.state?.data?.data?.status !== "transcribed" &&
           query.state?.data?.data?.status !== "draft";
-        return (isPolling && quiz_status === "in_progress"  ) ||
-          isNoteProcessing
+        return (isPolling && quiz_status === "in_progress") || isNoteProcessing
           ? 3000
           : false;
       } catch (e) {
@@ -319,14 +325,22 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
             const rawBlob = await entry.async("blob");
             const name = entry.name.toLowerCase();
             if (/\.(jpg|jpeg|png|webp|gif)$/.test(name))
-              imgs.push({ name: entry.name, url: URL.createObjectURL(rawBlob) });
+              imgs.push({
+                name: entry.name,
+                url: URL.createObjectURL(rawBlob),
+              });
             else if (/\.(mp3|wav|m4a|ogg|webm)$/.test(name))
-              auds.push({ name: entry.name, url: URL.createObjectURL(rawBlob) });
-            else if (name.endsWith(".pdf")){
+              auds.push({
+                name: entry.name,
+                url: URL.createObjectURL(rawBlob),
+              });
+            else if (name.endsWith(".pdf")) {
               const pdfBlob = new Blob([rawBlob], { type: "application/pdf" });
-              pdfs.push({ name: entry.name, url: URL.createObjectURL(pdfBlob)  });
-            }
-            else if (name.endsWith(".txt"))
+              pdfs.push({
+                name: entry.name,
+                url: URL.createObjectURL(pdfBlob),
+              });
+            } else if (name.endsWith(".txt"))
               txt += (await entry.async("string")) + "\n";
           })(),
         );
@@ -336,14 +350,13 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
       setAudioPaths(auds);
       setPdfPaths(pdfs);
       setTextContent(txt);
-    } 
-    catch(error) {
-       Sentry.captureException(error, { 
+    } catch (error) {
+      Sentry.captureException(error, {
         tags: { action: "unzip_files" },
-        extra: { noteId, url }
+        extra: { noteId, url },
       });
       toast.error(t("Failed to load attachments"));
-    }finally {
+    } finally {
       setProcessingFiles(false);
     }
   };
@@ -359,11 +372,9 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
   return (
     <>
       {/* 🟢 OUTERMOST WRAPPER: Flex Row makes Sidebar go to the right, and h-full makes it full height */}
-      <div className="flex flex-row h-[calc(100vh-3.5rem)] w-full overflow-hidden bg-transparent relative">
-        
+      <div className="flex flex-row h-[100vh] w-full overflow-hidden bg-transparent relative">
         {/* --- LEFT COLUMN: HEADER & MAIN CONTENT --- */}
         <div className="flex-1 flex flex-col min-w-0 h-full bg-transparent transition-all duration-300">
-          
           {/* FIXED HEADER */}
           <div className="flex-none bg-white dark:bg-zinc-950 z-40 border-b border-zinc-200/50">
             <div className="px-6 py-4">
@@ -417,186 +428,217 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
                       )}
                       {!isNoteProcessing && (
                         <>
-                        <Tooltip delayDuration={300}>
-                          <TooltipContent>
-                            {editNameMode ? t("Save (Enter)") : t("Edit name")}
-                          </TooltipContent>
-                          <TooltipTrigger>
-                            <button
-                              onClick={() =>
-                                editNameMode
-                                  ? handleSaveName()
-                                  : toggleEditNameMode(true)
-                              }
-                              disabled={saveNameMutation.isPending}
-                              className="relative flex items-center justify-center h-8 w-8 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
-                            >
-                              <AnimatePresence mode="wait" initial={false}>
-                                {saveNameMutation.isPending ? (
-                                  <motion.div
-                                    key="loading"
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                  >
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
-                                  </motion.div>
-                                ) : editNameMode ? (
-                                  <motion.div
-                                    key="save"
-                                    initial={{ y: 5, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    exit={{ y: -5, opacity: 0 }}
-                                  >
-                                    <CornerDownLeft className="w-3 h-3 text-zinc-900 dark:text-zinc-100" />
-                                  </motion.div>
-                                ) : (
-                                  <motion.div
-                                    key="edit"
-                                    initial={{ y: 5, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    exit={{ y: -5, opacity: 0 }}
-                                  >
-                                    <Pencil className="w-3.5 h-3.5 text-zinc-400" />
-                                  </motion.div>
-                                )}
-                              </AnimatePresence>
-                            </button>
-                          </TooltipTrigger>
-                        </Tooltip>
-                           <Tooltip>
-                    <TooltipContent>
-                      <p>
-                        {note?.quiz_alerts_enabled
-                          ? t("Quiz reminders enabled")
-                          : t("Quiz reminders disabled")}
-                      </p>
-                    </TooltipContent>
-                    <TooltipTrigger>
-                      
-                        {note?.quiz_alerts_enabled ? (
-                          <BellRing size={12} strokeWidth={3} className="w-3.5 h-3.5 text-zinc-400"/>
-                        ) : (
-                          <BellOff size={12} className="w-3.5 h-3.5 text-zinc-400" />
-                        )}
-                        
-                      
-                    </TooltipTrigger>
-                  </Tooltip>
-                        {note?.youtube_url && (
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <button
-                          className={cn(
-                            "h-8 w-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors",
-                            isMediaExpanded ? "text-primary" : "text-zinc-500",
+                          <Tooltip delayDuration={300}>
+                            <TooltipContent>
+                              {editNameMode
+                                ? t("Save (Enter)")
+                                : t("Edit name")}
+                            </TooltipContent>
+                            <TooltipTrigger>
+                              <button
+                                onClick={() =>
+                                  editNameMode
+                                    ? handleSaveName()
+                                    : toggleEditNameMode(true)
+                                }
+                                disabled={saveNameMutation.isPending}
+                                className="relative flex items-center justify-center h-8 w-8 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                              >
+                                <AnimatePresence mode="wait" initial={false}>
+                                  {saveNameMutation.isPending ? (
+                                    <motion.div
+                                      key="loading"
+                                      initial={{ opacity: 0 }}
+                                      animate={{ opacity: 1 }}
+                                      exit={{ opacity: 0 }}
+                                    >
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
+                                    </motion.div>
+                                  ) : editNameMode ? (
+                                    <motion.div
+                                      key="save"
+                                      initial={{ y: 5, opacity: 0 }}
+                                      animate={{ y: 0, opacity: 1 }}
+                                      exit={{ y: -5, opacity: 0 }}
+                                    >
+                                      <CornerDownLeft className="w-3 h-3 text-zinc-900 dark:text-zinc-100" />
+                                    </motion.div>
+                                  ) : (
+                                    <motion.div
+                                      key="edit"
+                                      initial={{ y: 5, opacity: 0 }}
+                                      animate={{ y: 0, opacity: 1 }}
+                                      exit={{ y: -5, opacity: 0 }}
+                                    >
+                                      <Pencil className="w-3.5 h-3.5 text-zinc-400" />
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </button>
+                            </TooltipTrigger>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipContent>
+                              <p>
+                                {note?.quiz_alerts_enabled
+                                  ? t("Quiz reminders enabled")
+                                  : t("Quiz reminders disabled")}
+                              </p>
+                            </TooltipContent>
+                            <TooltipTrigger>
+                              {note?.quiz_alerts_enabled ? (
+                                <BellRing
+                                  size={12}
+                                  strokeWidth={3}
+                                  className="w-3.5 h-3.5 text-zinc-400"
+                                />
+                              ) : (
+                                <BellOff
+                                  size={12}
+                                  className="w-3.5 h-3.5 text-zinc-400"
+                                />
+                              )}
+                            </TooltipTrigger>
+                          </Tooltip>
+                          {note?.youtube_url && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <button
+                                  className={cn(
+                                    "h-8 w-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors",
+                                    isMediaExpanded
+                                      ? "text-primary"
+                                      : "text-zinc-500",
+                                  )}
+                                  onClick={() =>
+                                    setIsMediaExpanded(!isMediaExpanded)
+                                  }
+                                >
+                                  <YoutubeIcon
+                                    size={16}
+                                    className="w-3.5 h-3.5 text-zinc-400"
+                                  />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="text-background">
+                                  {t("Show Youtube video")}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
                           )}
-                          onClick={() => setIsMediaExpanded(!isMediaExpanded)}
-                        >
-                          <YoutubeIcon size={16} className="w-3.5 h-3.5 text-zinc-400"/>
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-background">
-                          {t("Show Youtube video")}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
                         </>
                       )}
-                           </div>
                     </div>
                   </div>
-                  
                 </div>
+              </div>
 
-                {/* Meta Stats Row */}
-                <div className="flex items-center gap-2 sm:gap-2 overflow-x-auto no-scrollbar">
-                  <MetaItem
-                    icon={<Calendar size={12} />}
-                    label={t("Created")}
-                    value={new Date(note?.created_at).toLocaleDateString()}
-                  />
-                  <MetaItem
-                    icon={<Globe size={12} />}
-                    label={t("Language")}
-                    value={getNoteLanguageIso(note?.language)}
-                  />
-                  
-                  {/* ATTACHMENTS DROPDOWN */}
-                  {!note?.youtube_url && attachmentCount > 0 ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <MetaItem
-                          icon={<Paperclip size={12} />}
-                          label={t("Attachments")}
-                          value={`${attachmentCount} items`}
-                          iconEnd={<ChevronDown size={14} className="opacity-50" />}
-                        />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent 
-                        align="start" 
-                        sideOffset={8}
-                        className="w-64 p-1 rounded-xl shadow-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 z-50"
-                      >
-                        {pdfPaths.map((pdf, i) => (
-                          <DropdownMenuItem 
-                            key={`pdf-${i}`} 
-                            onClick={() => setPreviewFile(pdf)} 
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
-                          >
-                            <ScrollText size={16} className="text-red-500 shrink-0" />
-                            <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">{pdf.name}</span>
-                          </DropdownMenuItem>
-                        ))}
-                        {imagePaths.map((img, i) => (
-                          <DropdownMenuItem 
-                            key={`img-${i}`} 
-                            onClick={() => window.open(img.url, '_blank')} 
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
-                          >
-                            <ImageIcon size={16} className="text-blue-500 shrink-0" />
-                            <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">{img.name}</span>
-                          </DropdownMenuItem>
-                        ))}
-                        {audioPaths.map((aud, i) => (
-                          <DropdownMenuItem 
-                            key={`aud-${i}`} 
-                            onClick={() => window.open(aud.url, '_blank')} 
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
-                          >
-                            <FileAudioIcon size={16} className="text-amber-500 shrink-0" />
-                            <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">{aud.name}</span>
-                          </DropdownMenuItem>
-                        ))}
-                        {textContent && (
-                          <DropdownMenuItem 
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
-                          >
-                            <FileTextIcon size={16} className="shrink-0 text-zinc-400" />
-                            <span className="truncate text-zinc-500 dark:text-zinc-400 font-medium">Extracted Text</span>
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : (
-                    !note?.youtube_url && (
+              {/* Meta Stats Row */}
+              <div className="flex items-center gap-2 sm:gap-2 overflow-x-auto no-scrollbar">
+                <MetaItem
+                  icon={<Calendar size={12} />}
+                  label={t("Created")}
+                  value={new Date(note?.created_at).toLocaleDateString()}
+                />
+                <MetaItem
+                  icon={<Globe size={12} />}
+                  label={t("Language")}
+                  value={getNoteLanguageIso(note?.language)}
+                />
+
+                {/* ATTACHMENTS DROPDOWN */}
+                {!note?.youtube_url && attachmentCount > 0 ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
                       <MetaItem
                         icon={<Paperclip size={12} />}
                         label={t("Attachments")}
-                        value={`0 items`}
+                        value={`${attachmentCount} items`}
+                        iconEnd={
+                          <ChevronDown size={14} className="opacity-50" />
+                        }
                       />
-                    )
-                  )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="start"
+                      sideOffset={8}
+                      className="w-64 p-1 rounded-xl shadow-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 z-50"
+                    >
+                      {pdfPaths.map((pdf, i) => (
+                        <DropdownMenuItem
+                          key={`pdf-${i}`}
+                          onClick={() => setPreviewFile(pdf)}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
+                        >
+                          <ScrollText
+                            size={16}
+                            className="text-red-500 shrink-0"
+                          />
+                          <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
+                            {pdf.name}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                      {imagePaths.map((img, i) => (
+                        <DropdownMenuItem
+                          key={`img-${i}`}
+                          onClick={() => window.open(img.url, "_blank")}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
+                        >
+                          <ImageIcon
+                            size={16}
+                            className="text-blue-500 shrink-0"
+                          />
+                          <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
+                            {img.name}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                      {audioPaths.map((aud, i) => (
+                        <DropdownMenuItem
+                          key={`aud-${i}`}
+                          onClick={() => window.open(aud.url, "_blank")}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
+                        >
+                          <FileAudioIcon
+                            size={16}
+                            className="text-amber-500 shrink-0"
+                          />
+                          <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
+                            {aud.name}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                      {textContent && (
+                        <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors">
+                          <FileTextIcon
+                            size={16}
+                            className="shrink-0 text-zinc-400"
+                          />
+                          <span className="truncate text-zinc-500 dark:text-zinc-400 font-medium">
+                            Extracted Text
+                          </span>
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  !note?.youtube_url && (
+                    <MetaItem
+                      icon={<Paperclip size={12} />}
+                      label={t("Attachments")}
+                      value={`0 items`}
+                    />
+                  )
+                )}
 
-                  {/* <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" /> */}
-               
+                {/* <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" /> */}
 
-                  {/* <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" /> */}
-                  
-                  {/* CHAT SIDEBAR TOGGLE BUTTON */}
-                  {/* <button
+                {/* <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" /> */}
+
+                {/* CHAT SIDEBAR TOGGLE BUTTON */}
+                {/* <button
                     onClick={() => setIsChatSidebarOpen(!isChatSidebarOpen)}
                     className={cn(
                       "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shrink-0 border",
@@ -608,16 +650,14 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
                     <PanelRight size={14} />
                     {isChatSidebarOpen ? t("Close Chat") : t("Open Chat")}
                   </button> */}
-
-                </div>
               </div>
             </div>
+          </div>
 
-            {/* MAIN CONTENT AREA */}
-            <div className="flex-1 min-h-0 flex flex-col bg-transparent">
-              
-              {/* Existing Non-YouTube Media Attachments Header (Expanded State) */}
-              {/* {isMediaExpanded && hasMedia && !note?.youtube_url && (
+          {/* MAIN CONTENT AREA */}
+          <div className="flex-1 min-h-0 flex flex-col bg-transparent">
+            {/* Existing Non-YouTube Media Attachments Header (Expanded State) */}
+            {/* {isMediaExpanded && hasMedia && !note?.youtube_url && (
                 <div className="w-full flex flex-col px-6 py-4">
                   <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
                     <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
@@ -673,58 +713,52 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
                 </div>
               )} */}
 
-              {/* Vertical Media + Tabs PanelGroup */}
-              <div className="flex-1 min-h-0 flex flex-col">
-    
-                  
-                  {/* 🟢 FIXED FRAGMENT ISSUE: No more <></> wrapping these panels */}
-                  {note?.youtube_url && isMediaExpanded && (
-               
-                      <div className="w-full h-full flex flex-col px-6 py-4">
-                        <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
-                          <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
-                            <div className="flex-1 min-h-0 flex items-center justify-center">
-                              <div className="relative h-full w-auto max-w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black mx-auto">
-                                <iframe
-                                  className="w-full h-full"
-                                  src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`}
-                                  allowFullScreen
-                                  title="YouTube Video"
-                                />
-                              </div>
-                            </div>
-                          </div>
+            {/* Vertical Media + Tabs PanelGroup */}
+            <div className="flex-1 min-h-0 flex flex-col">
+              {/* 🟢 FIXED FRAGMENT ISSUE: No more <></> wrapping these panels */}
+              {note?.youtube_url && isMediaExpanded && (
+                <div className="w-full h-full flex flex-col px-6 py-4">
+                  <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
+                    <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
+                      <div className="flex-1 min-h-0 flex items-center justify-center">
+                        <div className="relative h-full w-auto max-w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black mx-auto">
+                          <iframe
+                            className="w-full h-full"
+                            src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`}
+                            allowFullScreen
+                            title="YouTube Video"
+                          />
                         </div>
                       </div>
-          
-                  )}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                 
+              {/* PANEL 2: TABS & CONTENT */}
 
-                  {/* PANEL 2: TABS & CONTENT */}
-               
-                    <div className="flex flex-col h-full bg-transparent">
-                      {/* Tabs Header */}
-                      <div className="px-6 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950">
-                        <Tabs
-                          value={activeTab}
-                          onValueChange={handleTabChange}
-                          asChild={false}
-                        >
-                          <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 w-full justify-start overflow-x-auto no-scrollbar">
-                            <StudioTabTrigger
-                              value="overview"
-                              icon={<NotepadText size={14} />}
-                              label={t("Overview")}
-                              active={activeTab === "overview"}
-                            />
-                            <StudioTabTrigger
-                              value="transcript"
-                              icon={<ScrollText size={14} />}
-                              label={t("Transcript")}
-                              active={activeTab === "transcript"}
-                            />
-                            {/* {!note?.processing_error_message && (
+              <div className="flex flex-col h-full bg-transparent">
+                {/* Tabs Header */}
+                <div className="px-6 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950">
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={handleTabChange}
+                    asChild={false}
+                  >
+                    <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 w-full justify-start overflow-x-auto no-scrollbar">
+                      <StudioTabTrigger
+                        value="overview"
+                        icon={<NotepadText size={14} />}
+                        label={t("Overview")}
+                        active={activeTab === "overview"}
+                      />
+                      <StudioTabTrigger
+                        value="transcript"
+                        icon={<ScrollText size={14} />}
+                        label={t("Transcript")}
+                        active={activeTab === "transcript"}
+                      />
+                      {/* {!note?.processing_error_message && (
                               <StudioTabTrigger
                                 value="ai"
                                 icon={<AIIcon size={31} className="w-31 h-31" />}
@@ -732,107 +766,107 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
                                 active={activeTab === "ai"}
                               />
                             )} */}
-                          </TabsList>
-                        </Tabs>
-                      </div>
+                    </TabsList>
+                  </Tabs>
+                </div>
 
-                      {/* Content */}
-                      <div className="flex-1 min-h-0 overflow-hidden relative">
-                        <Tabs value={activeTab} className="h-full flex flex-col">
-                          {isNoteProcessing ? (
-                            <div className="flex flex-col mt-20 h-full overflow-y-auto">
-                              <div className="mx-auto my-10 flex flex-col items-center">
-                                <AIIcon
-                                  hideStar
-                                  className="h-10 w-10 animate-spin-slow "
-                                />
-                                <p
-                                  className="text-xl mt-5"
-                                  style={{
-                                    backgroundImage:
-                                      "linear-gradient(to right, #71717a, #e4e4e7, #71717a)",
-                                    backgroundSize: "200% auto",
-                                    backgroundClip: "text",
-                                    WebkitBackgroundClip: "text",
-                                    color: "transparent",
-                                    animation: "gradient-flow-text 4s linear infinite",
-                                  }}
-                                >
-                                  {t("Processing")}
-                                </p>
+                {/* Content */}
+                <div className="flex-1 min-h-0 overflow-hidden relative">
+                  <Tabs value={activeTab} className="h-full flex flex-col">
+                    {isNoteProcessing ? (
+                      <div className="flex flex-col mt-20 h-full overflow-y-auto">
+                        <div className="mx-auto my-10 flex flex-col items-center">
+                          <AIIcon
+                            hideStar
+                            className="h-10 w-10 animate-spin-slow "
+                          />
+                          <p
+                            className="text-xl mt-5"
+                            style={{
+                              backgroundImage:
+                                "linear-gradient(to right, #71717a, #e4e4e7, #71717a)",
+                              backgroundSize: "200% auto",
+                              backgroundClip: "text",
+                              WebkitBackgroundClip: "text",
+                              color: "transparent",
+                              animation:
+                                "gradient-flow-text 4s linear infinite",
+                            }}
+                          >
+                            {t("Processing")}
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <TabsContent
+                          value="overview"
+                          className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
+                        >
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="prose prose-zinc dark:prose-invert max-w-none pb-20"
+                          >
+                            {note?.processing_error_message ? (
+                              <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 font-medium">
+                                {note.processing_error_message}
                               </div>
-                            </div>
-                          ) : (
-                            <>
-                              <TabsContent
-                                value="overview"
-                                className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
+                            ) : (
+                              <MarkdownView
+                                onExplain={(text) =>
+                                  handleMarkdownAction(text, "explain")
+                                }
+                                onQuiz={(text) =>
+                                  handleMarkdownAction(text, "quiz")
+                                }
                               >
-                                <motion.div
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  className="prose prose-zinc dark:prose-invert max-w-none pb-20"
-                                >
-                                  {note?.processing_error_message ? (
-                                    <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 font-medium">
-                                      {note.processing_error_message}
-                                    </div>
-                                  ) : (
-                                    <MarkdownView
-                                      onExplain={(text) =>
-                                        handleMarkdownAction(text, "explain")
-                                      }
-                                      onQuiz={(text) =>
-                                        handleMarkdownAction(text, "quiz")
-                                      }
-                                    >
-                                      {sanitizeMarkdown(note?.md_summary_ai)}
-                                    </MarkdownView>
-                                  )}
-                                </motion.div>
-                              </TabsContent>
+                                {sanitizeMarkdown(note?.md_summary_ai)}
+                              </MarkdownView>
+                            )}
+                          </motion.div>
+                        </TabsContent>
 
-                              <TabsContent
-                                value="transcript"
-                                className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
-                              >
-                                <div className="bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800 pb-20">
-                                  <MarkdownView
-                                    onExplain={(text) =>
-                                      handleMarkdownAction(text, "explain")
-                                    }
-                                    onQuiz={(text) =>
-                                      handleMarkdownAction(text, "quiz")
-                                    }
-                                  >
-                                    {note?.transcript}
-                                  </MarkdownView>
-                                </div>
-                              </TabsContent>
+                        <TabsContent
+                          value="transcript"
+                          className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
+                        >
+                          <div className="bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800 pb-20">
+                            <MarkdownView
+                              onExplain={(text) =>
+                                handleMarkdownAction(text, "explain")
+                              }
+                              onQuiz={(text) =>
+                                handleMarkdownAction(text, "quiz")
+                              }
+                            >
+                              {note?.transcript}
+                            </MarkdownView>
+                          </div>
+                        </TabsContent>
 
-                              <TabsContent
-                                value="ai"
-                                className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
-                              >
-                                <div className="pb-20">
-                                  <StudyMaterials
-                                    noteId={noteId!}
-                                    noteQuery={noteQueryResponse}
-                                    setIsPolling={setIsPolling}
-                                  />
-                                </div>
-                              </TabsContent>
-                            </>
-                          )}
-                        </Tabs>
-                      </div>
-                    </div>
-     
+                        <TabsContent
+                          value="ai"
+                          className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
+                        >
+                          <div className="pb-20">
+                            <StudyMaterials
+                              noteId={noteId!}
+                              noteQuery={noteQueryResponse}
+                              setIsPolling={setIsPolling}
+                            />
+                          </div>
+                        </TabsContent>
+                      </>
+                    )}
+                  </Tabs>
+                </div>
               </div>
             </div>
+          </div>
         </div>
-            
-           {/* 🟢 FLOATING "OPEN CHAT" BUTTON (Docks to the right edge) */}
+
+        {/* 🟢 FLOATING "OPEN CHAT" BUTTON (Docks to the right edge) */}
         {/* 🟢 FLOATING "OPEN AI TOOLS" BUTTON (Horizontal, docked to the right) */}
         <AnimatePresence>
           {!isChatSidebarOpen && (
@@ -857,79 +891,91 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
               </div>
             </motion.button>
           )}
-        </AnimatePresence>        
-        
+        </AnimatePresence>
 
-        {/* --- MOBILE OVERLAY (For small screens) --- */}
-            <AnimatePresence>
+        <AnimatePresence>
           {isChatSidebarOpen && (
             <>
-             <div className="cursor-pointer h-[30px] w-[30px] flex items-center justify-center bg-white dark:bg-zinc-900" onClick={() => setIsChatSidebarOpen(false)}  >
-                <X  className="text-zinc-400" onClick={() => setIsChatSidebarOpen(false)} />
-            </div>
-            <motion.div 
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 500, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              className="hidden md:flex flex-col border-l border-zinc-200/50 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 overflow-hidden z-40 shrink-0 h-full"
-            >
-               
-              <div className="w-[500px] flex flex-col h-full bg-white dark:bg-zinc-950">
-                <Tabs value={sidebarActiveTab} onValueChange={setSidebarActiveTab} className="flex flex-col h-full bg-transparent">
-                  
-                  {/* Tabs Header (Identical to Overview/Transcript styling) */}
-                  <div className="flex-none px-6 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950 h-[61px]">
-                    <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 w-full justify-start overflow-x-auto no-scrollbar">
-                      <StudioTabTrigger
-                        value="chat"
-                        icon={<MessageSquare size={14} />}
-                        label={t("AI Chat")}
-                        active={sidebarActiveTab === "chat"}
-                      />
-                      {!note?.processing_error_message && (
-                        <StudioTabTrigger
-                          value="ai"
-                          icon={<AIIcon size={31} className="w-31 h-31" />}
-                          label={t("AI Tools")}
-                          active={sidebarActiveTab === "ai"}
-                        />
-                      )}
-                    </TabsList>
-                  </div>
-                  
-                  {/* Tab Content Area */}
-                  <div className="flex-1 min-h-0 overflow-hidden relative">
-                    <TabsContent value="chat" className="h-full flex flex-col mt-0 p-0 focus-visible:ring-0 overflow-hidden">
-                      <ChatInterface
-                        noteName={note?.name}
-                        noteId={noteId!}
-                        pendingAction={pendingAiAction}
-                        onActionComplete={() => setPendingAiAction(null)}
-                      />
-                    </TabsContent>
-                      {!note?.processing_error_message && (
-                            <TabsContent value="ai" className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0">
-                            <div className="pb-20">
-                                <StudyMaterials
-                                noteId={noteId!}
-                                noteQuery={noteQueryResponse}
-                                setIsPolling={setIsPolling}
-                                />
-                            </div>
-                            </TabsContent>
-                      )}
-                  </div>
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 500, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                className="hidden md:flex flex-col border-l border-zinc-200/50 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 overflow-hidden z-40 shrink-0 h-full"
+              >
+                <div className="w-[500px] flex flex-col h-full bg-white dark:bg-zinc-950">
+                  <Tabs
+                    value={sidebarActiveTab}
+                    onValueChange={setSidebarActiveTab}
+                    className="flex flex-col h-full bg-transparent"
+                  >
+                    {/* Tabs Header (Identical to Overview/Transcript styling) */}
+                    {/* Tabs Header (Close Button + Centered Tabs) */}
+                    <div className="flex-none px-4 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950 h-[61px] flex items-center justify-between">
+                      {/* 🟢 LEFT: The Close Button */}
+                      <button
+                        onClick={() => setIsChatSidebarOpen(false)}
+                        className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors shrink-0 outline-none cursor-pointer"
+                      >
+                        <X size={16} className="text-zinc-400" />
+                      </button>
 
-                </Tabs>
-              </div>
-            </motion.div>
+                      {/* 🟢 CENTER: The Tabs */}
+                      <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 mx-auto flex shrink-0">
+                        <StudioTabTrigger
+                          value="chat"
+                          icon={<MessageSquare size={14} />}
+                          label={t("AI Chat")}
+                          active={sidebarActiveTab === "chat"}
+                        />
+                        {!note?.processing_error_message && (
+                          <StudioTabTrigger
+                            value="ai"
+                            icon={<AIIcon size={31} className="w-31 h-31" />}
+                            label={t("AI Tools")}
+                            active={sidebarActiveTab === "ai"}
+                          />
+                        )}
+                      </TabsList>
+
+                      {/* 🟢 RIGHT: Invisible Spacer (Keeps the tabs perfectly centered) */}
+                      <div className="w-[70px] shrink-0" aria-hidden="true" />
+                    </div>
+
+                    {/* Tab Content Area */}
+                    <div className="flex-1 min-h-0 overflow-hidden relative">
+                      <TabsContent
+                        value="chat"
+                        className="h-full flex flex-col mt-0 p-0 focus-visible:ring-0 overflow-hidden"
+                      >
+                        <ChatInterface
+                          noteName={note?.name}
+                          noteId={noteId!}
+                          pendingAction={pendingAiAction}
+                          onActionComplete={() => setPendingAiAction(null)}
+                        />
+                      </TabsContent>
+                      {!note?.processing_error_message && (
+                        <TabsContent
+                          value="ai"
+                          className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
+                        >
+                          <div className="pb-20">
+                            <StudyMaterials
+                              noteId={noteId!}
+                              noteQuery={noteQueryResponse}
+                              setIsPolling={setIsPolling}
+                            />
+                          </div>
+                        </TabsContent>
+                      )}
+                    </div>
+                  </Tabs>
+                </div>
+              </motion.div>
             </>
           )}
         </AnimatePresence>
-
-        
-
       </div>
 
       {/* Dialogs & Styles */}
@@ -946,7 +992,6 @@ const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: S
           __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow-text { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `,
         }}
       />
-
     </>
   );
 };
