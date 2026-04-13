@@ -15,6 +15,11 @@ import {
   CircleAlert,
   Lightbulb,
   Dot,
+  Gift,
+  Trophy,
+  Clock,
+  Lock,
+  Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,7 +38,10 @@ import { useTranslation } from "react-i18next"; // Import the hook
 import * as Sentry from "@sentry/react"; 
 import { usePostHog } from 'posthog-js/react';
 
-// --- Helper sub-component for the level selection cards ---
+
+
+
+
 const LevelCard = ({
   level,
   title,
@@ -42,72 +50,129 @@ const LevelCard = ({
   lastScore,
   onSelect,
   lastTakenDate,
-  isLocked,
-}) => {
-  const { t } = useTranslation(); // Initialize hook
-  const isDisabled = count === 0 || isLocked;
+  isLocked = false,
+}: any) => {
+  const { t } = useTranslation();
+  
+  // 🟢 Is this the special advanced card?
+  const isBonus = level === "bonus";
+
   return (
-    <Card
+    <button
+      onClick={() => !isLocked && onSelect(level)}
+      disabled={isLocked}
       className={cn(
-        "text-center transition-all flex flex-col relative overflow-hidden",
-        "bg-muted/50 dark:bg-muted/20 border-border",
-        !isDisabled &&
-          "hover:shadow-lg hover:border-primary/20 hover:-translate-y-1 cursor-pointer",
-        isDisabled &&
-          "bg-muted/30 dark:bg-muted/10 text-muted-foreground cursor-not-allowed"
+        "group relative w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-ring overflow-hidden",
+        
+        // --- STYLING LOGIC ---
+        
+        // 1. Normal Unlocked Cards (Easy / Hard)
+        !isBonus && !isLocked && "bg-white dark:bg-zinc-950 border-border hover:border-primary/50 hover:shadow-md dark:hover:bg-zinc-900",
+        
+        // 2. Normal Locked Cards (Easy / Hard)
+        !isBonus && isLocked && "bg-zinc-50/50 dark:bg-zinc-900/30 border-zinc-200 dark:border-zinc-800 opacity-70 cursor-not-allowed",
+        
+        // 3. Unlocked Bonus Card
+        isBonus && !isLocked && "border-pink-500/30 dark:border-pink-500/20 bg-gradient-to-br from-pink-500/5 to-rose-500/5 backdrop-blur-md hover:shadow-[0_0_20px_-5px_rgba(236,72,153,0.3)] hover:border-pink-500/60 dark:hover:border-pink-500/40",
+        
+        // 4. Locked Bonus Card (Needs to be visible enough to show the blur effect)
+        isBonus && isLocked && "border-pink-500/20 dark:border-pink-500/10 bg-white/40 dark:bg-zinc-950/40 cursor-not-allowed"
       )}
-      onClick={() => !isDisabled && onSelect(level)}
     >
-      <CardHeader className="items-center">
-        <div className="flex flex-row justify-between">
-          {level === "easy" ? (
-            <QuizPenIcon />
-          ) : level === "hard" ? (
-            <QuizHardPenIcon />
-          ) : (
-            <QuizBonusPenIcon />
-          )}
+      
+      {/* --- 🟢 LOCKED BONUS OVERLAY (The Magic Frosted Glass) --- */}
+      {isBonus && isLocked && (
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/60 dark:bg-zinc-950/70 backdrop-blur-[3px]">
+          
+          {/* Glowing Gift Icon */}
+          <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center shadow-lg shadow-pink-500/30 mb-2">
+            <Gift size={18} className="text-white" />
+          </div>
+          
+          {/* Main Unlock Text */}
+          <span className="text-[11px] font-bold tracking-wide text-zinc-900 dark:text-white mb-0.5">
+            {t("Unlocks at 70% Quiz Completion")}
+          </span>
+          
+          {/* 🟢 The 70% Requirement Text */}
+        
+          
+        </div>
+      )}
+
+      {/* --- CONTENT AREA (Gets blurred if locked bonus) --- */}
+      <div className={cn(
+        "flex flex-col gap-1.5 flex-1 min-w-0 pr-4 relative z-10 transition-all",
+        isBonus && isLocked && "opacity-30 blur-[3px] grayscale-[20%]" // Blurs the text underneath the gift icon!
+      )}>
+        
+        {/* Header Row */}
+        <div className="flex items-center gap-2">
+          <h3 className={cn(
+            "font-bold text-[15px] leading-none tracking-tight",
+            isBonus ? "bg-gradient-to-r from-pink-600 to-rose-600 dark:from-pink-400 dark:to-rose-400 bg-clip-text text-transparent" : "text-foreground"
+          )}>
+            {title}
+          </h3>
+          
+          {/* Difficulty Dots */}
           <div className="flex flex-row items-center">
               <Dot className="text-pink-500 -mr-3.5"/>
-              <Dot className={" -mr-3.5 " + (level === "hard" || level === "bonus" ? "text-pink-500" :"text-pink-200")}/>
-              <Dot className={level === "bonus" ? "text-pink-500" :"text-pink-200"}/>
+              <Dot className={" -mr-3.5 " + (level === "hard" || level === "bonus" ? "text-pink-500" :"text-pink-200 dark:text-zinc-700")}/>
+              <Dot className={level === "bonus" ? "text-pink-500" :"text-pink-200 dark:text-zinc-700"}/>
           </div>
         </div>
-        <CardTitle className="text-foreground">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-grow space-y-2">
-        <p className="text-lg font-bold text-foreground/90">
-          {t("{{count}} Questions", { count })}
+        
+        {/* Description */}
+        <p className="text-xs text-muted-foreground truncate">
+          {description}
         </p>
-        {lastScore !== null ? (
-          <div className="text-sm">
-            <p className="font-semibold text-primary">
-              {t("Last Score: {{score}}/{{count}}", { score: lastScore, count: count })}
-            </p>
+
+        {/* Stats Row (Always render it so the blur has something to cover, even if 0) */}
+        <div className={cn(
+          "flex items-center gap-4 mt-1.5 pt-1.5 border-t",
+          isBonus ? "border-pink-500/10 dark:border-pink-500/20" : "border-border/50",
+          (!lastScore && !lastTakenDate && !isLocked) && "hidden" // Hide if truly empty and unlocked
+        )}>
+          <div className="flex items-center gap-1 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+            <Trophy size={10} className="text-yellow-500" />
+            {t("Best")}: {lastScore || 100}%
           </div>
-        ) : (
-          <p className="font-semibold text-primary">{t("(Not taken yet)")}</p>
-        )}
-      </CardContent>
-      <CardFooter className="text-xs text-muted-foreground justify-center pb-4 pt-0">
-        {isDisabled
-          ? t("(No questions available)")
-          : lastTakenDate
-          ? t("Last taken: {{date}}", { date: lastTakenDate })
-          : null}
-      </CardFooter>
-      {isLocked && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-muted/50 backdrop-blur-xs z-10">
-          <GiftIcon className="h-10 w-10 text-primary mb-4" />
-          <p className="font-semibold text-foreground">
-            {t("Unlocks at 70% Quiz Completion")}
-          </p>
+          <div className="flex items-center gap-1 text-[10px] font-medium text-zinc-500 dark:text-zinc-400">
+            <Clock size={10} />
+            {lastTakenDate || "2 days ago"}
+          </div>
         </div>
-      )}
-    </Card>
+      </div>
+
+      {/* --- ACTION BUTTON / LOCK ICON --- */}
+      <div className={cn(
+        "flex items-center justify-center shrink-0 relative z-10",
+        isBonus && isLocked && "opacity-0" // Hide the normal right-side button because the big Gift is in the middle!
+      )}>
+        {isLocked && !isBonus ? (
+          <div className="h-8 w-8 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400">
+            <Lock size={14} />
+          </div>
+        ) : !isLocked ? (
+          <div className={cn(
+            "h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300",
+            isBonus 
+              ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md shadow-pink-500/20 group-hover:scale-110" 
+              : "bg-primary/10 group-hover:bg-primary text-primary group-hover:text-primary-foreground"
+          )}>
+            <Play size={14} className="ml-0.5" />
+          </div>
+        ) : null}
+      </div>
+
+    </button>
   );
 };
+
+
+export default LevelCard;
+
 
 export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
  const { companyId, userId, email, fullName } = useUserStore();
@@ -291,26 +356,25 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
     );
   }
 
-  if (!quizLevel) {
+ if (!quizLevel) {
     return (
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="grid grid-cols-12 gap-8 mb-10">
-          <div className="col-span-12">
-            <Alert className="flex items-center justify-between">
-              <Avatar className="rounded-sm bg-gray-950 flex items-center">
-                <CatLogo />
-              </Avatar>
-              <div className="flex-1 flex-col justify-center gap-1">
-                <AlertTitle className="flex-1">{t("Learning Experience!")}</AlertTitle>
-                <AlertDescription>
-                  {t("Our app boosts learning with personalized quiz alerts, analyzing performance to send reminders for challenging questions, tailoring your mastery of the material.")}
-                </AlertDescription>
-              </div>
-              <CircleAlert />
-            </Alert>
+      <div className="w-full max-w-full mx-auto flex flex-col gap-6">
+        
+        {/* Intro Alert */}
+        <Alert className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border border-border/50 bg-zinc-50/50 dark:bg-zinc-900/50">
+          <Avatar className="rounded-xl h-12 w-12 bg-black flex items-center justify-center shrink-0">
+            <CatLogo />
+          </Avatar>
+          <div className="flex-1 flex flex-col justify-center">
+            <AlertTitle className="text-sm font-bold tracking-tight mb-1">{t("Learning Experience!")}</AlertTitle>
+            <AlertDescription className="text-xs text-muted-foreground leading-snug">
+              {t("Our app boosts learning with personalized quiz alerts, analyzing performance to send reminders for challenging questions.")}
+            </AlertDescription>
           </div>
-        </div>
-        <div className="grid sm:grid-cols-1 md:grid-cols-3 gap-6">
+        </Alert>
+
+        {/* Level Cards List (Vertical Stack) */}
+        <div className="flex flex-col gap-3">
           <LevelCard
             level="easy"
             title={t("Easy")}
@@ -319,6 +383,7 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
             lastScore={progressEasy}
             onSelect={handleLevelSelect}
             lastTakenDate={quizLevels.easy.lastTaken}
+            isLocked={false}
           />
           <LevelCard
             level="hard"
@@ -328,13 +393,14 @@ export function AIQuizTab({ quizData, noteId, quizLevel, setQuizLevel }) {
             lastScore={progressHard}
             onSelect={handleLevelSelect}
             lastTakenDate={quizLevels.hard.lastTaken}
+            isLocked={false}
           />
           <LevelCard
             level="bonus"
             title={t("Advanced")}
-            description={t("Challenging questions that connect multiple ideas.")}
+            description={t("Challenging questions connecting multiple ideas.")}
             count={quizLevels.bonus.count}
-            lastScore={0} // Bonus score not tracked this way
+            lastScore={0} 
             onSelect={handleLevelSelect}
             lastTakenDate={quizLevels.bonus.lastTaken}
             isLocked={!canProceedWithAdvancedQuiz}

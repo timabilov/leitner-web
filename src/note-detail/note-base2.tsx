@@ -893,87 +893,90 @@ const NoteDetailBase = () => {
           )}
         </AnimatePresence>
 
+        {/* --- RIGHT COLUMN: CHAT SIDEBAR (Desktop & Mobile Unified) --- */}
         <AnimatePresence>
           {isChatSidebarOpen && (
-            <>
-              <motion.div
-                initial={{ width: 0, opacity: 0 }}
-                animate={{ width: 500, opacity: 1 }}
-                exit={{ width: 0, opacity: 0 }}
-                transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-                className="hidden md:flex flex-col border-l border-zinc-200/50 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 overflow-hidden z-40 shrink-0 h-full"
-              >
-                <div className="w-[500px] flex flex-col h-full bg-white dark:bg-zinc-950">
-                  <Tabs
-                    value={sidebarActiveTab}
-                    onValueChange={setSidebarActiveTab}
-                    className="flex flex-col h-full bg-transparent"
-                  >
-                    {/* Tabs Header (Identical to Overview/Transcript styling) */}
-                    {/* Tabs Header (Close Button + Centered Tabs) */}
-                    <div className="flex-none px-4 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950 h-[61px] flex items-center justify-between">
-                      {/* 🟢 LEFT: The Close Button */}
-                      <button
-                        onClick={() => setIsChatSidebarOpen(false)}
-                        className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors shrink-0 outline-none cursor-pointer"
-                      >
-                        <X size={16} className="text-zinc-400" />
-                      </button>
+            <motion.div
+              // Mobile: start at 100% width | Desktop: start at 0px width
+              initial={{ width: "0px", opacity: 0 }}
+              animate={{ width: typeof window !== "undefined" && window.innerWidth < 768 ? "100%" : 500, opacity: 1 }}
+              exit={{ width: "0px", opacity: 0 }}
+              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              // REMOVED 'hidden md:flex'. Now it shows on all screens.
+              // Added absolute positioning on mobile, and standard flow on desktop
+              className="flex flex-col border-l border-zinc-200/50 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 overflow-hidden z-50 shrink-0 h-full absolute inset-0 md:relative"
+            >
+              {/* Inner wrapper matches the animated width */}
+              <div className="w-full md:w-[500px] flex flex-col h-full bg-white dark:bg-zinc-950">
+                <Tabs
+                  value={sidebarActiveTab}
+                  onValueChange={setSidebarActiveTab}
+                  className="flex flex-col h-full bg-transparent"
+                >
+                  {/* Tabs Header (Close Button + Centered Tabs) */}
+                  <div className="flex-none px-4 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950 h-[61px] flex items-center justify-between">
+                    
+                    {/* 🟢 LEFT: The Close Button */}
+                    <button
+                      onClick={() => setIsChatSidebarOpen(false)}
+                      className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors shrink-0 outline-none cursor-pointer"
+                    >
+                      <X size={16} className="text-zinc-400" />
+                    </button>
 
-                      {/* 🟢 CENTER: The Tabs */}
-                      <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 mx-auto flex shrink-0">
-                        <StudioTabTrigger
-                          value="chat"
-                          icon={<MessageSquare size={14} />}
-                          label={t("AI Chat")}
-                          active={sidebarActiveTab === "chat"}
-                        />
-                        {!note?.processing_error_message && (
-                          <StudioTabTrigger
-                            value="ai"
-                            icon={<AIIcon size={31} className="w-31 h-31" />}
-                            label={t("AI Tools")}
-                            active={sidebarActiveTab === "ai"}
-                          />
-                        )}
-                      </TabsList>
-
-                      {/* 🟢 RIGHT: Invisible Spacer (Keeps the tabs perfectly centered) */}
-                      <div className="w-[70px] shrink-0" aria-hidden="true" />
-                    </div>
-
-                    {/* Tab Content Area */}
-                    <div className="flex-1 min-h-0 overflow-hidden relative">
-                      <TabsContent
+                    {/* 🟢 CENTER: The Tabs */}
+                    <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 mx-auto flex shrink-0">
+                      <StudioTabTrigger
                         value="chat"
-                        className="h-full flex flex-col mt-0 p-0 focus-visible:ring-0 overflow-hidden"
-                      >
-                        <ChatInterface
-                          noteName={note?.name}
-                          noteId={noteId!}
-                          pendingAction={pendingAiAction}
-                          onActionComplete={() => setPendingAiAction(null)}
-                        />
-                      </TabsContent>
+                        icon={<MessageSquare size={14} />}
+                        label={t("AI Chat")}
+                        active={sidebarActiveTab === "chat"}
+                      />
                       {!note?.processing_error_message && (
-                        <TabsContent
+                        <StudioTabTrigger
                           value="ai"
-                          className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
-                        >
-                          <div className="pb-20">
-                            <StudyMaterials
-                              noteId={noteId!}
-                              noteQuery={noteQueryResponse}
-                              setIsPolling={setIsPolling}
-                            />
-                          </div>
-                        </TabsContent>
+                          icon={<AIIcon size={31} className="w-31 h-31" />}
+                          label={t("AI Tools")}
+                          active={sidebarActiveTab === "ai"}
+                        />
                       )}
-                    </div>
-                  </Tabs>
-                </div>
-              </motion.div>
-            </>
+                    </TabsList>
+
+                    {/* 🟢 RIGHT: Invisible Spacer (Keeps the tabs perfectly centered) */}
+                    <div className="w-[40px] shrink-0" aria-hidden="true" />
+                  </div>
+
+                  {/* Tab Content Area */}
+                  <div className="flex-1 min-h-0 overflow-hidden relative">
+                    <TabsContent
+                      value="chat"
+                      className="h-full flex flex-col mt-0 p-0 focus-visible:ring-0 overflow-hidden"
+                    >
+                      <ChatInterface
+                        noteName={note?.name}
+                        noteId={noteId!}
+                        pendingAction={pendingAiAction}
+                        onActionComplete={() => setPendingAiAction(null)}
+                      />
+                    </TabsContent>
+                    {!note?.processing_error_message && (
+                      <TabsContent
+                        value="ai"
+                        className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
+                      >
+                        <div className="pb-20">
+                          <StudyMaterials
+                            noteId={noteId!}
+                            noteQuery={noteQueryResponse}
+                            setIsPolling={setIsPolling}
+                          />
+                        </div>
+                      </TabsContent>
+                    )}
+                  </div>
+                </Tabs>
+              </div>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
