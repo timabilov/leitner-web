@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
 import LiveActivityFeed2 from "@/prices/live-activity-feed2";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 import OnboardingBanner from "./onboarding-banner"; // <-- Your newly created banner!
+import AIChatAnimation from "./ai-chat-animation";
+import LiveSessionAnimation from "./live-session-animation";
+import FifthStepAnimation from "./fourth-step-animation";
 
 
 export const ClaimButton = ({
@@ -109,7 +112,7 @@ const OnboardingModal = ({
   isFinishing,
   isSuccess,
 }: any) => {
-  const TOTAL_STEPS = 4;
+  const TOTAL_STEPS = 6;
   const posthog = usePostHog();
   const [step, setStep] = useState(0);
   const { hasPromo } = useOfferCountdown();
@@ -192,7 +195,7 @@ const OnboardingModal = ({
               <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="relative w-full max-w-[500px] bg-white border border-slate-100 rounded-xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden"
+                className="relative w-full max-w-4xl bg-white border border-slate-100 rounded-xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden"
               >
                 
                 {/* Loading/Success Overlay */}
@@ -249,7 +252,7 @@ const OnboardingModal = ({
                       ))}
                     </div>
                     {
-                      step!== 3 && (
+                      step!== 5 && (
                         <div className="w-full flex justify-center">
                           <OnboardingBanner step={step} hasPromo={hasPromo}/>
                         </div>
@@ -270,11 +273,19 @@ const OnboardingModal = ({
                       className="w-full h-full"
                     >
                       {step === 0 && <FirstStepAnimation t={t} />}
-                      {step === 1 && <SecondStepAnimation t={t} />}
-                      {step === 2 && <ThirdStepAnimation t={t} />}
+                      {step === 2 && <SecondStepAnimation t={t} />}
+                      {step === 1 && <ThirdStepAnimation t={t} />}
+                     
                       {step === 3 && (
-                        <FourthStepAnimation t={t} finishSignup={() => nextStep(true)} hasPromo={hasPromo} />
+                        <AIChatAnimation t={t} />
                       )}
+                       {step === 4 && (
+                        <LiveSessionAnimation t={t}/>
+                      )}
+                       {step === 5 && (
+                        <FifthStepAnimation t={t} finishSignup={() => nextStep(true)} hasPromo={hasPromo} />
+                      )}
+
                     </motion.div>
                   )}
                 </div>

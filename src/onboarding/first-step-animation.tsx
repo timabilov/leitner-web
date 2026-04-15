@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Mic, FileText, Image as ImageIcon, Type, Sparkles, CheckCircle2, Layers, Youtube, MessageCircle } from 'lucide-react';
 
@@ -39,8 +38,8 @@ const Fragment = ({ icon, label, initialPos, delay }: any) => (
     transition={{ duration: 2.8, repeat: Infinity, delay: delay, times: [0, 0.1, 0.8, 1], ease: "easeInOut" }}
     className="absolute z-30 flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-slate-200 shadow-sm"
   >
-    <span className="text-slate-900">{icon}</span>
-    <span className="text-[12px] font-semibold text-slate-900 tracking-tight">{label}</span>
+    <span className="text-muted-foreground-900">{icon}</span>
+    <span className="text-[12px] font-semibold text-muted-foreground-900 tracking-tight">{label}</span>
   </motion.div>
 );
 
@@ -49,16 +48,17 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
     <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 font-sans tracking-tight">
       <BrandGradient />
       
-      <div className="text-center px-4">
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tighter leading-none">
+      <div className="text-center px-4 mb-5">
+        <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-tighter leading-none">
           {t("Everything in One Note")}<br />
-          <span className="relative inline-block text-slate-400 font-semibold text-xl mt-2 tracking-tight">
-            {t("Unified Intelligent Capture")} <AnimatedUnderline />
+          <span className="relative inline-block text-muted-foreground-400 font-semibold text-[14px] mt-5 tracking-tight">
+            {t("Summarize videos, pdf, audios, and images in one place")} 
+            {/* <AnimatedUnderline /> */}
           </span>
         </h2>
       </div>
 
-      <div className="relative w-full h-50 flex items-center justify-center">
+      <div className="relative w-full h-50 flex items-center justify-center mt-5">
         {/* Atmosphere adjusted to brand reddish/pinkish tones */}
         <div 
           className="absolute w-44 h-44 rounded-full blur-3xl" 
@@ -98,22 +98,6 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
         <Fragment icon={<ImageIcon size={15} />} label={t("Photo")} initialPos={{ x: 140, y: 30 }} delay={0.6} />
         <Fragment icon={<Type size={15} />} label={t("Text")} initialPos={{ x: 0, y: 110 }} delay={0.1} />
         <Fragment icon={<MessageCircle size={15} />} label={t("AI Chat")} initialPos={{ x: 0, y: -110 }} delay={0.1} />
-      </div>
-
-      <div className="w-full text-center">
-        <div className="flex flex-col gap-2.5 mb-4">
-          <div className="flex items-center justify-center gap-2 text-slate-500 font-medium text-[13px] tracking-tight">
-            <CheckCircle2 size={15} className="text-slate-900" />{t("Summarize YouTube and Lectures")}
-          </div>
-          <div className="flex items-center justify-center gap-2 text-slate-500 font-medium text-[13px] tracking-tight">
-            <CheckCircle2 size={15} className="text-slate-900" />{t("One workspace, six ways to learn")}
-          </div>
-        </div>
-        
-        <h3 className="text-xl font-bold text-slate-900 tracking-tighter">
-          {t("Stop switching apps.")}<br />
-          <span className="text-slate-400 font-semibold text-lg tracking-tight">{t("One Note holds it all.")}</span>
-        </h3>
       </div>
     </div>
   );

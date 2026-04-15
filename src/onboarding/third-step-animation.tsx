@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, RefreshCw, Check } from 'lucide-react';
-
-const AnimatedUnderline = ({ color = "#e2e8f0" }: { color?: string }) => (
-  <motion.svg className="absolute -bottom-1 left-0 w-full h-2 pointer-events-none" viewBox="0 0 100 10" preserveAspectRatio="none">
-    <motion.path d="M 0 5 Q 25 2, 50 5 Q 75 8, 100 5" fill="transparent" stroke={color} strokeWidth="2.5" strokeLinecap="round" 
-      initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ delay: 0.8, duration: 0.8 }} />
-  </motion.svg>
-);
+import { Check } from 'lucide-react';
 
 const ThirdStepAnimation = ({ t }: { t: any }) => {
   const [phase, setPhase] = useState(0);
@@ -16,7 +9,7 @@ const ThirdStepAnimation = ({ t }: { t: any }) => {
     // Cycle: Flashcard Front -> Back -> Swap -> Quiz -> Answer -> Swap
     const timer = setInterval(() => {
       setPhase((prev) => (prev + 1) % 5);
-    }, 1500); 
+    }, 2000); // Slightly slower so they can read the text
     return () => clearInterval(timer);
   }, []);
 
@@ -44,10 +37,10 @@ const ThirdStepAnimation = ({ t }: { t: any }) => {
       
       {/* 1. HEADER */}
       <div className="text-center px-4 mt-4">
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tighter leading-none">
-          {t("Knowledge")}<br />
-          <span className="relative inline-block text-slate-400 font-semibold text-xl mt-2 tracking-tight">
-            {t("Supercharged")} <AnimatedUnderline />
+        <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-tighter leading-none">
+          {t("Quizzes and flashcards")}<br />
+          <span className="relative inline-block text-muted-foreground-400 font-semibold text-[14px] mt-5 mb-5 tracking-tight">
+            {t("Turn passive notes into active practice")} 
           </span>
         </h2>
       </div>
@@ -67,42 +60,43 @@ const ThirdStepAnimation = ({ t }: { t: any }) => {
           style={{ transformStyle: "preserve-3d" }}
         >
           <motion.div
-            className="w-full h-full relative"
+            className="w-full h-full relative shadow-xl rounded-xl"
             animate={{ rotateY: isFlashcardFlipped ? 180 : 0 }}
-            transition={{ duration: 0.5, type: "spring", stiffness: 260, damping: 20 }}
+            transition={{ duration: 0.6, type: "spring", stiffness: 260, damping: 20 }}
             style={{ transformStyle: "preserve-3d" }}
           >
             {/* FRONT (Question) */}
-            <div className="absolute inset-0 backface-hidden bg-white border border-slate-200 rounded-xl shadow-lg flex flex-col justify-between overflow-hidden">
+            <div className="absolute inset-0 backface-hidden bg-white border border-slate-200 rounded-xl flex flex-col justify-between overflow-hidden">
               <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                <p className="font-semibold text-slate-900 text-xs">{t("Question")}</p>
+                <p className="font-semibold text-muted-foreground-900 text-xs">{t("Question")}</p>
               </div>
-              <div className="flex-1 flex items-center justify-center p-4">
-                <div className="space-y-2 w-full flex flex-col items-center">
-                   <div className="h-2 w-3/4 bg-slate-200 rounded-full" />
-                   <div className="h-2 w-1/2 bg-slate-200 rounded-full" />
-                </div>
+              <div className="flex-1 flex items-center justify-center p-5 text-center">
+                <p className="text-sm font-bold text-muted-foreground-800 leading-snug">
+                  {t("What was the primary trigger for the start of World War I?")}
+                </p>
               </div>
               <div className="px-4 py-3 border-t border-slate-100 bg-slate-50/50 text-right">
-                <p className="text-[9px] text-slate-400">{t("Click to reveal")}</p>
+                <p className="text-[9px] text-muted-foreground-400 font-medium">{t("Click to reveal")}</p>
               </div>
             </div>
 
             {/* BACK (Answer) */}
             <div 
-              className="absolute inset-0 backface-hidden bg-slate-100 border border-slate-200 rounded-xl shadow-lg flex flex-col justify-between overflow-hidden"
+              className="absolute inset-0 backface-hidden bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between overflow-hidden"
               style={{ transform: "rotateY(180deg)" }}
             >
               <div className="px-4 py-3 border-b border-slate-200 bg-slate-200/50">
-                <p className="font-semibold text-green-600 text-xs">{t("Answer")}</p>
+                <p className="font-bold text-green-600 text-xs flex items-center gap-1">
+                   {t("Answer")}
+                </p>
               </div>
-              <div className="flex-1 flex items-center justify-center p-4">
-                 <div className="space-y-2 w-full flex flex-col items-center">
-                   <div className="h-2 w-2/3 bg-green-200 rounded-full" />
-                </div>
+              <div className="flex-1 flex items-center justify-center p-5 text-center">
+                <p className="text-[13px] font-medium text-muted-foreground-700 leading-relaxed">
+                  {t("The assassination of Archduke Franz Ferdinand of Austria in June 1914.")}
+                </p>
               </div>
               <div className="px-4 py-3 border-t border-slate-200 bg-slate-200/50 text-right">
-                <p className="text-[9px] text-slate-500">{t("Click to hide")}</p>
+                <p className="text-[9px] text-muted-foreground-500 font-medium">{t("Click to hide")}</p>
               </div>
             </div>
           </motion.div>
@@ -113,69 +107,45 @@ const ThirdStepAnimation = ({ t }: { t: any }) => {
           custom={-60}
           variants={cardVariants}
           animate={!isFlashcardActive ? "active" : "inactive"}
-          className="absolute w-64 h-52 bg-white border border-slate-200 rounded-xl shadow-lg p-4 flex flex-col"
+          className="absolute w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-4 flex flex-col"
         >
           <div className="mb-4">
-             <div className="h-3 w-1/2 bg-slate-800 rounded-full mb-2" />
-             <div className="h-2 w-full bg-slate-100 rounded-full" />
+             <p className="text-xs font-bold text-muted-foreground-800 mb-1">{t("Question 1 of 10")}</p>
+             <p className="text-sm font-semibold text-muted-foreground-700 leading-snug">
+               {t("Which event directly triggered World War I?")}
+             </p>
           </div>
 
           <div className="space-y-2">
-            {/* Option A (Correct Answer Style) */}
+            
+            {/* Option A */}
+            <div className="w-full p-2.5 px-3 border border-slate-200 rounded-lg opacity-60 bg-slate-50">
+               <p className="text-xs font-medium text-muted-foreground-600">{t("The sinking of the Lusitania")}</p>
+            </div>
+
+            {/* Option B (Correct Answer Style) */}
             <motion.div 
               animate={{ 
-                backgroundColor: isQuizCorrect ? "#dcfce7" : "transparent",
+                backgroundColor: isQuizCorrect ? "#dcfce7" : "#f8fafc",
                 borderColor: isQuizCorrect ? "#22c55e" : "#e2e8f0",
-                color: isQuizCorrect ? "#166534" : "inherit"
+                color: isQuizCorrect ? "#166534" : "#475569"
               }}
-              className="w-full p-3 border rounded-lg flex items-center justify-between transition-all duration-300 relative overflow-hidden"
-              style={{ borderWidth: isQuizCorrect ? '2px' : '1px' }}
+              className="w-full p-2.5 px-3 border rounded-lg flex items-center justify-between transition-colors duration-300 relative overflow-hidden"
             >
-              <div className="flex items-center gap-2">
-                 <div className="w-16 h-2 bg-current opacity-30 rounded-full" />
-              </div>
+              <p className="text-xs font-medium relative z-10 pr-6">
+                {t("Assassination of Archduke Franz Ferdinand")}
+              </p>
+              
               {isQuizCorrect && (
-                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                    <Check className="h-3.5 w-3.5" />
+                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute right-3 z-10">
+                    <Check className="h-4 w-4 text-green-600" />
                  </motion.div>
               )}
             </motion.div>
-
-            {/* Option B */}
-            <div className="w-full p-3 border border-slate-200 rounded-lg opacity-60">
-               <div className="w-12 h-2 bg-slate-200 rounded-full" />
-            </div>
-
-             {/* Option C */}
-             <div className="w-full p-3 border border-slate-200 rounded-lg opacity-60">
-               <div className="w-14 h-2 bg-slate-200 rounded-full" />
-            </div>
+            
           </div>
         </motion.div>
-
       </div>
-
-      {/* 3. FOOTER */}
-      <div className="w-full px-8 text-center pb-2">
-        <div className="flex flex-col gap-2 mb-4">
-          <div className="flex items-center justify-center gap-2 text-slate-500 font-medium text-[13px] tracking-tight">
-            <CheckCircle2 size={15} className="text-slate-900" />
-            {t("Turn passive notes into active practice")}
-          </div>
-          <div className="flex items-center justify-center gap-2 text-slate-500 font-medium text-[13px] tracking-tight">
-            <CheckCircle2 size={15} className="text-slate-900" />
-            {t("Master concepts through smart repetition")}
-          </div>
-        </div>
-        
-        <h3 className="text-xl font-bold text-slate-900 tracking-tighter leading-none">
-          {t("Study half the time.")}<br />
-          <span className="text-slate-400 font-semibold text-lg mt-1 inline-block tracking-tight">
-            {t("Remember forever.")}
-          </span>
-        </h3>
-      </div>
-
       <style dangerouslySetInnerHTML={{ __html: `
         .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
       `}} />

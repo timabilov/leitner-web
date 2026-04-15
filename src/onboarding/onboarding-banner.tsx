@@ -88,7 +88,7 @@ const OnboardingBanner = ({ className, step, hasPromo }: { className: string; st
           }
         `}
       </style>
-    <div className={`relative justify-between group w-full mx-auto overflow-hidden rounded-xl p-[1px] shadow-lg shadow-pink-500/10 fade-in animate-in slide-in-from-top-4 duration-700 z-[100] ${className} `}>
+    <div className={`relative justify-between group w-full mx-auto overflow-hidden rounded-xl p-[1px]  fade-in animate-in slide-in-from-top-4 duration-700 z-[100] ${className} `}>
       
       {/* Animated Glowing Border */}
       <span 
@@ -121,9 +121,9 @@ const OnboardingBanner = ({ className, step, hasPromo }: { className: string; st
               )}
               {
                 hasPromo && (
-                  <div className="flex items-center gap-1.5 bg-slate-50/80 border border-slate-100 px-3 py-1.5 rounded-full shadow-sm">
+                  <div className="flex items-center gap-1.5 bg-slate-50/80 border border-muted-foreground-100 px-3 py-1.5 rounded-full">
                     <Timer className="size-3.5 text-pink-500 animate-wiggle" />
-                    <span className="font-mono text-[13px] font-bold text-slate-700 tabular-nums tracking-tight">
+                    <span className="text-[13px] tracking-wide font-bold text-muted-foreground-700 tabular-nums ">
                       {format(timeLeft.d)}d:{format(timeLeft.h)}h:{format(timeLeft.m)}m:{format(timeLeft.s)}s
                     </span>
                   </div>
