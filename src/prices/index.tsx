@@ -1,5 +1,20 @@
 import { useEffect, useState } from "react";
-import { Check, Loader2, Star, ShieldCheck, Zap, Globe, Wallet } from "lucide-react";
+import {
+  Check,
+  Loader2,
+  Star,
+  ShieldCheck,
+  Zap,
+  Globe,
+  Wallet,
+  Music,
+  Bookmark,
+  Share2,
+  MessagesSquare,
+  MessageCircle,
+  Heart,
+  ChevronRight,
+} from "lucide-react";
 import { initializePaddle } from "@paddle/paddle-js";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -30,33 +45,57 @@ const INTERVAL_TO_PLAN: Record<string, "weekly" | "monthly" | "annual"> = {
   year: "annual",
 };
 
-const userImages =[user1, user2, user3, user4, user5];
+const userImages = [user1, user2, user3, user4, user5];
 
 const fetchSubscription = async () => {
   const res = await axiosInstance.get(`${API_BASE_URL}/subscription/get`);
   return res.data;
 };
 
+const TimeUnit = ({ value, label }: { value: string | number; label: string }) => (
+  <div className="flex flex-col items-center min-w-[32px]">
+    <span className="text-lg md:text-xl font-bold tracking-tighter tabular-nums animate-pulse-subtle">
+      {value.toString().padStart(2, '0')}
+    </span>
+    <span className="text-[9px] uppercase font-bold text-zinc-500 -mt-1">{label}</span>
+  </div>
+);
+
 // --- COMPONENT: Trust & Organic Data (Bottom Section) ---
 export const TrustStats = () => {
   const { t } = useTranslation();
-  
-  const stats =[
-    { icon: ShieldCheck, text: "Bank-level security", sub: "256-bit encryption" },
+
+  const stats = [
+    {
+      icon: ShieldCheck,
+      text: "Bank-level security",
+      sub: "256-bit encryption",
+    },
     { icon: Zap, text: "Cancel anytime", sub: "No hidden fees" },
-    { icon: Globe, text: "Global community", sub: "Learners from 120+ countries" },
+    {
+      icon: Globe,
+      text: "Global community",
+      sub: "Learners from 120+ countries",
+    },
   ];
 
   return (
     <div className="w-full grid grid-cols-1 sm:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
       {stats.map((stat, i) => (
-        <div key={i} className="flex items-center gap-3 bg-zinc-100/50 p-3 rounded-xl border border-border/30 backdrop-blur-sm">
+        <div
+          key={i}
+          className="flex items-center gap-3 bg-zinc-100/50 p-3 rounded-xl border border-border/30 backdrop-blur-sm"
+        >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-600 dark:text-zinc-300 group-hover:scale-105 transition-transform duration-300">
             <stat.icon className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-foreground">{t(stat.text)}</span>
-            <span className="text-[11px] text-muted-foreground">{t(stat.sub)}</span>
+            <span className="text-sm font-bold text-foreground">
+              {t(stat.text)}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {t(stat.sub)}
+            </span>
           </div>
         </div>
       ))}
@@ -70,7 +109,7 @@ export const SocialProof = () => (
     <div className="flex flex-wrap justify-center items-center gap-4 bg-muted/30 p-3 rounded-2xl border border-border/40 backdrop-blur-sm">
       {/* Avatars Stack */}
       <div className="flex -space-x-3">
-       {userImages.map((imgSrc, i) => (
+        {userImages.map((imgSrc, i) => (
           <div
             key={i}
             className="h-8 w-8 overflow-hidden rounded-full border-2 border-background shadow-sm"
@@ -95,14 +134,14 @@ export const SocialProof = () => (
           ))}
         </div>
         <span className="text-[11px] font-medium text-muted-foreground">
-              <Trans
-                i18nKey="trusted_by_students"
-                defaults="Trusted by <bold>20k+</bold> students"
-                components={{
-                  bold: <span className="text-foreground font-bold" />, 
-                }}
-              />
-            </span>
+          <Trans
+            i18nKey="trusted_by_students"
+            defaults="Trusted by <bold>20k+</bold> students"
+            components={{
+              bold: <span className="text-foreground font-bold" />,
+            }}
+          />
+        </span>
       </div>
     </div>
   </div>
@@ -122,7 +161,7 @@ const PricingCard = ({
   claimOffer,
   activePlanKey,
   isCanceling,
-  onManage
+  onManage,
 }: {
   tier: (typeof PRICING_TIERS)[0];
   isSelected: boolean;
@@ -167,9 +206,12 @@ const PricingCard = ({
             {(tier as any).discount}
           </div>
         )}
-        
+
         {/* Content Section */}
-        <div className="flex flex-col gap-4 relative z-10 flex-1" style={{ transform: "translateZ(20px)" }}>
+        <div
+          className="flex flex-col gap-4 relative z-10 flex-1"
+          style={{ transform: "translateZ(20px)" }}
+        >
           <div className="flex flex-col gap-1">
             <div className="flex justify-between items-center gap-2">
               <h3 className="text-lg font-bold leading-none">{t(tier.name)}</h3>
@@ -194,10 +236,13 @@ const PricingCard = ({
               <div className="relative">
                 {/* 🟢 FIXED: Safe math that works for Annual, Monthly, and Weekly */}
                 <span className="text-3xl font-bold tracking-tight">
-                  ${tier.key === "annual" ? (Number(finalOriginal || 0) / 12).toFixed(2) : Number(finalOriginal || 0).toFixed(2)}
+                  $
+                  {tier.key === "annual"
+                    ? (Number(finalOriginal || 0) / 12).toFixed(2)
+                    : Number(finalOriginal || 0).toFixed(2)}
                 </span>
-                <span className="text-md font-bold tracking-tight opacity-70" >{`/${tier.unit}`}</span>
-              
+                <span className="text-md font-bold tracking-tight opacity-70">{`/${tier.unit}`}</span>
+
                 {isSelected && (
                   <svg
                     className="absolute bottom-1 left-0 -z-10 w-full h-[1.5em]"
@@ -220,7 +265,10 @@ const PricingCard = ({
               {finalDefault && Number(finalDefault) > 0 && (
                 <div className="flex flex-col justify-end ml-1">
                   <span className="text-sm font-medium line-through text-foreground decoration-1 opacity-70">
-                    ${tier.key === "annual" ? (Number(finalDefault || 0) / 12).toFixed(2) : Number(finalDefault || 0).toFixed(2)}
+                    $
+                    {tier.key === "annual"
+                      ? (Number(finalDefault || 0) / 12).toFixed(2)
+                      : Number(finalDefault || 0).toFixed(2)}
                   </span>
                 </div>
               )}
@@ -231,7 +279,7 @@ const PricingCard = ({
             </p>
 
             {/* Features Block */}
-            <div className="space-y-3 pt-4 border-t border-border mt-2">
+            {/* <div className="space-y-3 pt-4 border-t border-border mt-2">
               <div className="space-y-3">
                 {tier.features.map((feature, i) => (
                   <div key={i} className="flex items-start gap-3">
@@ -244,7 +292,7 @@ const PricingCard = ({
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -281,7 +329,13 @@ const PricingCard = ({
                   : "bg-background text-slate-900 dark:text-white border-neutral-200 hover:border-neutral-300 hover:bg-slate-50",
             )}
           >
-            {isLoading ? <Loader2 className="animate-spin h-3 w-3" /> : isActivePlan ? t("Manage subscription") : t("Purchase now")}
+            {isLoading ? (
+              <Loader2 className="animate-spin h-3 w-3" />
+            ) : isActivePlan ? (
+              t("Manage subscription")
+            ) : (
+              t("Purchase now")
+            )}
           </button>
         </div>
       </motion.div>
@@ -297,14 +351,46 @@ export default function PricingSection() {
   const [paddle, setPaddle] = useState<any>(null);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string>("pro_monthly");
-  
-  const[prices, setPrices] = useState<Record<string, { current: number; original: number | null }>>({});
-  
-  const { targetDate, hasPromo } = useOfferCountdown();
+
+  const [prices, setPrices] = useState<
+    Record<string, { current: number; original: number | null }>
+  >({});
+
+  const { targetDate, hasPromo, discountPercent } = useOfferCountdown();
   const [searchParams] = useSearchParams();
   const isPromoLink = searchParams.get("sale") === "true";
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const hasActivePlan = subscriptionStatus !== 'free';
+  const hasActivePlan = subscriptionStatus !== "free";
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+
+
+
+
+
+  useEffect(() => {
+    if (!targetDate) return;
+
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = targetDate.getTime() - now;
+
+      if (distance < 0) {
+        clearInterval(timer);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
+      setTimeLeft({
+        days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((distance % (1000 * 60)) / 1000),
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
 
   const { data: subscriptionData, error: subscriptionError } = useQuery({
     queryKey: ["subscription"],
@@ -313,14 +399,18 @@ export default function PricingSection() {
   });
 
   const activePlanKey = subscriptionData?.data?.billing_cycle?.interval
-    ? INTERVAL_TO_PLAN[subscriptionData.data.billing_cycle.interval] ?? null
+    ? (INTERVAL_TO_PLAN[subscriptionData.data.billing_cycle.interval] ?? null)
     : null;
 
-  const isCanceling = subscriptionData?.data?.scheduled_change?.action === "cancel";
+  const isCanceling =
+    subscriptionData?.data?.scheduled_change?.action === "cancel";
 
   useEffect(() => {
     if (subscriptionData) {
-      console.log("[Subscription] Response:", JSON.stringify(subscriptionData, null, 2));
+      console.log(
+        "[Subscription] Response:",
+        JSON.stringify(subscriptionData, null, 2),
+      );
     }
     if (subscriptionError) {
       console.error("[Subscription] Error:", subscriptionError);
@@ -332,32 +422,39 @@ export default function PricingSection() {
   useEffect(() => {
     posthog.capture("pricing_page_viewed", {
       is_promo: isPromoLink,
-      source: "web_app"
+      source: "web_app",
     });
-  },[posthog, isPromoLink]);
+  }, [posthog, isPromoLink]);
 
   // 🟢 Move fetchPrices ABOVE the useEffect that uses it
   const fetchPrices = async (paddleInstance: any) => {
-    const activeTiers = isPromoLink && hasPromo ? PRICING_TIERS_CLAIM : PRICING_TIERS;
+    const activeTiers =
+      isPromoLink && hasPromo ? PRICING_TIERS_CLAIM : PRICING_TIERS;
 
     try {
       const previewPromises = activeTiers.map((tier: any) => {
         return paddleInstance.PricePreview({
-          items:[{ priceId: tier.priceId, quantity: 1 }],
-          discountId: tier.discountId || undefined, 
+          items: [{ priceId: tier.priceId, quantity: 1 }],
+          discountId: tier.discountId || undefined,
         });
       });
 
       const results = await Promise.all(previewPromises);
-      
-      const newPrices: Record<string, { current: number; original: number | null }> = {};
+
+      const newPrices: Record<
+        string,
+        { current: number; original: number | null }
+      > = {};
 
       results.forEach((result: any) => {
-        const item = result.data.details.lineItems[0]; 
-        
-        const currentNum = parseInt(item.formattedTotals.total.replace(/[^0-9]/g, ""), 10) / 100;
-        const subtotalNum = parseInt(item.formattedTotals.subtotal.replace(/[^0-9]/g, ""), 10) / 100;
-        
+        const item = result.data.details.lineItems[0];
+
+        const currentNum =
+          parseInt(item.formattedTotals.total.replace(/[^0-9]/g, ""), 10) / 100;
+        const subtotalNum =
+          parseInt(item.formattedTotals.subtotal.replace(/[^0-9]/g, ""), 10) /
+          100;
+
         newPrices[item.price.id] = {
           current: currentNum,
           original: subtotalNum !== currentNum ? subtotalNum : null,
@@ -365,7 +462,6 @@ export default function PricingSection() {
       });
       console.log("Fetched Prices:", newPrices);
       setPrices(newPrices);
-      
     } catch (error: any) {
       console.error("Price Preview Error", error);
       Sentry.captureException(error);
@@ -386,21 +482,23 @@ export default function PricingSection() {
               console.log("Checkout Completed Event:", event);
               posthog.capture("pricing_checkout_completed", {
                 is_promo: isPromoLink,
-                selected_tier: selectedId
+                selected_tier: selectedId,
               });
               setTimeout(() => {
                 toast.success(t("Payment Successful! Welcome aboard."));
                 queryClient.invalidateQueries({ queryKey: ["subscription"] });
                 queryClient.invalidateQueries({ queryKey: ["me"] });
                 queryClient.invalidateQueries({ queryKey: ["profile"] });
-              }, 2400); 
+              }, 2400);
             } else if (event.name === "checkout.error") {
-                posthog.capture("pricing_checkout_failed", {
-                  is_promo: isPromoLink,
-                  event_name: event.name,
-                  email: email
-                });
-                toast.error(t("There was an issue with payment. Please contact support."));
+              posthog.capture("pricing_checkout_failed", {
+                is_promo: isPromoLink,
+                event_name: event.name,
+                email: email,
+              });
+              toast.error(
+                t("There was an issue with payment. Please contact support."),
+              );
             }
           },
         });
@@ -425,19 +523,19 @@ export default function PricingSection() {
     posthog.capture("pricing_checkout_started", {
       price_id: priceId,
       is_promo: isPromoLink,
-      selected_tier: selectedId
+      selected_tier: selectedId,
     });
 
     setLoadingPriceId(priceId);
 
     try {
       paddle.Checkout.open({
-        items:[{ priceId: priceId, quantity: 1 }],
+        items: [{ priceId: priceId, quantity: 1 }],
         discountId: discountId,
-        customData: { 
-          internal_user_id: userId ? userId.toString() : "", 
-          internal_email: email ? email.toString() : "", 
-          internal_use_promo: isPromoLink ? "true" : "false" 
+        customData: {
+          internal_user_id: userId ? userId.toString() : "",
+          internal_email: email ? email.toString() : "",
+          internal_use_promo: isPromoLink ? "true" : "false",
         },
         settings: {
           displayMode: "overlay",
@@ -454,121 +552,157 @@ export default function PricingSection() {
   };
 
   return (
-    <>
+      <>
       <style>
         {`
-          @keyframes gradient-flow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+          @keyframes marquee-left {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
           }
-          @keyframes draw {
-            from { stroke-dashoffset: 1; }
-            to { stroke-dashoffset: 0; }
+          .animate-marquee-left {
+            animation: marquee-left 40s linear infinite;
+            width: max-content;
           }
-          .animate-draw {
-            stroke-dasharray: 1;
-            stroke-dashoffset: 1;
-            animation: draw 0.8s ease-out forwards;
+          .mask-horizontal {
+            mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
           }
         `}
       </style>
 
-      <div className="relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground">
-         <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 w-full">
-          <div className="flex justify-start w-full flex-col ">
+      {/* 🟢 TOP BANNER: Only shows if hook returns hasPromo and a valid date */}
+     {hasPromo && targetDate && isPromoLink && (
+  <div className="absolute top-0 left-0 right-0 z-[300] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="flex h-14 w-full  items-center justify-between px-4">
+      
+      {/* Left: Branding & Offer Badge */}
+      <div className="flex items-center gap-3">
+        <div className="hidden rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2.5 py-0.5 text-xs font-semibold text-amber-50 sm:block">
+          {discountPercent}% {t("OFF")}
+        </div>
+        <p className="text-sm font-medium tracking-tight">
+          <span className="hidden sm:inline text-muted-foreground">{t("Limited time:")} </span>
+          <span className="text-foreground">{t("Special student pricing is active")}</span>
+        </p>
+      </div>
 
-              <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-                <span className="p-2 rounded-xl">
-                  <Wallet className="text-zinc-800 dark:text-zinc-100" />
-                </span>
-                <span>{t("Select plan")}</span>
-                {hasActivePlan && (
-                  <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
-                    {t("Active")}
-                  </span>
-                )}
-                {hasActivePlan && isCanceling && (
-                  <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-3 py-1 text-xs font-medium text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20">
-                    {t("Canceling")}
-                  </span>
-                )}
-              </h1>
-          </div>
-        </div>
-        
-        {/* --- HEADER --- */}
-        <div className="relative w-full px-6 flex flex-col items-center text-center z-10">
-          {/* --- SPINNING BORDER OFFER --- */}
-          {
-            isPromoLink && hasPromo && (
-              <div className="mx-auto flex justify-center mt-2">
-                <div className="group relative inline-flex overflow-hidden rounded-xl p-[2px] shadow-lg shadow-pink-500/10">
-                  <span className="relative inline-flex h-full w-full items-center justify-center rounded-xl bg-background px-4 py-2 text-sm font-medium text-foreground backdrop-blur-3xl">
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1.5 rounded-full bg-pink-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-pink-500 ring-1 ring-inset ring-pink-500/20">
-                        🔥 {t("Sale")}
-                      </span>
-                      <span className="font-bold text-xs sm:text-sm">{t("Claim offer")}</span>
-                      <span className="h-4 w-px bg-border/60 mx-1" />
-                      {
-                        targetDate &&  <CountdownTimer 
-                          targetDate={targetDate} 
-                          size="md" 
-                        /> 
-                      }
-                    </div>
-                  </span>
-                </div>
-              </div>
-            )
-          }
-          <SocialProof />
-        </div>
-        
-        {/* --- PRICING GRID --- */}
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-3 w-full max-w-4xl px-4 z-20 justify-items-center items-stretch">
-          {(isPromoLink && hasPromo ? PRICING_TIERS_CLAIM : PRICING_TIERS).map((tier) => {
-            
-            // 🟢 FIXED: Extremely safe variable extraction.
-            // If liveData is missing (because Paddle is still loading), it pulls the default original/defaultPrice.
-            const liveData = prices[(tier as any).priceId];
-            
-            const fallbackOriginal = (tier as any).original !== undefined ? (tier as any).original : (tier as any).defaultPrice;
-            const finalOriginal = liveData ? liveData.current : fallbackOriginal;
-            
-            const finalDefault = liveData && liveData.original ? liveData.original : (tier as any).defaultPrice;
-
-            return (
-              <PricingCard
-                key={tier.id}
-                tier={tier}
-                isSelected={selectedId === tier.id}
-                onSelect={() => {
-                  posthog.capture("pricing_plan_selected", { plan_id: tier.id });
-                  setSelectedId(tier.id)
-                }}
-                onCheckout={() => openCheckout((tier as any).priceId, (tier as any).discountId)}
-                isLoading={loadingPriceId === (tier as any).priceId}
-                finalOriginal={finalOriginal}
-                finalDefault={finalDefault}
-                isPromo={isPromoLink && hasPromo}
-                isSpecialAnnual={isPromoLink}
-                claimOffer={(tier as any).claimOffer}
-                activePlanKey={activePlanKey}
-                isCanceling={isCanceling}
-                onManage={() => setSettingsOpen(true)}
-              />
-            );
-          })}
-        </div>
-           
-        <div className="w-full max-w-4xl px-4 mt-10 flex flex-col gap-8 z-10">
-          <TrustStats />
+      {/* Right: Timer & Button */}
+      <div className="flex items-center gap-4 sm:gap-8">
+        {/* Timer */}
+        <div className="flex items-center gap-3 border-l pl-4 sm:gap-4">
+          <TimeUnit value={timeLeft.days} label="days" />
+          <div className="text-muted-foreground/30 font-light">:</div>
+          <TimeUnit value={timeLeft.hours} label="hours" />
+          <div className="text-muted-foreground/30 font-light">:</div>
+          <TimeUnit value={timeLeft.minutes} label="mins" />
+          <div className="text-muted-foreground/30 font-light">:</div>
+          <TimeUnit value={timeLeft.seconds} label="secs" />
         </div>
       </div>
-      
-      <SettingsDialog isOpen={settingsOpen} setIsOpen={setSettingsOpen} defaultTab="subscription" />
+    </div>
+  </div>
+)}
+
+      <div className={
+        cn(
+        "relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground pb-20",
+        hasPromo && targetDate && isPromoLink ? "pt-16" : ""
+        )
+        }>
+        <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 w-full">
+            <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+              <span className="p-2 rounded-xl">
+                <Wallet className="text-zinc-800 dark:text-zinc-100" />
+              </span>
+              <span>{t("Select plan")}</span>
+              {hasActivePlan && (
+                <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
+                  {t("Active")}
+                </span>
+              )}
+            </h1>
+        </div>
+
+        {/* --- PRICING GRID --- */}
+        <div id="pricing-grid" className="grid gap-4 grid-cols-1 md:grid-cols-3 w-full max-w-4xl px-4 z-20 justify-items-center items-stretch mt-6">
+          {(isPromoLink && hasPromo ? PRICING_TIERS_CLAIM : PRICING_TIERS).map((tier) => {
+              const liveData = prices[(tier as any).priceId];
+              return (
+                <PricingCard
+                  key={tier.id}
+                  tier={tier}
+                  isSelected={selectedId === tier.id}
+                  onSelect={() => setSelectedId(tier.id)}
+                  onCheckout={() => openCheckout((tier as any).priceId, (tier as any).discountId)}
+                  isLoading={loadingPriceId === (tier as any).priceId}
+                  finalOriginal={liveData ? liveData.current : (tier as any).defaultPrice}
+                  finalDefault={liveData && liveData.original ? liveData.original : (tier as any).defaultPrice}
+                  isPromo={hasPromo}
+                  isSpecialAnnual={isPromoLink}
+                  activePlanKey={activePlanKey}
+                  isCanceling={isCanceling}
+                  onManage={() => setSettingsOpen(true)}
+                />
+              );
+          })}
+        </div>
+
+        {/* 🟢 TIKTOK VIDEO SLIDER */}
+        <div className="w-full mt-6 flex flex-col items-center">
+          <div className="text-center mb-8 px-4">
+            <h3 className="text-2xl font-bold tracking-tight text-foreground uppercase italic">
+              See it in action
+            </h3>
+            <p className="text-muted-foreground text-sm mt-1">
+              Join thousands of students upgrading their study routine.
+            </p>
+          </div>
+
+          <div className="relative w-full overflow-hidden mask-horizontal pb-10">
+            <div className="animate-marquee-left flex gap-4 w-max px-4 hover:[animation-play-state:paused]">
+              {[
+                "https://bycatassets.com/ugcsimplebycatdeskroom.mp4#t=0.001",
+                "https://bycatassets.com/droppingabookbycatai.mp4#t=0.001",
+                "https://bycatassets.com/midtermstressugc.mp4#t=0.001",
+                "https://bycatassets.com/ugcchessestickbycatai.mp4#t=0.001",
+                "https://bycatassets.com/fooduserreview.mp4#t=0.001",
+                "https://bycatassets.com/ugcbycataisippingondesk.mp4#t=0.001",
+                // Duplicated for seamless loop
+                "https://bycatassets.com/ugcsimplebycatdeskroom.mp4#t=0.001",
+                "https://bycatassets.com/droppingabookbycatai.mp4#t=0.001",
+                "https://bycatassets.com/midtermstressugc.mp4#t=0.001",
+                "https://bycatassets.com/ugcchessestickbycatai.mp4#t=0.001",
+                "https://bycatassets.com/fooduserreview.mp4#t=0.001",
+                "https://bycatassets.com/ugcbycataisippingondesk.mp4#t=0.001",
+              ].map((vid, index) => (
+                <div key={index} className="shrink-0 w-[200px] aspect-[9/19] bg-zinc-900 rounded-[30px] p-1 border border-white/5 overflow-hidden">
+                  <div className="w-full h-full rounded-[26px] overflow-hidden relative">
+                    <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+                      <source src={vid} type="video/mp4" />
+                    </video>
+                    <div className="absolute bottom-3 left-3 flex items-center gap-1.5 text-white z-20">
+                      <Zap size={10} className="fill-white" />
+                      <span className="text-[10px] font-bold">{(Math.random() * 40 + 10).toFixed(1)}K</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+               <div className="fixed bottom-6 right-6 z-[220] pointer-events-none hidden md:block">
+                  <div className="pointer-events-auto drop-shadow-2xl">
+                    <LiveActivityFeed2 />
+                  </div>
+              </div>
+
+      <SettingsDialog
+        isOpen={settingsOpen}
+        setIsOpen={setSettingsOpen}
+        defaultTab="subscription"
+      />
     </>
   );
 }

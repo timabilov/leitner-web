@@ -52,7 +52,8 @@ const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) =>
   // 2. Handle "noGap" logic dynamically based on URL
   const location = useLocation();
   // Add paths here that need full width/no padding
-  const noGap = location.pathname.includes("/notes/"); 
+  console.log("location", location)
+  const noGap = location.pathname.includes("/notes/") || (location.pathname.includes("/price-page") && location.search.includes("?sale=true")); 
 
   return (
     <SidebarProvider

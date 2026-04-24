@@ -89,7 +89,7 @@ const TimeUnit = ({
           labelSizeClasses[size]
         )}
       >
-        {label}
+        { label }
       </span>
     </div>
   );
