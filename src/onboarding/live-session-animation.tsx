@@ -50,9 +50,9 @@ const LiveSessionAnimation = ({ t }: { t: any }) => {
       
       {/* 1. HEADER */}
       <div className="text-center px-4 mt-4">
-        <h2 className="text-3xl font-bold text-slate-900 tracking-tighter leading-none">
+        <h2 className="text-3xl font-bold text-slate-900 tracking-normal leading-none">
           {t("Live Voice Tutoring")}<br />
-          <span className="relative inline-block text-slate-400 font-semibold text-[14px] mt-3 tracking-tight">
+          <span className="relative inline-block text-gray-700 font-semibold text-[14px] mt-3 tracking-normal">
             {t("Talk to your AI tutor on the go. Available on mobile.")}
           </span>
         </h2>
@@ -68,7 +68,7 @@ const LiveSessionAnimation = ({ t }: { t: any }) => {
         />
 
         {/* The Mobile Phone "Screen" - EXACT UI MATCH */}
-        <div className="relative z-10 w-52 h-[300px] bg-[#0a0a0a] border-[4px] border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-white font-sans">
+        <div className="relative z-10 w-80 h-[340px] bg-[#0a0a0a] border-[4px] border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden text-white font-sans">
           
           {/* Top Speaker Notch */}
           <div className="absolute top-0 inset-x-0 h-4 bg-slate-800 rounded-b-xl w-20 mx-auto z-30" />
@@ -188,16 +188,43 @@ const LiveSessionAnimation = ({ t }: { t: any }) => {
                       <span className="font-medium text-zinc-300 w-20">{stat.label}</span>
                       
                       {/* Segmented Progress Bar */}
-                      <div className="flex gap-0.5 flex-1 mx-2">
-                        {[...Array(10)].map((_, index) => (
-                          <div 
-                            key={index} 
-                            className={cn(
-                              "h-1.5 flex-1 rounded-sm",
-                              index < stat.score ? "bg-pink-500" : "bg-zinc-800"
-                            )}
-                          />
-                        ))}
+                      <div className="flex flex-1 mx-6 gap-[3px] h-1">
+                        {[...Array(10)].map((_, index) => {
+                          // Is this segment part of the user's score?
+                          const isActive = index < stat.score;
+                          
+                          // If it's a half-score (e.g., 8.5), the 9th block should be 50% filled.
+                          // Your screenshot shows 'Subject Knowledge' is 8.5, so we need to handle decimals!
+                          const isHalf = index === Math.floor(stat.score) && stat.score % 1 !== 0;
+
+                          return (
+                            <div 
+                              key={index} 
+                              className={cn(
+                                "flex-1 rounded-xl relative overflow-hidden",
+                                // Inactive blocks are simply dark gray
+                                !isActive && !isHalf && "bg-[#27272a]" 
+                              )}
+                            >
+                              {/* The Gradient Fill */}
+                              {(isActive || isHalf) && (
+                                <div 
+                                  className="absolute inset-0 bg-gradient-to-r from-[#ff4b6b] to-[#c9306b]"
+                                  style={{
+                                    // 🟢 THE MAGIC TRICK:
+                                    // This stretches the gradient across ALL 10 blocks,
+                                    // but we shift the starting position based on which block this is.
+                                    // This creates one continuous, seamless gradient across the whole row!
+                                    width: "1000%",
+                                    left: `-${index * 100}%`,
+                                    // If it's a half-score block, cut its opacity in half or limit its width
+                                    opacity: isHalf ? 0.5 : 1
+                                  }}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                       
                       <span className="font-bold text-pink-500">{stat.score}</span>

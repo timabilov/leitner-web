@@ -177,17 +177,22 @@ const OnboardingModal = ({
             className="fixed inset-0 bg-white/80 backdrop-blur-xl z-0"
           />
 
+
           {/* Background Live Activity (Only on last step) */}
+          {console.log("has promo",  step === TOTAL_STEPS - 1 && !isFinishing && !isSuccess )}
           {step === TOTAL_STEPS - 1 && !isFinishing && !isSuccess && (
-            <div className="fixed inset-0 z-10 pointer-events-none overflow-hidden">
-              <div className="absolute right-2 -bottom-190">
+            <div className="fixed inset-0 z-40 pointer-events-none overflow-hidden">
+              <div className="absolute left-2 bottom-10">
                 <LiveActivityFeed2 />
               </div>
             </div>
           )}
 
+
+
           {/* 3. SCROLLABLE AREA: This allows the whole modal to scroll natively! */}
           <div className="fixed inset-0 overflow-y-auto z-20">
+            
             {/* min-h-full & py-12 ensures padding on top/bottom when scrolling */}
             <div className="flex min-h-full items-center justify-center p-4 py-12 sm:p-6">
               
@@ -195,7 +200,10 @@ const OnboardingModal = ({
               <motion.div
                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="relative w-full max-w-4xl bg-white border border-slate-100 rounded-xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden"
+                className={cn(
+                  "relative w-full bg-white border border-slate-100 rounded-xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.1)] flex flex-col overflow-hidden",
+                  step === TOTAL_STEPS - 1 ? "max-w-4xl" : "max-w-2xl",
+                )}
               >
                 
                 {/* Loading/Success Overlay */}
@@ -239,20 +247,28 @@ const OnboardingModal = ({
                 </AnimatePresence>
 
                 {/* HEADER (Progress + Banner) */}
+             {/* 🟢 HEADER (Full-Width Continuous Progress + Banner) */}
+         {/* HEADER (Progress + Banner) */}
                 {!isFinishing && !isSuccess && (
                   <div className="w-full flex flex-col px-6 pt-6 sm:px-10 sm:pt-8 gap-5">
-                    <div className="flex items-center gap-1.5">
+                    
+                    {/* 🟢 Full-Width Segmented Slider Dots */}
+                    <div className="flex items-center w-full gap-2">
                       {[...Array(TOTAL_STEPS)].map((_, i) => (
                         <div
                           key={i}
-                          className={`h-1.5 rounded-full transition-all duration-500 ${
-                            step === i ? "w-8 bg-slate-900" : "w-2 bg-slate-100"
-                          }`}
+                          className={cn(
+                            "h-1.5 rounded-full transition-all duration-500",
+                            // 🟢 flex-1 forces every dot to stretch and share the full width equally!
+                            "flex-1", 
+                            step >= i ? "bg-slate-900" : "bg-slate-100"
+                          )}
                         />
                       ))}
                     </div>
+
                     {
-                      step!== 5 && (
+                      step !== 5 && (
                         <div className="w-full flex justify-center">
                           <OnboardingBanner step={step} hasPromo={hasPromo}/>
                         </div>

@@ -49,14 +49,14 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 pt-0 font-sans tracking-tight">
+    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 pt-0 font-sans tracking-normal">
       
       {/* HEADER SECTION */}
       <div className="text-center px-4 mb-5 mt-4">
         <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-tighter leading-none">
           {t("Master Spaced Recall")}<br />
-          <span className="relative inline-block text-muted-foreground-400 font-semibold text-[14px] mt-3 tracking-tight">
-            {t("Get the app for push alerts")} 
+          <span className="relative inline-block text-muted-foreground-400 font-semibold text-[14px] mt-3  tracking-normal">
+            {t("Turn on smart alerts for personalized spaced-repetition quizzes.")} 
           </span>
         </h2>
       </div>

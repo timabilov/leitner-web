@@ -88,7 +88,7 @@ const OnboardingBanner = ({ className, step, hasPromo }: { className: string; st
           }
         `}
       </style>
-    <div className={`relative justify-between group w-full mx-auto overflow-hidden rounded-xl p-[1px]  fade-in animate-in slide-in-from-top-4 duration-700 z-[100] ${className} `}>
+    <div className={`relative justify-between group max-w-md  mx-auto overflow-hidden rounded-xl p-[1px]  fade-in animate-in slide-in-from-top-4 duration-700 z-[100] ${className} `}>
       
       {/* Animated Glowing Border */}
       <span 
@@ -103,9 +103,9 @@ const OnboardingBanner = ({ className, step, hasPromo }: { className: string; st
       <div className={cn("relative flex items-center bg-white/95 backdrop-blur-md px-4 py-2 rounded-xl justify-between w-full h-full", step === 3 ? "gap-2" : "gap-6")}>
         
         <div className={cn("flex items-center", step === 3 ? "gap-1" : "gap-2")}>
-          <div className="flex items-center justify-center size-8 rounded-full bg-pink-500/10 text-pink-500">
+          {/* <div className="flex items-center justify-center size-8 rounded-full bg-pink-500/10 text-pink-500">
             <AIIcon className="size-4" />
-          </div>
+          </div> */}
           <div className="flex flex-col text-left">
             <span className={cn("text-[13px] font-bold text-slate-900 leading-tight", step === 3 ? "pr-0" : "pr-1")}>
                {content.title}
@@ -121,8 +121,8 @@ const OnboardingBanner = ({ className, step, hasPromo }: { className: string; st
               )}
               {
                 hasPromo && (
-                  <div className="flex items-center gap-1.5 bg-slate-50/80 border border-muted-foreground-100 px-3 py-1.5 rounded-full">
-                    <Timer className="size-3.5 text-pink-500 animate-wiggle" />
+                  <div className="flex items-center gap-1.5 bg-slate-50/80 border border-muted-foreground-100 px-3 py-1.5 rounded-xl">
+                    <Timer className="size-3.5 text-pink-500 " />
                     <span className="text-[13px] tracking-wide font-bold text-muted-foreground-700 tabular-nums ">
                       {format(timeLeft.d)}d:{format(timeLeft.h)}h:{format(timeLeft.m)}m:{format(timeLeft.s)}s
                     </span>

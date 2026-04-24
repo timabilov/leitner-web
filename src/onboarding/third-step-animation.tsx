@@ -37,9 +37,9 @@ const ThirdStepAnimation = ({ t }: { t: any }) => {
       
       {/* 1. HEADER */}
       <div className="text-center px-4 mt-4">
-        <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-tighter leading-none">
+        <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-normal leading-none">
           {t("Quizzes and flashcards")}<br />
-          <span className="relative inline-block text-muted-foreground-400 font-semibold text-[14px] mt-5 mb-5 tracking-tight">
+          <span className="relative inline-block text-gray-700 font-semibold text-[14px] mt-5 mb-5 tracking-normal">
             {t("Turn passive notes into active practice")} 
           </span>
         </h2>

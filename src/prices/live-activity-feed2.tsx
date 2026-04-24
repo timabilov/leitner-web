@@ -71,7 +71,6 @@ const getActionConfig = (rawAction: string) => {
 const LiveActivityFeed2 = () => {
   const store = useUserStore();
   const companyId = store?.companyId || 169;
-  console.log("companyId", companyId);
   const [currentActivity, setCurrentActivity] = useState<ActivityItem | null>(null);
   const [activityQueue, setActivityQueue] = useState<ActivityItem[]>([]);
 
@@ -194,7 +193,6 @@ const SystemMessagePill = ({ item, timeoutId }: { item: ActivityItem }) => {
         <div className="flex justify-between items-baseline w-full">
           <span className="font-bold text-foreground hover:underline cursor-pointer decoration-muted-foreground/50 underline-offset-2">
             {item.user}
-            user also will bve deleted
           </span>
           <span className="ml-2 text-[10px] text-muted-foreground font-mono whitespace-nowrap">
             {item.time}

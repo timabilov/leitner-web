@@ -37,6 +37,7 @@ const Fragment = ({ icon, label, initialPos, delay }: any) => (
     }}
     transition={{ duration: 2.8, repeat: Infinity, delay: delay, times: [0, 0.1, 0.8, 1], ease: "easeInOut" }}
     className="absolute z-30 flex items-center gap-2 px-3 py-1.5 rounded-md bg-white border border-slate-200 shadow-sm"
+    key={label}
   >
     <span className="text-muted-foreground-900">{icon}</span>
     <span className="text-[12px] font-semibold text-muted-foreground-900 tracking-tight">{label}</span>
@@ -49,9 +50,9 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
       <BrandGradient />
       
       <div className="text-center px-4 mb-5">
-        <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-tighter leading-none">
+        <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-normal leading-none">
           {t("Everything in One Note")}<br />
-          <span className="relative inline-block text-muted-foreground-400 font-semibold text-[14px] mt-5 tracking-tight">
+          <span className="relative inline-block text-gray-600  font-semibold text-[14px] mt-5 tracking-normal">
             {t("Summarize videos, pdf, audios, and images in one place")} 
             {/* <AnimatedUnderline /> */}
           </span>
@@ -92,12 +93,12 @@ const FirstStepAnimation = ({ t }: { t: any }) => {
         </motion.div>
 
         {/* Fragments */}
-        <Fragment icon={<Mic size={15} />} label={t("Audio")} initialPos={{ x: -140, y: -80 }} delay={0} />
-        <Fragment icon={<Youtube size={15} />} label={t("YouTube")} initialPos={{ x: 140, y: -70 }} delay={0.2} />
-        <Fragment icon={<FileText size={15} />} label={t("PDF")} initialPos={{ x: -140, y: 20 }} delay={0.4} />
-        <Fragment icon={<ImageIcon size={15} />} label={t("Photo")} initialPos={{ x: 140, y: 30 }} delay={0.6} />
-        <Fragment icon={<Type size={15} />} label={t("Text")} initialPos={{ x: 0, y: 110 }} delay={0.1} />
-        <Fragment icon={<MessageCircle size={15} />} label={t("AI Chat")} initialPos={{ x: 0, y: -110 }} delay={0.1} />
+        <Fragment icon={<Mic size={15} />} label={t("Audio")} key="Audio" initialPos={{ x: -140, y: -80 }} delay={0} />
+        <Fragment icon={<Youtube size={15} />} label={t("YouTube")} key="YouTube" initialPos={{ x: 140, y: -70 }} delay={0.2} />
+        <Fragment icon={<FileText size={15} />} label={t("PDF")} key="PDF" initialPos={{ x: -140, y: 20 }} delay={0.4} />
+        <Fragment icon={<ImageIcon size={15} />} label={t("Photo")} key="Photo" initialPos={{ x: 140, y: 30 }} delay={0.6} />
+        <Fragment icon={<Type size={15} />} label={t("Text")} key="Text" initialPos={{ x: 0, y: 110 }} delay={0.1} />
+        <Fragment icon={<MessageCircle size={15} />} label={t("AI Chat")} key="AI Chat" initialPos={{ x: 0, y: -110 }} delay={0.1} />
       </div>
     </div>
   );
