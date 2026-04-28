@@ -14,6 +14,9 @@ import {
   MessageCircle,
   Heart,
   ChevronRight,
+  Clock,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { initializePaddle } from "@paddle/paddle-js";
 import { useTranslation } from "react-i18next";
@@ -38,12 +41,41 @@ import user2 from "./assets/user2.png";
 import user3 from "./assets/user3.png";
 import user4 from "./assets/user4.png";
 import user5 from "./assets/user5.png";
+import { AnimatedGrid, FloatingBlobs, RisingBubbles } from "@/login";
 
 const INTERVAL_TO_PLAN: Record<string, "weekly" | "monthly" | "annual"> = {
   week: "weekly",
   month: "monthly",
   year: "annual",
 };
+
+const FAQ_DATA = [
+  {
+    question: "Can I cancel anytime?",
+    answer:
+      "Yes. Cancel anytime from your account settings with no questions asked. Weekly and monthly plans auto-renew but never lock you in.",
+  },
+  {
+    question: "What happens after the 3-day free trial?",
+    answer:
+      "You'll be billed the annual rate only after your trial ends. We'll send you a reminder 24 hours before — you can cancel before then at no charge.",
+  },
+  {
+    question: "Is the Weekly plan really free?",
+    answer:
+      "Yes — the weekly plan is free during our launch promotion. It includes all core features so you can try Bycat before committing.",
+  },
+  {
+    question: "How does Live AI Tutoring work?",
+    answer:
+      "Our AI Tutoring uses advanced language models trained on your specific curriculum to provide step-by-step guidance, hints, and explanations in real-time.",
+  },
+  {
+    question: "Is my data safe?",
+    answer:
+      "Absolutely. All data is encrypted at rest and in transit with AES-256 and TLS 1.3. We never sell your data to third parties.",
+  },
+];
 
 const userImages = [user1, user2, user3, user4, user5];
 
@@ -52,12 +84,20 @@ const fetchSubscription = async () => {
   return res.data;
 };
 
-const TimeUnit = ({ value, label }: { value: string | number; label: string }) => (
+const TimeUnit = ({
+  value,
+  label,
+}: {
+  value: string | number;
+  label: string;
+}) => (
   <div className="flex flex-col items-center min-w-[32px]">
     <span className="text-lg md:text-xl font-bold tracking-tighter tabular-nums animate-pulse-subtle">
-      {value.toString().padStart(2, '0')}
+      {value.toString().padStart(2, "0")}
     </span>
-    <span className="text-[9px] uppercase font-bold text-zinc-500 -mt-1">{label}</span>
+    <span className="text-[9px] uppercase font-bold text-zinc-500 -mt-1">
+      {label}
+    </span>
   </div>
 );
 
@@ -84,7 +124,7 @@ export const TrustStats = () => {
       {stats.map((stat, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 bg-zinc-100/50 p-3 rounded-xl border border-border/30 backdrop-blur-sm"
+          className="flex items-center gap-3  p-3 rounded-xl border border-border/30 backdrop-blur-sm"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm text-zinc-600 dark:text-zinc-300 group-hover:scale-105 transition-transform duration-300">
             <stat.icon className="h-5 w-5" />
@@ -93,7 +133,7 @@ export const TrustStats = () => {
             <span className="text-sm font-bold text-foreground">
               {t(stat.text)}
             </span>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[11px] text-sidebar-accent-foreground">
               {t(stat.sub)}
             </span>
           </div>
@@ -162,6 +202,9 @@ const PricingCard = ({
   activePlanKey,
   isCanceling,
   onManage,
+  trialInterval,
+  trialFrequency,
+  hasTrial,
 }: {
   tier: (typeof PRICING_TIERS)[0];
   isSelected: boolean;
@@ -176,6 +219,9 @@ const PricingCard = ({
   activePlanKey: string | null;
   isCanceling?: boolean;
   onManage: () => void;
+  trialFrequency?: number;
+  trialInterval?: string;
+  hasTrial?: boolean;
 }) => {
   const isActivePlan = activePlanKey === tier.key;
   const { t } = useTranslation();
@@ -198,6 +244,7 @@ const PricingCard = ({
             : "border border-border shadow-md z-0",
         )}
       >
+        {/* Top-Right Discount Badge */}
         {(tier as any).discount && (
           <div
             className="absolute -top-2 -right-2 px-3 py-1 rounded-full font-bold text-[10px] text-white shadow-sm bg-primary dark:bg-neutral-600 z-30"
@@ -213,18 +260,23 @@ const PricingCard = ({
           style={{ transform: "translateZ(20px)" }}
         >
           <div className="flex flex-col gap-1">
+            {/* 🟢 REDESIGNED TRIAL INDICATOR PILL */}
+
             <div className="flex justify-between items-center gap-2">
               <h3 className="text-lg font-bold leading-none">{t(tier.name)}</h3>
+
               {isActivePlan && (
                 <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-0.5 text-[10px] font-semibold text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
                   {t("Active")}
                 </span>
               )}
+
               {isActivePlan && isCanceling && (
                 <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-900/30 px-2.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20">
                   {t("Canceling")}
                 </span>
               )}
+
               {isSpecialAnnual && isPromo && claimOffer && (
                 <span className=" inline-flex items-center rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-inset ring-pink-500/20 whitespace-nowrap">
                   🎁 {t(claimOffer)}
@@ -232,9 +284,8 @@ const PricingCard = ({
               )}
             </div>
 
-            <div className="flex items-baseline gap-2 flex-wrap">
+            <div className="flex items-baseline gap-2 flex-wrap mt-2">
               <div className="relative">
-                {/* 🟢 FIXED: Safe math that works for Annual, Monthly, and Weekly */}
                 <span className="text-3xl font-bold tracking-tight">
                   $
                   {tier.key === "annual"
@@ -261,7 +312,6 @@ const PricingCard = ({
                 )}
               </div>
 
-              {/* 🟢 FIXED: Safe default/strikethrough math */}
               {finalDefault && Number(finalDefault) > 0 && (
                 <div className="flex flex-col justify-end ml-1">
                   <span className="text-sm font-medium line-through text-foreground decoration-1 opacity-70">
@@ -274,12 +324,23 @@ const PricingCard = ({
               )}
             </div>
 
-            <p className="text-sm font-medium text-muted-foreground min-h-[40px] leading-tight">
+            <p
+              className={cn(
+                "text-sm font-medium text-muted-foreground leading-tight mt-1",
+                tier.key !== "annual" ? " min-h-[40px]" : "",
+              )}
+            >
               {tier.description}
             </p>
-
+            {hasTrial && !isActivePlan && (
+              <div className="flex items-center animate-in fade-in slide-in-from-bottom-1 duration-500">
+                <div className="relative flex items-center gap-2 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 dark:bg-blue-500/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-widesfont-bold text-white ring-1 ring-inset ring-pink-500/20 ">
+                  {trialFrequency} {trialInterval} {t("Free Trial")}
+                </div>
+              </div>
+            )}
             {/* Features Block */}
-            {/* <div className="space-y-3 pt-4 border-t border-border mt-2">
+            <div className="space-y-3 pt-4 border-t border-border mt-2">
               <div className="space-y-3">
                 {tier.features.map((feature, i) => (
                   <div key={i} className="flex items-start gap-3">
@@ -292,7 +353,7 @@ const PricingCard = ({
                   </div>
                 ))}
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
 
@@ -333,6 +394,11 @@ const PricingCard = ({
               <Loader2 className="animate-spin h-3 w-3" />
             ) : isActivePlan ? (
               t("Manage subscription")
+            ) : hasTrial ? (
+              <span className="flex items-center gap-2">
+                <Zap size={14} className="fill-current" />
+                {t("Start")} {trialInterval} {trialFrequency}-{t("free trial")}
+              </span>
             ) : (
               t("Purchase now")
             )}
@@ -360,12 +426,15 @@ export default function PricingSection() {
   const [searchParams] = useSearchParams();
   const isPromoLink = searchParams.get("sale") === "true";
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [openIndex, setOpenIndex] = useState(0);
+
   const hasActivePlan = subscriptionStatus !== "free";
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-
-
-
-
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
 
   useEffect(() => {
     if (!targetDate) return;
@@ -382,7 +451,9 @@ export default function PricingSection() {
 
       setTimeLeft({
         days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        hours: Math.floor(
+          (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+        ),
         minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
         seconds: Math.floor((distance % (1000 * 60)) / 1000),
       });
@@ -390,7 +461,6 @@ export default function PricingSection() {
 
     return () => clearInterval(timer);
   }, [targetDate]);
-
 
   const { data: subscriptionData, error: subscriptionError } = useQuery({
     queryKey: ["subscription"],
@@ -454,10 +524,17 @@ export default function PricingSection() {
         const subtotalNum =
           parseInt(item.formattedTotals.subtotal.replace(/[^0-9]/g, ""), 10) /
           100;
-
+        console.log("item.price", item.price);
         newPrices[item.price.id] = {
           current: currentNum,
           original: subtotalNum !== currentNum ? subtotalNum : null,
+          hasTrial: !!item.price?.trialPeriod,
+          trialInterval: item.price?.trialPeriod?.interval
+            ? item.price?.trialPeriod?.interval
+            : undefined,
+          trialFrequency: item.price?.trialPeriod?.frequency
+            ? item.price?.trialPeriod?.frequency
+            : undefined,
         };
       });
       console.log("Fetched Prices:", newPrices);
@@ -552,7 +629,7 @@ export default function PricingSection() {
   };
 
   return (
-      <>
+    <>
       <style>
         {`
           @keyframes marquee-left {
@@ -571,72 +648,118 @@ export default function PricingSection() {
       </style>
 
       {/* 🟢 TOP BANNER: Only shows if hook returns hasPromo and a valid date */}
-     {hasPromo && targetDate && isPromoLink && (
-  <div className="absolute top-0 left-0 right-0 z-[300] w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-    <div className="flex h-14 w-full  items-center justify-between px-4">
-      
-      {/* Left: Branding & Offer Badge */}
-      <div className="flex items-center gap-3">
-        <div className="hidden rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2.5 py-0.5 text-xs font-semibold text-amber-50 sm:block">
-          {discountPercent}% {t("OFF")}
-        </div>
-        <p className="text-sm font-medium tracking-tight">
-          <span className="hidden sm:inline text-muted-foreground">{t("Limited time:")} </span>
-          <span className="text-foreground">{t("Special student pricing is active")}</span>
-        </p>
-      </div>
-
-      {/* Right: Timer & Button */}
-      <div className="flex items-center gap-4 sm:gap-8">
-        {/* Timer */}
-        <div className="flex items-center gap-3 border-l pl-4 sm:gap-4">
-          <TimeUnit value={timeLeft.days} label="days" />
-          <div className="text-muted-foreground/30 font-light">:</div>
-          <TimeUnit value={timeLeft.hours} label="hours" />
-          <div className="text-muted-foreground/30 font-light">:</div>
-          <TimeUnit value={timeLeft.minutes} label="mins" />
-          <div className="text-muted-foreground/30 font-light">:</div>
-          <TimeUnit value={timeLeft.seconds} label="secs" />
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-      <div className={
-        cn(
-        "relative min-h-full w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground pb-20",
-        hasPromo && targetDate && isPromoLink ? "pt-16" : ""
-        )
-        }>
-        <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 w-full">
-            <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-              <span className="p-2 rounded-xl">
-                <Wallet className="text-zinc-800 dark:text-zinc-100" />
-              </span>
-              <span>{t("Select plan")}</span>
-              {hasActivePlan && (
-                <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
-                  {t("Active")}
+      {hasPromo && targetDate && isPromoLink && (
+        <div className="absolute top-0 left-0 right-0 z-[300] w-full border-b border-pink-100 bg-[#FFF5F8] py-1 sm:py-0">
+          <div className="flex h-full sm:h-14 w-full items-center justify-between px-4 sm:px-8 max-w-[1400px] mx-auto">
+            {/* Left: Badge & Text */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="bg-[#ED4B8E] text-white px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest shadow-sm">
+                {t("SALE")}
+              </div>
+              <p className="text-[13px] sm:text-[15px] font-medium text-zinc-700 tracking-tight">
+                {t("Limited time:")}{" "}
+                <span className="font-bold text-zinc-900">
+                  {t("Special student pricing is active")}
                 </span>
-              )}
-            </h1>
+              </p>
+            </div>
+
+            {/* Right: Timer & Close Button */}
+            <div className="flex items-center gap-6 sm:gap-10">
+              <div className="flex items-center gap-4 sm:gap-6">
+                <TimeUnit value={timeLeft.days} label={t("Days")} />
+                <TimeUnit value={timeLeft.hours} label={t("Hrs")} />
+                <TimeUnit value={timeLeft.minutes} label={t("Mins")} />
+                <TimeUnit value={timeLeft.seconds} label={t("Secs")} />
+              </div>
+
+              {/* Close Button */}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div
+        className={cn(
+          "relative  w-full font-sans flex flex-col items-center bg-transparent gap-4 text-foreground px-4 sm:px-6",
+          hasPromo && targetDate && isPromoLink ? "pt-16" : "",
+        )}
+      >
+        {/* <div className="flex  md:flex-row md:items-center justify-between gap-4 w-full">
+          <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+            <span className="p-2 rounded-xl">
+              <Wallet className="text-zinc-800 dark:text-zinc-100" />
+            </span>
+            <span>{t("Select plan")}</span>
+            {hasActivePlan && (
+              <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
+                {t("Active")}
+              </span>
+            )}
+          </h1>
+        </div> */}
+        <div className="flex flex-col items-center text-center px-4 pt-16 w-full max-w-4xl mx-auto">
+          {/* 🟢 Social Proof Pill */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 px-3 py-1 shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <span className="text-xs sm:text-sm font-medium text-zinc-800 dark:text-zinc-300">
+              20k+ {t("students learning smarter")}
+            </span>
+          </div>
+
+          {/* 🟢 Main Heading */}
+          <h1 className="mt-6 text-3xl font-bold tracking-tight text-zinc-900 dark:text-white leading-[1.1]">
+            {t("Simple, transparent pricing")}
+          </h1>
+
+          {/* 🟢 Sub-description */}
+          <p className="mt-4 text-base sm:text-xl font-normal text-zinc-400 dark:text-zinc-400 max-w-2xl leading-relaxed">
+            {t(
+              "No hidden fees. No credit card required to start. Cancel anytime.",
+            )}
+          </p>
         </div>
 
+        <SocialProof />
         {/* --- PRICING GRID --- */}
-        <div id="pricing-grid" className="grid gap-4 grid-cols-1 md:grid-cols-3 w-full max-w-4xl px-4 z-20 justify-items-center items-stretch mt-6">
-          {(isPromoLink && hasPromo ? PRICING_TIERS_CLAIM : PRICING_TIERS).map((tier) => {
+        <div
+          id="pricing-grid"
+          className="grid gap-4 grid-cols-1 md:grid-cols-3 w-full max-w-4xl px-4 z-20 justify-items-center items-stretch mt-6"
+        >
+          {(isPromoLink && hasPromo ? PRICING_TIERS_CLAIM : PRICING_TIERS).map(
+            (tier) => {
               const liveData = prices[(tier as any).priceId];
+              const hasTrial = !!liveData?.hasTrial;
+              const trialFrequency = liveData?.trialFrequency;
+              const trialInterval = liveData?.trialInterval;
+              console.log("trialDays", liveData);
               return (
                 <PricingCard
                   key={tier.id}
+                  hasTrial={hasTrial}
+                  trialFrequency={trialFrequency}
+                  trialInterval={trialInterval}
                   tier={tier}
                   isSelected={selectedId === tier.id}
                   onSelect={() => setSelectedId(tier.id)}
-                  onCheckout={() => openCheckout((tier as any).priceId, (tier as any).discountId)}
+                  onCheckout={() =>
+                    openCheckout(
+                      (tier as any).priceId,
+                      (tier as any).discountId,
+                    )
+                  }
                   isLoading={loadingPriceId === (tier as any).priceId}
-                  finalOriginal={liveData ? liveData.current : (tier as any).defaultPrice}
-                  finalDefault={liveData && liveData.original ? liveData.original : (tier as any).defaultPrice}
+                  finalOriginal={
+                    liveData ? liveData.current : (tier as any).defaultPrice
+                  }
+                  finalDefault={
+                    liveData && liveData.original
+                      ? liveData.original
+                      : (tier as any).defaultPrice
+                  }
                   isPromo={hasPromo}
                   isSpecialAnnual={isPromoLink}
                   activePlanKey={activePlanKey}
@@ -644,21 +767,24 @@ export default function PricingSection() {
                   onManage={() => setSettingsOpen(true)}
                 />
               );
-          })}
+            },
+          )}
         </div>
-
         {/* 🟢 TIKTOK VIDEO SLIDER */}
-        <div className="w-full mt-6 flex flex-col items-center">
-          <div className="text-center mb-8 px-4">
+        <div className="w-full max-w-4xl px-4 mt-10 flex flex-col gap-8 z-10">
+          <TrustStats />
+        </div>
+        <div className="max-w-4xl flex flex-col items-center">
+          {/* <div className="text-center mb-8 px-4">
             <h3 className="text-2xl font-bold tracking-tight text-foreground uppercase italic">
               See it in action
             </h3>
             <p className="text-muted-foreground text-sm mt-1">
               Join thousands of students upgrading their study routine.
             </p>
-          </div>
+          </div> */}
 
-          <div className="relative w-full overflow-hidden mask-horizontal pb-10">
+          {/* <div className="relative w-full overflow-hidden mask-horizontal pb-10">
             <div className="animate-marquee-left flex gap-4 w-max px-4 hover:[animation-play-state:paused]">
               {[
                 "https://bycatassets.com/ugcsimplebycatdeskroom.mp4#t=0.001",
@@ -675,7 +801,7 @@ export default function PricingSection() {
                 "https://bycatassets.com/fooduserreview.mp4#t=0.001",
                 "https://bycatassets.com/ugcbycataisippingondesk.mp4#t=0.001",
               ].map((vid, index) => (
-                <div key={index} className="shrink-0 w-[200px] aspect-[9/19] bg-zinc-900 rounded-[30px] p-1 border border-white/5 overflow-hidden">
+                <div key={index} className="shrink-0 w-[150px] aspect-[9/19] bg-zinc-900 rounded-[30px] p-1 border border-white/5 overflow-hidden">
                   <div className="w-full h-full rounded-[26px] overflow-hidden relative">
                     <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
                       <source src={vid} type="video/mp4" />
@@ -688,15 +814,80 @@ export default function PricingSection() {
                 </div>
               ))}
             </div>
+          </div> */}
+          <div className="w-full max-w-4xl mx-auto px-4 py-10 font-sans">
+        {/* --- HEADER --- */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+            {t("Frequently asked questions")}
+          </h2>
+          <p className="text-zinc-500 dark:text-zinc-400 font-medium mt-1">
+            {t("Everything you need to know before upgrading.")}
+          </p>
+        </div>
+
+        {/* --- FAQ CARD --- */}
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[24px] overflow-hidden shadow-sm mb-12">
+          {FAQ_DATA.map((item, index) => {
+            const isOpen = openIndex === index;
+            return (
+              <div
+                key={index}
+                className={`border-b border-zinc-100 dark:border-zinc-800 last:border-none transition-colors ${isOpen ? "bg-zinc-50/30 dark:bg-zinc-800/20" : ""}`}
+              >
+                <button
+                  onClick={() => setOpenIndex(isOpen ? -1 : index)}
+                  className="w-full flex items-center justify-between p-6 text-left hover:bg-zinc-50/50 dark:hover:bg-zinc-800/40 transition-all"
+                >
+                  <span className="text-base font-medium text-zinc-900 dark:text-zinc-100">
+                    {t(item.question)}
+                  </span>
+                  {isOpen ? (
+                    <ChevronUp className="w-5 h-5 text-zinc-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-zinc-400" />
+                  )}
+                </button>
+
+                {isOpen && (
+                  <div className="px-6 pb-6 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <p className="text-zinc-500 text-[15px] leading-relaxed font-regular">
+                      {t(item.answer)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* --- BOTTOM CTA BOX --- */}
+        <div className="border border-zinc-200 dark:border-zinc-800 rounded-[32px] p-8 sm:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 bg-white dark:bg-zinc-900 shadow-sm">
+          <div className="text-center sm:text-left">
+            <h3 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+              {t("Still unsure? Start free.")}
+            </h3>
+            <p className="text-zinc-500 dark:text-zinc-400 font-medium mt-1">
+              {t("The weekly plan is always free — no credit card needed.")}
+            </p>
           </div>
+
+          <button className="bg-[#ED4B8E] hover:bg-[#D43D7A] text-white px-8 py-3.5 rounded-2xl font-bold text-base transition-all active:scale-95 shadow-[0_10px_20px_-5px_rgba(237,75,142,0.3)] whitespace-nowrap">
+            {t("Get started for free")} →
+          </button>
         </div>
       </div>
 
-               <div className="fixed bottom-6 right-6 z-[220] pointer-events-none hidden md:block">
-                  <div className="pointer-events-auto drop-shadow-2xl">
-                    <LiveActivityFeed2 />
-                  </div>
-              </div>
+        </div>
+        
+      </div>
+      
+
+      <div className="fixed bottom-6 right-6 z-[220] pointer-events-none hidden md:block">
+        <div className="pointer-events-auto drop-shadow-2xl">
+          <LiveActivityFeed2 />
+        </div>
+      </div>
 
       <SettingsDialog
         isOpen={settingsOpen}
