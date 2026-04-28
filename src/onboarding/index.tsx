@@ -179,7 +179,7 @@ const OnboardingModal = ({
 
 
           {/* Background Live Activity (Only on last step) */}
-          {console.log("has promo",  step === TOTAL_STEPS - 1 && !isFinishing && !isSuccess )}
+
           {step === TOTAL_STEPS - 1 && !isFinishing && !isSuccess && (
             <div className="fixed inset-0 z-40 pointer-events-none overflow-hidden">
               <div className="absolute left-2 bottom-10">
@@ -267,18 +267,30 @@ const OnboardingModal = ({
                       ))}
                     </div>
 
-                    {
+                    {/* {
                       step !== 5 && (
                         <div className="w-full flex justify-center">
                           <OnboardingBanner step={step} hasPromo={hasPromo}/>
                         </div>
                       )
-                    }
+                    } */}
                   </div>
                 )}
 
                 {/* BODY: No overflow constraints! Height grows naturally */}
                 <div className="w-full px-4 py-4 sm:px-10 relative z-10">
+                  {
+                    step === 5 && (
+                        <button
+                              onClick={prevStep}
+                              className="h-11 px-4 text-slate-400 hover:text-slate-600 rounded-lg font-medium text-[14px] flex items-center justify-center gap-2 transition-colors"
+                            >
+                              <ChevronLeft size={16} />
+                              {t("Back")}
+                            </button>
+                    )
+                  }
+
                   {!isFinishing && !isSuccess && (
                     <motion.div
                       key={step}
@@ -307,7 +319,7 @@ const OnboardingModal = ({
                 </div>
 
                 {/* FOOTER - Navigation buttons */}
-                {!isFinishing && !isSuccess && (
+                {!isFinishing && !isSuccess && step!== 5 && (
                   <div className="w-full px-6 pb-6 sm:px-10 sm:pb-8 flex items-center justify-between mt-2 border-t border-slate-50 pt-4">
                     <div className={step === 0 ? "invisible pointer-events-none" : "visible"}>
                       <button

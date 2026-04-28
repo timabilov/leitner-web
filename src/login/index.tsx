@@ -19,6 +19,9 @@ import { jwtDecode } from "jwt-decode";
 import { usePostHog } from "posthog-js/react";
 import OnboardingModal from "@/onboarding";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { PromoBanner } from "@/components/promo-banner";
+import { cn } from "@/lib/utils";
+import {useOfferCountdown } from "@/hooks/use-offer-countdown"
 
 // --- 1. SVG Components (Unchanged) ---
 export const SparkleHot = ({ className }: { className?: string }) => (
@@ -331,6 +334,7 @@ const LoginBase = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const { hasPromo } = useOfferCountdown();
 
   const [sessionData, setSessionData] = useState<any>(null);
   useEffect(() => {
@@ -535,9 +539,10 @@ const LoginBase = () => {
           }`}
       </style>
       <AnimatedGrid />
-        <div className="absolute top-8 right-8 z-[101]">
-          <LanguageSwitcher />
-        </div>
+      <PromoBanner />
+      <div className={cn("absolute  right-8 z-[101]", hasPromo ? "top-20" : "top-10")}>
+        <LanguageSwitcher />
+      </div>
       
       <FloatingBlobs />
       { !showOnboarding &&  <RisingBubbles /> }

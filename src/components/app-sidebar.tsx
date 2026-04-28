@@ -28,6 +28,7 @@ import {
   MoreVertical,
   Menu,
   X,
+  Sparkles
 } from "lucide-react";
 import { NavUser } from "./nav-user";
 import { cn } from "@/lib/utils";
@@ -90,29 +91,7 @@ const SidebarSaleCard = () => {
       `}</style>
 
       {/* --- 1. FULL CARD (Visible when Expanded) --- */}
-      <div
-        role="button"
-        onClick={() => navigate("/price-page?sale=true")}
-        className="hidden group-data-[state=expanded]:block cursor-pointer pt-2 pb-1 w-full"
-      >
-        <div className="group relative w-full overflow-hidden rounded-lg box-border transition-transform hover:scale-[1.02] active:scale-[0.98] duration-200">
-          <div className="relative h-full w-full rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 animate-gradient-flow shadow-md p-[1px]">
-            {/* Inner Content */}
-            <div className="relative z-10 flex flex-row justify-between items-center px-3 py-2 bg-black/10 backdrop-blur-[1px] rounded-lg">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-white drop-shadow-md">
-                  🔥 Claim offer
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[10px] font-bold text-white drop-shadow-md tracking-tight">
-                  {timeLeft.d}d {timeLeft.h}h {timeLeft.m}m
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+     
 
       {/* --- 2. MINI ICON (Visible when Collapsed) --- */}
       <div
@@ -148,6 +127,7 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
     { title: t("Notes"), icon: Home, key: "/notes" },
     { title: t("Folders"), icon: FolderOpen, key: "/folders" },
     { title: t("Alerts"), icon: Bell, key: "/alerts" },
+    { title: t("Upgrade to Pro"), icon: Sparkles, key: "/price-page" },
     { title: t("Mobile App"), icon: Smartphone, key: "/app" },
   ];
 

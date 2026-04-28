@@ -5,6 +5,7 @@ import Header from "./header";
 import { SidebarInset, SidebarProvider } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Outlet, useLocation } from "react-router";
+import { PromoBanner } from "./promo-banner";
 
 // Define outside component to prevent re-renders or wrap in React.memo
 const ArchitecturalBackground = () => (
@@ -70,12 +71,15 @@ const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) =>
           ref={containerRef}
           className={cn(
             "flex-1 flex flex-col relative overflow-y-auto isolate w-full",
-            noGap ? "p-0" : "p-4 sm:p-6"
+           
           )}
         >
           <ArchitecturalBackground />
           <div className="relative z-10 w-full max-w-8xl mx-auto flex flex-1 flex-col">
-            <Outlet />
+               <PromoBanner />
+               <div className={ noGap ? "p-0" : "p-4 sm:p-6"}>
+                  <Outlet />
+               </div>
           </div>
         </main>
       </SidebarInset>
