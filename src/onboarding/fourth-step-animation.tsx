@@ -23,7 +23,7 @@ import user2 from "./assets/user2.png";
 import user3 from "./assets/user3.png";
 import user4 from "./assets/user4.png";
 import user5 from "./assets/user5.png";
-const userImages = [user1, user2, user3, user4, user5];
+const userImages = [user1, user2, user3, user4];
 
 export const PRICING_TIERS_CLAIM = [
   {
@@ -152,7 +152,7 @@ const AppliedDiscountBadge = ({ percent, tierKey }: { percent: string | number, 
       <Tag size={12} className="text-[#EC4899] fill-[#EC4899]/10" />
       <div className="flex items-center gap-1.5 text-[11px] tracking-tight">
         <span className="text-zinc-500 font-medium lowercase">
-          {percent} {t("off applied")}
+          {percent}
         </span>
       </div>
     </div>
@@ -222,7 +222,7 @@ const FifthStepAnimation = ({
           : t("Subscription renews."),
       buttonText:
         selectedPlanKey === "annual"
-          ? t("Start free trial")
+          ? t("Try Bycat AI for $0")
           : t("Continue to checkout"),
       footerNote:
         selectedPlanKey === "annual"
@@ -342,9 +342,9 @@ const FifthStepAnimation = ({
                       : "border-zinc-200 hover:border-slate-300 bg-white",
                   )}
                 >
-                  {(tier as any).discountId && (
+                  {(tier as any).discountId && +liveData?.discountPercent  > 1 && (
                     <div className="absolute -top-5 left-6 ">
-                        <AppliedDiscountBadge percent={"40%"} tierKey={tier.key} />
+                        <AppliedDiscountBadge percent={isAnnual ? "2 month free" : Math.round(+liveData?.discountPercent) + "% off applied"} tierKey={tier.key} />
                     </div>
                   )}
 
@@ -411,9 +411,9 @@ const FifthStepAnimation = ({
               <span>
                 Used by <strong>20,000+</strong> students
               </span>
-              <span className="mt-0.5">
+              {/* <span className="mt-0.5">
                 Free for the first week — zero risk.
-              </span>
+              </span> */}
             </div>
           </div>
         </div>
