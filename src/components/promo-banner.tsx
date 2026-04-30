@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 
 // Sub-component for the numbers
@@ -20,7 +20,11 @@ const TimeUnit = ({ value, label }: { value: string | number; label: string }) =
 export const PromoBanner = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  
+  const location = useLocation();
+    console.log("location", location)
+    const regex = /\/notes\/(\d+)$/;
+  const isNoteDetailPage = location.pathname.match(regex); 
+
   // 🟢 Logic from your hooks
   const { targetDate, hasPromo } = useOfferCountdown();
   const isPromoLink = searchParams.get("sale") === "true";
@@ -65,7 +69,7 @@ export const PromoBanner = () => {
   }, [targetDate, hasPromo]);
 
   // 🟢 Render Conditions
-  const shouldShow = hasPromo && targetDate  && !isDismissed;
+  const shouldShow = hasPromo && targetDate  && !isDismissed && !isNoteDetailPage;
 
   return (
     <AnimatePresence>

@@ -18,6 +18,7 @@ import Layout from "./components/layout";
 import { useTranslation } from "react-i18next";
 import { useInitPromo } from "./store/use-init-promo";
 import NoteDetailBase from "./note-detail/note-base2";
+import Login2 from "./login/login-claude-design";
 
 function App() {
     const { t } = useTranslation();
@@ -39,7 +40,7 @@ function App() {
               {/* <Route element={<PublicRoute />}>
                 <Route path="/" element={<Login />} />
               </Route> */}
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Login2 />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               {/* --- PROTECTED ROUTES (Only accessible if logged in) --- */}

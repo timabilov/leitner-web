@@ -9,7 +9,30 @@ const AIIcon = ({ size = 16, className = "" }: any) => (
 );
 
 const AIChatAnimation = ({ t }: { t: any }) => {
-  const [chatPhase, setChatPhase] = useState(0);
+
+
+  return (
+    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 pt-0 font-sans tracking-tight">
+      
+      {/* 1. HEADER */}
+      <div className="text-center px-4 mt-4 mb-5">
+        <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-tighter leading-none">
+          {t("Chat about your notes")}<br />
+          <span className="relative inline-block text-muted-foreground-400 font-semibold text-[14px] mt-5 tracking-tight">
+            {t("Every note has its own chat with an AI tutor ready to answer questions.")}
+          </span>
+        </h2>
+      </div>
+
+      {/* 2. 3D STAGE / CHAT UI */}
+      <ChatWindow t={t} />
+    </div>
+  );
+};
+
+
+export const ChatWindow = ({ t }) => {
+    const [chatPhase, setChatPhase] = useState(0);
 
 useEffect(() => {
     // Phase 0: Empty chat
@@ -30,20 +53,7 @@ useEffect(() => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-sm mx-auto h-full bg-white py-4 pt-0 font-sans tracking-tight">
-      
-      {/* 1. HEADER */}
-      <div className="text-center px-4 mt-4 mb-5">
-        <h2 className="text-3xl font-bold text-muted-foreground-900 tracking-tighter leading-none">
-          {t("Chat about your notes")}<br />
-          <span className="relative inline-block text-muted-foreground-400 font-semibold text-[14px] mt-5 tracking-tight">
-            {t("Every note has its own chat with an AI tutor ready to answer questions.")}
-          </span>
-        </h2>
-      </div>
-
-      {/* 2. 3D STAGE / CHAT UI */}
-      <div className="relative w-full h-64 flex items-center justify-center mt-6">
+    <div className="relative w-full h-64 flex items-center justify-center mt-6">
         
         {/* Background Decorative Glow */}
         <div 
@@ -141,8 +151,6 @@ When you get a quiz question wrong, I remember it. A few hours later, I’ll sen
         </div>
 
       </div>
-    </div>
-  );
-};
-
+  )
+}
 export default AIChatAnimation;

@@ -6,9 +6,10 @@ import { SidebarInset, SidebarProvider } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Outlet, useLocation } from "react-router";
 import { PromoBanner } from "./promo-banner";
+import { useOfferCountdown } from "@/store/use-offer-countdown";
 
 // Define outside component to prevent re-renders or wrap in React.memo
-const ArchitecturalBackground = () => (
+export const ArchitecturalBackground = () => (
   <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
     <div 
       className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07]" 
@@ -53,8 +54,12 @@ const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) =>
   // 2. Handle "noGap" logic dynamically based on URL
   const location = useLocation();
   // Add paths here that need full width/no padding
-  console.log("location", location)
+    console.log("location", location)
+    const regex = /\/notes\/(\d+)$/;
+  const isNoteDetailPage = location.pathname.match(regex); 
+
   const noGap = location.pathname.includes("/notes/") || (location.pathname.includes("/price-page") && location.search.includes("?sale=true")); 
+  const { hasPromo } = useOfferCountdown();
 
   return (
     <SidebarProvider
@@ -77,7 +82,11 @@ const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) =>
           <ArchitecturalBackground />
           <div className="relative z-10 w-full max-w-8xl mx-auto flex flex-1 flex-col">
                <PromoBanner />
-               <div className={ noGap ? "p-0" : "p-4 sm:p-6"}>
+               <div className={cn(
+                isNoteDetailPage ? "" :  "p-4 sm:p-6", 
+                noGap && "p-0",
+                hasPromo && !isNoteDetailPage ? "mt-14" : ""
+                )}>
                   <Outlet />
                </div>
           </div>

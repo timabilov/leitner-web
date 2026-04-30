@@ -171,13 +171,13 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
                   {t("Library")}
                 </span>
               </div>
-              {
+              {/* {
                 subscriptionStatus === 'free' && (
                   <SidebarMenuItem>
                     <SidebarSaleCard />
                   </SidebarMenuItem>
                 )
-              }
+              } */}
 
 
               {items.map((item) => {
