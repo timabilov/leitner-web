@@ -87,7 +87,8 @@ const PricingCard = ({
   trialFrequency,
   trialInterval,
   hasTrial,
-  discountPercent
+  discountPercent,
+  hasPromo
 }: any) => {
   const { t } = useTranslation();
   const isActivePlan = activePlanKey === tier.key;
@@ -142,7 +143,12 @@ const PricingCard = ({
                 <span className="text-sm font-medium text-zinc-400 line-through">${isAnnual ? (Number(finalDefault) / 12).toFixed(2) : finalDefault}/{tier.unit}</span>
               )}
             </div>
-            <span className=" inline-flex items-center rounded-full bg-[#EC4899] px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-inset ring-pink-500/20 whitespace-nowrap">🎁 { isAnnual  ? "2 months free": `${discountPercent} % discount`} </span>
+            {
+              discountPercent && hasPromo && (
+                <span className=" inline-flex items-center rounded-full bg-[#EC4899] px-2 py-0.5 text-[10px] font-bold text-white ring-1 ring-inset ring-pink-500/20 whitespace-nowrap">🎁 { isAnnual  ? "2 months free": `${discountPercent} % discount`} </span>
+              ) 
+            }
+            
           </div>
           <p className="text-zinc-500 text-sm font-regular mt-3 leading-relaxed">{tier.description}</p>
         </div>
@@ -207,8 +213,7 @@ export default function PricingSection() {
   const [showBanner, setShowBanner] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
-
-  const { targetDate, hasPromo } = useOfferCountdown();
+  const { targetDate , hasPromo} = useOfferCountdown();
   const [searchParams] = useSearchParams();
   const isPromoLink = searchParams.get("sale") === "true";
   const posthog = usePostHog();
@@ -292,10 +297,10 @@ export default function PricingSection() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-neutral-50 dark:bg-zinc-950 pt-20">
       {/* 🟢 BANNER */}
 
-      <main className="flex flex-col items-center pt-20 pb-32">
+      <main className="flex flex-col items-center  pb-32">
         {/* HEADER */}
         <div className="flex flex-col items-center text-center px-4 max-w-3xl mb-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white/50 px-3 py-1  mb-6">
@@ -360,6 +365,7 @@ export default function PricingSection() {
                   onManage={() => setSettingsOpen(true)}
                   discountPercent={liveData?.discountPercent}
                   discountFormatted={liveData?.discountFormatted}
+                  hasPromo={hasPromo}
                 />
               );
            })}

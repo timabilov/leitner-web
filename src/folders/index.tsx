@@ -109,7 +109,7 @@ export default function Folders() {
 
   return (
     <>
-      <div className="min-h-screen bg-transparent w-full max-w-7xl mx-auto">
+      <div className="min-h-screen bg-transparent w-full max-w-7xl mx-auto ">
         {/* --- HEADER --- */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>

@@ -17,7 +17,7 @@ const TimeUnit = ({ value, label }: { value: string | number; label: string }) =
   </div>
 );
 
-export const PromoBanner = () => {
+export const PromoBanner = ({width}) => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -26,6 +26,8 @@ export const PromoBanner = () => {
   const isNoteDetailPage = location.pathname.match(regex); 
 
   // 🟢 Logic from your hooks
+  // const hasPromo = true;
+  // const targetDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Example: 24 hours from now
   const { targetDate, hasPromo } = useOfferCountdown();
   const isPromoLink = searchParams.get("sale") === "true";
   
@@ -79,6 +81,7 @@ export const PromoBanner = () => {
           animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.4, ease: "easeInOut" }}
+          style={{ width: `${width}px` }} // Dynamic width applied here
           className="fixed top-0 z-[200] w-full border-b border-pink-100 bg-[#FFF5F8] overflow-hidden"
         >
           <div className="flex h-14 w-full items-center justify-between px-4  max-w-[1400px] mx-auto">

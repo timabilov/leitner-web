@@ -354,8 +354,8 @@ const NoteDetailBase = () => {
     (textContent ? 1 : 0);
 
   return (
-    <>
-      <div className="flex flex-col  overflow-hidden bg-transparent">
+    <div className="pt-20">
+      <div className="flex flex-col  overflow-hidden bg-transparent  ">
         {/* --- FIXED HEADER --- */}
         <div className="flex-none bg-white dark:bg-zinc-950 z-40 border-b border-zinc-200/50">
           <div className="px-6 py-4">
@@ -821,7 +821,7 @@ const NoteDetailBase = () => {
           __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow-text { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `,
         }}
       />
-    </>
+    </div>
   );
 };
 

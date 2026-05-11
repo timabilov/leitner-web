@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useUserStore } from "@/store/userStore";
 import { AppSidebar } from "./app-sidebar"; 
 import Header from "./header";
@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { Outlet, useLocation } from "react-router";
 import { PromoBanner } from "./promo-banner";
 import { useOfferCountdown } from "@/store/use-offer-countdown";
+import { useElementWidth } from "@/hooks/use-width";
 
 // Define outside component to prevent re-renders or wrap in React.memo
 export const ArchitecturalBackground = () => (
@@ -47,7 +48,7 @@ export const ArchitecturalBackground = () => (
   </div>
 );
 
-const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) => {
+const Layout = ({  title, processingNotes, onProcessingClick }) => {
   const { photo, fullName, email,
      processingNotesCount, triggerFocusNotes 
    } = useUserStore();
@@ -57,21 +58,23 @@ const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) =>
     console.log("location", location)
     const regex = /\/notes\/(\d+)$/;
   const isNoteDetailPage = location.pathname.match(regex); 
-
-  const noGap = location.pathname.includes("/notes/") || (location.pathname.includes("/price-page") && location.search.includes("?sale=true")); 
+  const  containerRef = useRef<HTMLElement>(null);
+  const mainWidth = useElementWidth(containerRef);
+  // const hasPromo = true; ;
+  const noGap = location.pathname.includes("/notes/") || ((location.pathname.includes("/price-page") || location.search.includes("?sale=true"))) ; 
   const { hasPromo } = useOfferCountdown();
 
   return (
     <SidebarProvider
       // Adding defaultOpen helps prevent initial flash if using local storage
       defaultOpen={true} 
-      className="flex h-screen w-full bg-background overflow-hidden"
+      className="flex h-screen w-full bg-background overflow-hidden relative"
     >
       <AppSidebar photo={photo} fullName={fullName} email={email} />
       
       <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
         {/* <Header processingNotes={processingNotesCount} onProcessingClick={triggerFocusNotes} /> */}
-        
+         <PromoBanner width={mainWidth} />
         <main 
           ref={containerRef}
           className={cn(
@@ -81,9 +84,9 @@ const Layout = ({  title, containerRef, processingNotes, onProcessingClick }) =>
         >
           <ArchitecturalBackground />
           <div className="relative z-10 w-full max-w-8xl mx-auto flex flex-1 flex-col">
-               <PromoBanner />
+              
                <div className={cn(
-                isNoteDetailPage ? "" :  "p-4 sm:p-6", 
+                isNoteDetailPage ? "" : ( noGap ?  "" : "p-4 sm:p-6"), 
                 noGap && "p-0",
                 hasPromo && !isNoteDetailPage ? "mt-14" : ""
                 )}>
