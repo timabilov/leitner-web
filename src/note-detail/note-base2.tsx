@@ -65,6 +65,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { usePostHog } from "posthog-js/react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 // --- Sub-Components ---
 
@@ -153,6 +154,8 @@ const NoteDetailBase = () => {
   const [pdfPaths, setPdfPaths] = useState<any[]>([]);
   const [textContent, setTextContent] = useState<string>("");
   const [isProcessingFiles, setProcessingFiles] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
 
   // Pending Action
   const [pendingAiAction, setPendingAiAction] = useState<{
@@ -175,6 +178,16 @@ const NoteDetailBase = () => {
       );
     }
   }, [activeTab, setSearchParams]);
+
+      useEffect(() => {
+        // Only revoke if it's a real blob URL
+        if (selectedImage?.startsWith('blob:')) {
+          return () => {
+            console.log("Revoking blob URL to free memory:", selectedImage);
+            URL.revokeObjectURL(selectedImage);
+          };
+        }
+    }, [selectedImage]);
 
   useEffect(() => {
     if (noteId) {
@@ -261,7 +274,7 @@ const NoteDetailBase = () => {
       axiosInstance.get(
         `${API_BASE_URL}/company/${companyId}/notes/${noteId}/documents-url`,
       ),
-    enabled: !!(note && note.note_type !== "youtube"),
+    enabled:  note && note.note_type !== "youtube",
   });
 
   useEffect(() => {
@@ -580,10 +593,12 @@ const NoteDetailBase = () => {
                           </span>
                         </DropdownMenuItem>
                       ))}
-                      {imagePaths.map((img, i) => (
+                      {imagePaths.map((img, i) => {
+                        console.log("img", img)
+                        return (
                         <DropdownMenuItem
                           key={`img-${i}`}
-                          onClick={() => window.open(img.url, "_blank")}
+                          onClick={() => setSelectedImage(img.url)} 
                           className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
                         >
                           <ImageIcon
@@ -594,7 +609,7 @@ const NoteDetailBase = () => {
                             {img.name}
                           </span>
                         </DropdownMenuItem>
-                      ))}
+                      )})}
                       {audioPaths.map((aud, i) => (
                         <DropdownMenuItem
                           key={`aud-${i}`}
@@ -633,86 +648,12 @@ const NoteDetailBase = () => {
                   )
                 )}
 
-                {/* <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" /> */}
-
-                {/* <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 shrink-0" /> */}
-
-                {/* CHAT SIDEBAR TOGGLE BUTTON */}
-                {/* <button
-                    onClick={() => setIsChatSidebarOpen(!isChatSidebarOpen)}
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all shrink-0 border",
-                      isChatSidebarOpen
-                        ? "bg-zinc-900 border-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-sm"
-                        : "bg-white border-zinc-200 text-zinc-600 dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                    )}
-                  >
-                    <PanelRight size={14} />
-                    {isChatSidebarOpen ? t("Close Chat") : t("Open Chat")}
-                  </button> */}
               </div>
             </div>
           </div>
 
           {/* MAIN CONTENT AREA */}
           <div className="flex-1 min-h-0 flex flex-col bg-transparent">
-            {/* Existing Non-YouTube Media Attachments Header (Expanded State) */}
-            {/* {isMediaExpanded && hasMedia && !note?.youtube_url && (
-                <div className="w-full flex flex-col px-6 py-4">
-                  <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
-                    <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
-                      {(imagePaths.length > 0 ||
-                        audioPaths.length > 0 ||
-                        pdfPaths.length > 0 ||
-                        textContent) && (
-                        <div className="shrink-0 h-full max-h-[250px] overflow-y-auto space-y-2 pr-2 pt-2 border-t border-zinc-200/50">
-                          {imagePaths.length > 0 && (
-                            <div className="flex bg-zinc-50/50 dark:bg-zinc-900/50 p-3 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                              {imagePaths.map((img, i) => (
-                                <Zoom key={i}>
-                                  <img
-                                    src={img.url}
-                                    className="aspect-square object-cover rounded-md border border-zinc-200 h-[120px] mr-1"
-                                  />
-                                </Zoom>
-                              ))}
-                            </div>
-                          )}
-                          <div className="flex flex-wrap gap-2">
-                            {audioPaths.map((aud, i) => (
-                              <div key={i} className="min-w-[200px]">
-                                <AudioPlayer audio={aud} />
-                              </div>
-                            ))}
-                            {pdfPaths.map((pdf, i) => (
-                              <button
-                                key={i}
-                                onClick={() => setPreviewFile(pdf)}
-                                className="flex items-center gap-3 p-2 rounded-xl border border-zinc-200 bg-white hover:border-zinc-400 transition-all"
-                              >
-                                <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
-                                  <ScrollText size={16} />
-                                </div>
-                                <span className="text-sm font-semibold truncate max-w-[150px]">
-                                  {pdf.name}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                          {textContent && (
-                            <div className="mt-2 p-3 bg-zinc-50 border rounded-lg">
-                              <pre className="text-xs whitespace-pre-wrap">
-                                {textContent}
-                              </pre>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )} */}
-
             {/* Vertical Media + Tabs PanelGroup */}
             <div className="flex-1 min-h-0 flex flex-col">
               {/* 🟢 FIXED FRAGMENT ISSUE: No more <></> wrapping these panels */}
@@ -990,6 +931,21 @@ const NoteDetailBase = () => {
           onClose={() => setPreviewFile(null)}
         />
       )}
+      {/* The Modal remains closed until selectedImage is not null */}
+      <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+        {/* Use max-w-full and adjust width based on screen size */}
+        <DialogContent className="max-w-[95vw] md:max-w-3xl lg:max-w-5xl p-2 md:p-6 overflow-hidden">
+          <div className="relative flex items-center justify-center w-full max-h-[85vh]">
+            {selectedImage && (
+              <img 
+                src={selectedImage} 
+                alt="Preview" 
+                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-sm"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       <style
         dangerouslySetInnerHTML={{
           __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow-text { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `,

@@ -159,7 +159,7 @@ const useAudioRecorder = (onStopCallback: (blob: Blob) => void) => {
 // ============================================================================
 // 2. SUB-COMPONENT: AudioPreview
 // ============================================================================
-const AudioPreview = ({ file, onRemove }: { file: any, onRemove: () => void }) => {
+const AudioPreview = ({ file, loading, onRemove }: { file: any, loading: boolean, onRemove: () => void }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -181,9 +181,13 @@ const AudioPreview = ({ file, onRemove }: { file: any, onRemove: () => void }) =
         {isPlaying ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
       </Button>
       <span className="max-w-[120px] truncate font-medium">{file.name}</span>
-      <Button variant="ghost" size="icon" className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={onRemove}>
-        <X className="h-3 w-3" />
-      </Button>
+      {
+        !loading && (
+          <Button variant="ghost" size="icon" className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={onRemove}>
+            <X className="h-3 w-3" />
+          </Button>
+        )
+      }
     </motion.div>
   );
 };
@@ -474,7 +478,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="relative z-20 flex flex-wrap gap-2 px-3 pb-3 mt-1">
               {files.map((file: any, idx: number) => (
                 file.type.startsWith("audio/") ? (
-                  <AudioPreview key={file.name+idx} file={file} onRemove={() => removeFile(file)} />
+                  <AudioPreview key={file.name+idx} file={file} loading={isSubmitting} onRemove={() => removeFile(file)} />
                 ) : (
                   <motion.div layout initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} key={file.name + idx} className="group relative flex items-center gap-2 bg-background/50 rounded-xl border px-3 py-2 text-sm transition-colors hover:bg-background">
                     <div className="text-muted-foreground">
@@ -484,9 +488,14 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
                     {file.type.startsWith("image/") && (
                       <Zoom><img src={file.preview} alt={file.name} className="h-6 w-6 rounded object-cover border ml-1" /></Zoom>
                     )}
-                    <Button variant="ghost" size="icon" className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={() => removeFile(file)}>
-                      <X className="h-3 w-3" />
-                    </Button>
+                    {
+                      !isSubmitting && (
+                           <Button variant="ghost" size="icon" className="absolute -right-2 -top-2 h-5 w-5 rounded-full bg-background border opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={() => removeFile(file)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                      )
+                    }
+                 
                   </motion.div>
                 )
               ))}

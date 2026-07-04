@@ -21,7 +21,6 @@ export const PromoBanner = ({width}) => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-    console.log("location", location)
     const regex = /\/notes\/(\d+)$/;
   const isNoteDetailPage = location.pathname.match(regex); 
 

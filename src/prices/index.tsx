@@ -29,6 +29,7 @@ import user3 from "./assets/user3.png";
 import user4 from "./assets/user4.png";
 import user5 from "./assets/user5.png";
 import { PromoBanner } from "@/components/promo-banner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 const userImages = [user1, user2, user3, user4, user5];
 
 
@@ -135,7 +136,7 @@ const PricingCard = ({
               <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">{t(tier.key)}</h3>
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">
-                  {tier.key === "weekly" ? t("Free") : `$${isAnnual ? (Number(finalOriginal) / 12).toFixed(2) : finalOriginal}`}
+                  {(tier.key === "weekly" && hasPromo? t("Free") : `$${isAnnual ? ((Number(finalOriginal) / 12).toFixed(2) || "") : finalOriginal}`) || ""}
                 </span>
                 {tier.key !== "weekly" && <span className="text-zinc-400 font-regular text-lg">/{isAnnual ? 'month' : tier.unit}</span>}
               </div>
@@ -167,12 +168,19 @@ const PricingCard = ({
           {/* Features */}
           <div className="flex flex-col space-y-4 mb-8 pt-6 px-6 border-t border-dashed border-zinc-100 dark:border-zinc-800">
             {tier.features.map((feature: any, i: number) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className={cn("rounded-full p-0.5", "bg-white border border-neutral-200 ")}>
-                  <Check size={11} className={ "text-neutral-400" } strokeWidth={4} />
-                </div>
-                <span className="text-[13px] font-regular text-gray-700 dark:text-zinc-400">{feature}</span>
-              </div>
+              <Tooltip key={i}>
+                <TooltipTrigger>
+                  <div className="flex items-center gap-3">
+                    <div className={cn("rounded-full p-0.5", "bg-white border border-neutral-200 ")}>
+                      <Check size={11} className={ "text-neutral-400" } strokeWidth={4} />
+                    </div>
+                    <span className="text-[13px] font-regular text-gray-700 dark:text-zinc-400">{feature}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="bg-zinc-900 text-white text-sm rounded-md p-3">
+                  <p>{feature}</p>
+                </TooltipContent>
+              </Tooltip>
             ))}
           </div>
       </div>

@@ -55,7 +55,6 @@ const Layout = ({  title, processingNotes, onProcessingClick }) => {
   // 2. Handle "noGap" logic dynamically based on URL
   const location = useLocation();
   // Add paths here that need full width/no padding
-    console.log("location", location)
     const regex = /\/notes\/(\d+)$/;
   const isNoteDetailPage = location.pathname.match(regex); 
   const  containerRef = useRef<HTMLElement>(null);

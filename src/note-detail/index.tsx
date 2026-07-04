@@ -506,7 +506,9 @@ const NoteDetailBase = () => {
                                 </span>
                               </DropdownMenuItem>
                             ))}
-                            {imagePaths.map((img, i) => (
+                            {imagePaths.map((img, i) =>{ 
+                              console.log("img:", img);
+                              return (
                               <DropdownMenuItem
                                 key={`img-${i}`}
                                 onClick={() => window.open(img.url, "_blank")}
@@ -520,7 +522,7 @@ const NoteDetailBase = () => {
                                   {img.name}
                                 </span>
                               </DropdownMenuItem>
-                            ))}
+                            )})}
                             {audioPaths.map((aud, i) => (
                               <DropdownMenuItem
                                 key={`aud-${i}`}
