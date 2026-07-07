@@ -502,8 +502,135 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
             </motion.div>
           )}
         </AnimatePresence>
+         <div className="relative z-20 flex justify-between items-center rounded-[1rem] bg-background/50 backdrop-blur-sm border border-border/40 p-1.5 mt-2 min-h-[52px] w-full overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              {recorder.status === "idle" ? (
+                <motion.div
+                  key="idle-tools"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="flex items-center gap-1 w-full overflow-x-auto no-scrollbar"
+                >
+                  <Tooltip>
+                    <TooltipTrigger >
+                      <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-pink-600 rounded-full h-9 w-9" onClick={openFilePicker}>
+                        <Paperclip className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{t("Attach file")}</p></TooltipContent>
+                  </Tooltip>
 
-        <div className="relative z-20 flex justify-between items-center rounded-[1rem] bg-background/50 backdrop-blur-sm border border-border/40 p-1.5 mt-2 min-h-[48px]">
+                  <Tooltip>
+                    <TooltipTrigger >
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="shrink-0 text-muted-foreground hover:text-pink-600 rounded-full h-9 w-9" 
+                        onClick={() => { if (!recorder.devices.length) recorder.getDevices(true); posthog.capture('audio_recording_started'); recorder.start(); }}
+                      >
+                        <Mic className="h-5 w-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{t("Start recording")}</p></TooltipContent>
+                  </Tooltip>
+
+                  <div className="shrink-0">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-pink-600 rounded-full h-8 w-8">
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-[300px] rounded-2xl p-2">
+                        <DropdownMenuLabel>{t("Microphone")}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {recorder.isFetching ? (
+                          <DropdownMenuItem disabled><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {t("Fetching...")}</DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuRadioGroup value={recorder.selectedMicId} onValueChange={recorder.setSelectedMicId}>
+                            {recorder.devices.map(d => (
+                              <DropdownMenuRadioItem key={d.deviceId} value={d.deviceId} className="rounded-lg">
+                                {d.label || "Mic"}
+                              </DropdownMenuRadioItem>
+                            ))}
+                          </DropdownMenuRadioGroup>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="rounded-lg" onSelect={() => recorder.getDevices(true)}>
+                          <RefreshCw className="h-4 w-4 mr-2" /> {t("Update microphone list")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
+                  <div className="ml-2 shrink-0  sm:block">
+                    <FolderSelect data={data?.folders || []} />
+                  </div>
+
+                  {recorder.isBlocked && <p className="text-xs text-red-500 ml-2 whitespace-nowrap">{t("Mic blocked")}</p>}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="recording-tools"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex items-center gap-1 sm:gap-3 w-full px-1"
+                >
+                  <Button variant="ghost" size="icon" onClick={() => recorder.stop(false)} className="shrink-0 text-muted-foreground hover:text-destructive rounded-full h-8 w-8">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+
+                  <div className="flex items-center gap-1.5 bg-red-500/10 px-2 py-1 rounded-full border border-red-500/20 shrink-0">
+                    <motion.div animate={{ opacity: recorder.status === "paused" ? 0.5 : [1, 0.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }} className="h-2 w-2 bg-red-500 rounded-full" />
+                    <span className="text-xs font-mono text-red-600 font-bold min-w-[40px] text-center">{formatTime(recorder.elapsedTime)}</span>
+                  </div>
+
+                  <div className="flex-1 h-8 hidden sm:flex justify-center items-center overflow-hidden">
+                    {recorder.stream && <AudioVisualizer mediaStream={recorder.stream} isPaused={recorder.status !== 'recording'} />}
+                  </div>
+
+                  <Button variant="ghost" size="icon" className="shrink-0 rounded-full h-8 w-8" onClick={recorder.status === "recording" ? recorder.pause : recorder.resume}>
+                    {recorder.status === "recording" ? <Pause className="h-4 w-4 text-muted-foreground" /> : <Play className="h-4 w-4 text-muted-foreground" />}
+                  </Button>
+
+                  <Tooltip>
+                    <TooltipTrigger >
+                      <Button onClick={() => recorder.stop(true)} className="shrink-0 text-red-500 hover:bg-red-50 rounded-full h-8 w-8 flex items-center justify-center p-0">
+                        <StopCircle className="h-6 w-6" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{t("Stop & Attach")}</p></TooltipContent>
+                  </Tooltip>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex-shrink-0 ml-auto flex items-center">
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="hidden md:inline-block mr-3 text-[10px] text-muted-foreground/90 font-medium select-none"
+              >
+                ⌘ + Enter
+              </motion.span>
+
+              <Button
+                onClick={saveNote}
+                size="icon"
+                disabled={isSubmitting || recorder.status === "recording"}
+                className="rounded-full h-9 w-9 bg-black hover:bg-black/90 text-white transition-all active:scale-95"
+              >
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : <ArrowUp className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+
+
+        {/* <div className="relative z-20 flex justify-between items-center rounded-[1rem] bg-background/50 backdrop-blur-sm border border-border/40 p-1.5 mt-2 min-h-[48px]">
           <AnimatePresence mode="wait" initial={false}>
             {recorder.status === "idle" ? (
               <motion.div key="idle-tools" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="flex items-center gap-1 ml-1">
@@ -592,7 +719,7 @@ export function AIPromptInput({  openFilePicker, files, setFiles, getInputProps,
               {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : recorder.status !== "idle" ? <AudioLinesIcon className="h-4 w-4 animate-pulse" /> : <ArrowUp />}
             </Button>
           </div>
-        </div>
+        </div> */}
 
         <AnimatePresence>
           {isDragActive && (

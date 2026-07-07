@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import FolderSelect from "@/components/select-folder";
 import CreateFolder from "@/components/create-folder";
 import { useFolders } from "@/hooks/use-folders";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -229,7 +230,7 @@ const Notes = ({ children }: any) => {
 
         `}
       </style>
-
+      <SidebarTrigger  className=" z-[201] mt-2" />
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className=" w-full max-w-2xl mx-auto">
@@ -301,7 +302,7 @@ const Notes = ({ children }: any) => {
             </Card>
           </div>
 
-          <div className="px-4 mt-4 grid gap-x-6 md:grid-cols-1 justify-items-center relative ">
+          <div className="px-4 mt-4 grid grid-cols-1 md:grid-cols-1 gap-6 w-full max-w-4xl mx-auto">
             <AIPromptInput
               setIsPolling={setIsPolling}
               files={files}
@@ -447,10 +448,10 @@ const Notes = ({ children }: any) => {
                 className={cn(
                   "w-full p-4 grid gap-4",
                   viewMode === "grid"
-                    ? "sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3"
+                    ? "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3" // Added grid-cols-1
                     : "grid-cols-1"
                 )}
-              >
+>
                 {(searchQuery
                   ? searchNotesQuery?.data || []
                   : notesQuery?.data?.data?.notes || []

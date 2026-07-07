@@ -76,7 +76,7 @@ const { setOpen } = useSidebar()
   const cardBase = "group relative bg-card border border-border transition-all duration-200 hover:border-foreground/30 overflow-hidden cursor-pointer rounded-xl";
 
   return (
-    <div className={cn("relative w-full", view === "grid" ? "h-full min-h-[180px]" : "h-auto")}>
+    <div key={item.id} className={cn("relative max-w-full", view === "grid" ? "h-full min-h-[180px]" : "h-auto")}>
       {/* <AnimatePresence mode="popLayout"> */}
         
         {/* === STATE 1: PROCESSING === */}
@@ -93,7 +93,7 @@ const { setOpen } = useSidebar()
         ) : (
           
           /* === STATE 2: FINISHED === */
-          <div key={item.id}  className="h-full w-full">
+         
             <motion.div
               layout
               key="content"
@@ -238,7 +238,6 @@ const { setOpen } = useSidebar()
                 </Tooltip>
               </div>
             </motion.div>
-          </div>
         )}
       {/* </AnimatePresence> */}
     </div>

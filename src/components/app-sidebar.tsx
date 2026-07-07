@@ -20,12 +20,8 @@ import {
   FolderOpen,
   Smartphone,
   Bell,
-  FileText,
-  Shield,
   Handshake,
-  Glasses,
   HatGlasses,
-  MoreVertical,
   Menu,
   X,
   Sparkles
@@ -138,7 +134,6 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
       {...props}
     >
       <SidebarHeader className="h-14 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center px-4  py-7 gap-3 transition-all">
-        
         {
           open ? (
             <div className="flex justify-between items-center w-full">
@@ -160,13 +155,13 @@ export function AppSidebar({ fullName, photo, email, ...props }) {
        
       </SidebarHeader>
 
-      <SidebarContent className="px-2 group-data-[collapsible=icon]:px-1 pt-4 gap-0 overflow-x-hidden scrollbar-none">
+      <SidebarContent className="px-2 group-data-[collapsible=icon]:px-1 gap-0 overflow-x-hidden scrollbar-none">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1 relative">
         
              
-              <div className="px-3 mb-2 mt-4 group-data-[collapsible=icon]:hidden transition-opacity duration-200">
+              <div className="px-3 mb-2  group-data-[collapsible=icon]:hidden transition-opacity duration-200">
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em]">
                   {t("Library")}
                 </span>

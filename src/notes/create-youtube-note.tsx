@@ -236,27 +236,29 @@ const CreateYoutubeNote = ({ component, refetch }) => {
             />
           </div>
         </div>
-        <DialogFooter>
-          <Label htmlFor={"lang"}>{t("Translate to")}:</Label>
+        <DialogFooter >
+          <div className="flex flex-row gap-2 w-full">
+            <Label htmlFor={"lang"}>{t("Translate to")}:</Label>
 
-          <Select
-            defaultValue="auto"
-            onValueChange={(val) => setSelectedLanguage(val)}
-          >
-            <SelectTrigger className="[&>span_svg]:text-muted-foreground/80 max-w-2xl [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0">
-              <SelectValue placeholder={t("Select language")} />
-            </SelectTrigger>
-            <SelectContent
-              id="lang"
-              className="[&_*[role=option]>span>svg]:text-muted-foreground/80 max-h-100 [&_*[role=option]]:pr-4 [&_*[role=option]]:pl-2 [&_*[role=option]>span]:right-2 [&_*[role=option]>span]:left-auto [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2 [&_*[role=option]>span>svg]:shrink-0"
+            <Select
+              defaultValue="auto"
+              onValueChange={(val) => setSelectedLanguage(val)}
             >
-              {availableLanguages.map((country, index) => (
-                <SelectItem key={index} value={country.iso}>
-                  <span className="truncate">{`${country.flag} ${country.language}`}</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger className="[&>span_svg]:text-muted-foreground/80 max-w-2xl [&>span]:flex [&>span]:items-center [&>span]:gap-2 [&>span_svg]:shrink-0">
+                <SelectValue placeholder={t("Select language")} />
+              </SelectTrigger>
+              <SelectContent
+                id="lang"
+                className="[&_*[role=option]>span>svg]:text-muted-foreground/80 max-h-100 [&_*[role=option]]:pr-4 [&_*[role=option]]:pl-2 [&_*[role=option]>span]:right-2 [&_*[role=option]>span]:left-auto [&_*[role=option]>span]:flex [&_*[role=option]>span]:items-center [&_*[role=option]>span]:gap-2 [&_*[role=option]>span>svg]:shrink-0"
+              >
+                {availableLanguages.map((country, index) => (
+                  <SelectItem key={index} value={country.iso}>
+                    <span className="truncate">{`${country.flag} ${country.language}`}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            </div>
 
           <DialogClose asChild>
             <Button

@@ -1,8 +1,7 @@
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 import { useUserStore } from "@/store/userStore";
 import { AppSidebar } from "./app-sidebar"; 
-import Header from "./header";
-import { SidebarInset, SidebarProvider } from "./ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Outlet, useLocation } from "react-router";
 import { PromoBanner } from "./promo-banner";
@@ -63,38 +62,39 @@ const Layout = ({  title, processingNotes, onProcessingClick }) => {
   const noGap = location.pathname.includes("/notes/") || ((location.pathname.includes("/price-page") || location.search.includes("?sale=true"))) ; 
   const { hasPromo } = useOfferCountdown();
 
-  return (
-    <SidebarProvider
-      // Adding defaultOpen helps prevent initial flash if using local storage
-      defaultOpen={true} 
-      className="flex h-screen w-full bg-background overflow-hidden relative"
-    >
-      <AppSidebar photo={photo} fullName={fullName} email={email} />
-      
-      <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
-        {/* <Header processingNotes={processingNotesCount} onProcessingClick={triggerFocusNotes} /> */}
-         <PromoBanner width={mainWidth} />
-        <main 
-          ref={containerRef}
-          className={cn(
-            "flex-1 flex flex-col relative overflow-y-auto isolate w-full",
-           
-          )}
-        >
-          <ArchitecturalBackground />
-          <div className="relative z-10 w-full max-w-8xl mx-auto flex flex-1 flex-col">
-              
-               <div className={cn(
-                isNoteDetailPage ? "" : ( noGap ?  "" : "p-4 sm:p-6"), 
-                noGap && "p-0",
-                hasPromo && !isNoteDetailPage ? "mt-14" : ""
-                )}>
-                  <Outlet />
-               </div>
-          </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+  return (<>
+     
+
+      <SidebarProvider
+        // Adding defaultOpen helps prevent initial flash if using local storage
+        defaultOpen={true} 
+        className="flex h-screen w-full bg-background overflow-hidden relative "
+      >
+        <AppSidebar photo={photo} fullName={fullName} email={email} />
+        <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
+          {/* <Header processingNotes={processingNotesCount} onProcessingClick={triggerFocusNotes} /> */}
+          <main 
+            ref={containerRef}
+            className={cn(
+              "flex-1 flex flex-col relative overflow-y-auto isolate w-full",
+            
+            )}
+          >
+            <ArchitecturalBackground />
+            <div className="relative z-10 w-full max-w-8xl mx-auto flex flex-1 flex-col">
+                
+                <div className={cn(
+                  isNoteDetailPage ? "" : ( noGap ?  "" : "p-4 sm:p-6"), 
+                  noGap && "p-0",
+                  hasPromo && !isNoteDetailPage ? "mt-14" : ""
+                  )}>
+                    <Outlet />
+                </div>
+            </div>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
+    </>
   );
 };
 

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, ChevronsUpDown, Folder, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Folder, FolderEdit, Folders, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -79,8 +79,8 @@ const FolderSelect = ({ data, variant = "outline", size="sm" }: any) => {
             className="flex-1 justify-between md:max-w-[200px] lg:max-w-[300px] cursor-pointer"
           >
             <div className="flex items-center gap-2">
-              <Folder className="h-4 w-4" />
-              <span className={`text-${size === "sm" ? "sm" : "lg"}`}>{selectedFolder?.id ? selectedFolder.name : t("All folders")}</span>
+              <Folders className="h-4 w-4" />
+               <span className={`hidden lg:block text-${size === "sm" ? "sm" : "lg"}`}>{selectedFolder?.id ? selectedFolder.name : t("All folders")}</span>
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>

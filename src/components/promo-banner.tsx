@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
+// import { SidebarTrigger, useSidebar } from "./ui/sidebar";
+import { cn } from "@/lib/utils";
 
 // Sub-component for the numbers
 const TimeUnit = ({ value, label }: { value: string | number; label: string }) => (
@@ -17,10 +18,11 @@ const TimeUnit = ({ value, label }: { value: string | number; label: string }) =
   </div>
 );
 
-export const PromoBanner = ({width}) => {
+export const PromoBanner = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+
     const regex = /\/notes\/(\d+)$/;
   const isNoteDetailPage = location.pathname.match(regex); 
 
@@ -29,7 +31,7 @@ export const PromoBanner = ({width}) => {
   // const targetDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Example: 24 hours from now
   const { targetDate, hasPromo } = useOfferCountdown();
   const isPromoLink = searchParams.get("sale") === "true";
-  
+   
   // 🟢 Internal UI state
   const [isDismissed, setIsDismissed] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
@@ -70,23 +72,27 @@ export const PromoBanner = ({width}) => {
   }, [targetDate, hasPromo]);
 
   // 🟢 Render Conditions
-  const shouldShow = hasPromo && targetDate  && !isDismissed && !isNoteDetailPage;
+
+
+  const shouldShow = useMemo(() => {
+      return hasPromo && targetDate  && !isDismissed && !isNoteDetailPage;
+  }, [hasPromo, targetDate, isDismissed, isNoteDetailPage]);
 
   return (
     <AnimatePresence>
       {shouldShow && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: "auto", opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-          style={{ width: `${width}px` }} // Dynamic width applied here
-          className="fixed top-0 z-[200] w-full border-b border-pink-100 bg-[#FFF5F8] overflow-hidden"
-        >
+            <motion.div
+              layout={false} 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed top-0 left-0 right-0 z-[200] border-b bg-[#FFF5F8]"
+            >
           <div className="flex h-14 w-full items-center justify-between px-4  max-w-[1400px] mx-auto">
             
             {/* Left Section: Badge & Message */}
             <div className="flex items-center gap-3 sm:gap-4">
+  
               <div className="bg-[#EC4899] text-white px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-widest shadow-sm">
                 {t("SALE")}
               </div>

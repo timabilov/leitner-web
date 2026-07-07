@@ -641,7 +641,7 @@ export const AudioRecorderWithVisualizer = ({
       )}
     >
       {recordingStatus === "recording" && (
-        <div className="flex h-8 w-full flex-row">
+        <div className="flex h-8 w-full flex-row overflow-hidden">
           <canvas ref={canvasRef} className="h-full w-full bg-background" />
         </div>
       )}

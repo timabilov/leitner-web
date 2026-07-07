@@ -1,12 +1,9 @@
 import { ArrowDown } from "lucide-react";
 import { LanguageSwitcher } from "./language-switcher";
 import CreateFolder from "./create-folder";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "./ui/spinner";
-
 import { useFolders } from "@/hooks/use-folders";
 import FolderSelect from "./select-folder";
-import CountdownTimer from "./countdown-timer";
 
 const Header = ({ processingNotes, onProcessingClick }: any) => {
   const { data } = useFolders();

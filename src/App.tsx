@@ -19,6 +19,7 @@ import { useTranslation } from "react-i18next";
 import { useInitPromo } from "./store/use-init-promo";
 import NoteDetailBase from "./note-detail/note-base2";
 import Login2 from "./login/login-claude-design";
+import { PromoBanner } from "./components/promo-banner";
 
 function App() {
     const { t } = useTranslation();
@@ -35,11 +36,13 @@ function App() {
               </div>
             }
           >
+            <PromoBanner />
             <Routes>
               {/* --- PUBLIC ROUTES (Only accessible if NOT logged in) --- */}
               {/* <Route element={<PublicRoute />}>
                 <Route path="/" element={<Login />} />
               </Route> */}
+               
             <Route path="/" element={<Login2 />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />

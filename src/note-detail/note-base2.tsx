@@ -64,8 +64,8 @@ import ChatInterface from "./chat-interface";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { usePostHog } from "posthog-js/react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 // --- Sub-Components ---
 
