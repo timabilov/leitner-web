@@ -1,16 +1,14 @@
 import { Suspense } from "react";
 import "./App.css";
 import Notes from "./notes";
-import Login from "./login";
 import Privacy from "./privacy";
 import Terms from "./terms";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Route, Routes } from "react-router";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "./components/ui/tooltip";
-import NoteDetail from "./note-detail";
 import PricingPage from "./prices";
-import { ProtectedRoute, PublicRoute } from "./components/protected-route";
+import { ProtectedRoute } from "./components/protected-route";
 import Alerts from "./alerts";
 import Folders from "./folders";
 import MobileApp from "./mobileapp";
@@ -23,9 +21,8 @@ import { PromoBanner } from "./components/promo-banner";
 
 function App() {
     const { t } = useTranslation();
-    console.log("App rendered");
     useInitPromo();
-
+    
   return (
       <TooltipProvider>
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>

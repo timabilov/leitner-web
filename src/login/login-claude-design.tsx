@@ -26,6 +26,7 @@ import { VoiceTutorSlide } from "./components/voice-tutor-slide";
 import { QuizSlide } from "./components/quiz-slide";
 import { TutorSlide } from "./components/chat-slide";
 import { FlashcardSlide } from "./components/flashcard-slide";
+import { useOfferCountdown } from "@/store/use-offer-countdown";
 
 
 const LoginBase = () => {
@@ -41,8 +42,7 @@ const LoginBase = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  // const { hasPromo } = useOfferCountdown();
-  const hasPromo = false
+  const { hasPromo } = useOfferCountdown();
   const [activeSlide, setActiveSlide] = useState(0);
   const [sessionData, setSessionData] = useState<any>(null);
 
@@ -273,16 +273,9 @@ const LoginBase = () => {
 
         {/* 🟢 RIGHT SIDE: LOGIN CONTENT */}
         <div className="relative flex w-full flex-col items-center justify-center bg-white/80 backdrop-blur-sm md:w-1/2 px-6 py-12 ">
-           <ArchitecturalBackground />
           {/* Top Right Sale Pill */}
           <div className="absolute top-8 right-8 flex items-center gap-4 z-50">
-             {hasPromo && (
-               <Link to="/price-page?sale=true" className="flex items-center gap-2 rounded-full border border-zinc-100 bg-white px-3 py-1.5 text-xs font-bold shadow-sm hover:bg-zinc-50 transition-colors">
-                  <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-zinc-600">Sale active — <span className="text-zinc-900 underline">View plans →</span></span>
-               </Link>
-             )}
-             <LanguageSwitcher />
+            <LanguageSwitcher /> 
           </div>
 
           <div className="w-full max-w-md flex flex-col items-center z-50">

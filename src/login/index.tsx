@@ -380,7 +380,7 @@ const LoginBase = () => {
         email: variables.user.email,
         new_user: data?.new,
       });
-      if (/*data?.new*/ true) {
+      if (data?.new) {
         setSessionData({
           id: data.id,
           idToken: variables.idToken,
@@ -394,7 +394,6 @@ const LoginBase = () => {
           trialDays: data?.company?.trial_days,
           fullAdmin: data?.company?.full_admin_access || false,
         });
-        console.log("he sore?")
         setShowOnboarding(true);
         posthog.identify(data.id, {
           email: variables.user.email,
@@ -540,7 +539,7 @@ const LoginBase = () => {
       </style>
       <AnimatedGrid />
       <PromoBanner />
-      <div className={cn("absolute  right-8 z-[101]", hasPromo ? "top-20" : "top-10")}>
+      <div className={cn("absolute  right-8 z-[101]", hasPromo ? "top-100" : "top-10")}>
         <LanguageSwitcher />
       </div>
       

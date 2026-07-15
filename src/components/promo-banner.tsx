@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
-// import { SidebarTrigger, useSidebar } from "./ui/sidebar";
-import { cn } from "@/lib/utils";
 
 // Sub-component for the numbers
-const TimeUnit = ({ value, label }: { value: string | number; label: string }) => (
+const TimeUnit = ({
+  value,
+  label,
+}: {
+  value: string | number;
+  label: string;
+}) => (
   <div className="flex flex-col items-center min-w-[35px] sm:min-w-[45px]">
     <span className="text-xl sm:text-2xl font-black leading-none text-zinc-900 tracking-tighter">
       {value.toString().padStart(2, "0")}
@@ -20,20 +24,16 @@ const TimeUnit = ({ value, label }: { value: string | number; label: string }) =
 
 export const PromoBanner = () => {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
   const location = useLocation();
-
-    const regex = /\/notes\/(\d+)$/;
-  const isNoteDetailPage = location.pathname.match(regex); 
+  const regex = /\/notes\/(\d+)$/;
+  const isNoteDetailPage = location.pathname.match(regex);
 
   // 🟢 Logic from your hooks
   // const hasPromo = true;
   // const targetDate = new Date(Date.now() + 24 * 60 * 60 * 1000); // Example: 24 hours from now
   const { targetDate, hasPromo } = useOfferCountdown();
-  const isPromoLink = searchParams.get("sale") === "true";
-   
+
   // 🟢 Internal UI state
-  const [isDismissed, setIsDismissed] = useState(false);
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -53,7 +53,9 @@ export const PromoBanner = () => {
 
       return {
         days: Math.floor(distance / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        hours: Math.floor(
+          (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+        ),
         minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
         seconds: Math.floor((distance % (1000 * 60)) / 1000),
       };
@@ -73,26 +75,23 @@ export const PromoBanner = () => {
 
   // 🟢 Render Conditions
 
-
   const shouldShow = useMemo(() => {
-      return hasPromo && targetDate  && !isDismissed && !isNoteDetailPage;
-  }, [hasPromo, targetDate, isDismissed, isNoteDetailPage]);
+    return hasPromo && targetDate && !isNoteDetailPage;
+  }, [hasPromo, targetDate, isNoteDetailPage]);
 
   return (
     <AnimatePresence>
       {shouldShow && (
-            <motion.div
-              layout={false} 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed top-0 left-0 right-0 z-[200] border-b bg-[#FFF5F8]"
-            >
+        <motion.div
+          layout={false}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed top-0 left-0 right-0 z-[200] border-b bg-[#FFF5F8]"
+        >
           <div className="flex h-14 w-full items-center justify-between px-4  max-w-[1400px] mx-auto">
-            
             {/* Left Section: Badge & Message */}
             <div className="flex items-center gap-3 sm:gap-4">
-  
               <div className="bg-[#EC4899] text-white px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-widest shadow-sm">
                 {t("SALE")}
               </div>
@@ -112,14 +111,6 @@ export const PromoBanner = () => {
                 <TimeUnit value={timeLeft.minutes} label={t("Mins")} />
                 <TimeUnit value={timeLeft.seconds} label={t("Secs")} />
               </div>
-
-              {/* <button
-                onClick={() => setIsDismissed(true)}
-                className="text-zinc-400 hover:text-zinc-600 p-1.5 transition-colors rounded-full hover:bg-pink-100/50"
-                aria-label="Close offer"
-              >
-                <X size={18} strokeWidth={2.5} />
-              </button> */}
             </div>
           </div>
         </motion.div>

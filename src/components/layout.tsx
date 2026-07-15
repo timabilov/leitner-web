@@ -62,9 +62,7 @@ const Layout = ({  title, processingNotes, onProcessingClick }) => {
   const noGap = location.pathname.includes("/notes/") || ((location.pathname.includes("/price-page") || location.search.includes("?sale=true"))) ; 
   const { hasPromo } = useOfferCountdown();
 
-  return (<>
-     
-
+  return (
       <SidebarProvider
         // Adding defaultOpen helps prevent initial flash if using local storage
         defaultOpen={true} 
@@ -88,13 +86,17 @@ const Layout = ({  title, processingNotes, onProcessingClick }) => {
                   noGap && "p-0",
                   hasPromo && !isNoteDetailPage ? "mt-14" : ""
                   )}>
+                    {
+                      !isNoteDetailPage && (
+                        <SidebarTrigger  className=" z-[201] mt-2" />
+                      )
+                    }
                     <Outlet />
                 </div>
             </div>
           </main>
         </SidebarInset>
       </SidebarProvider>
-    </>
   );
 };
 

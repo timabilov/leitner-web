@@ -4,7 +4,7 @@ import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Folder, Folders, Loader2Icon, Search, SearchX } from "lucide-react";
+import { Loader2Icon, Search, SearchX } from "lucide-react";
 import { Grid3X3, List } from "lucide-react";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
@@ -30,9 +30,7 @@ import { useDropzone } from "react-dropzone";
 import { NoteCard } from "./note-card";
 import { cn } from "@/lib/utils";
 import FolderSelect from "@/components/select-folder";
-import CreateFolder from "@/components/create-folder";
 import { useFolders } from "@/hooks/use-folders";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -42,7 +40,7 @@ const isNoteInLoadingState = (note: any) => {
   );
 };
 
-const Notes = ({ children }: any) => {
+const Notes = () => {
   const posthog = usePostHog();
   // 2. Create the Ref
   const notesListRef = useRef<HTMLDivElement>(null);
@@ -230,7 +228,6 @@ const Notes = ({ children }: any) => {
 
         `}
       </style>
-      <SidebarTrigger  className=" z-[201] mt-2" />
       <div className="flex flex-1 flex-col">
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className=" w-full max-w-2xl mx-auto">
