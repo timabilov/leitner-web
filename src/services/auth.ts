@@ -8,7 +8,7 @@ export const axiosInstance = axios.create({
   // set default headers here
 });
 
-axiosInstance.defaults.timeout = 8 * 1000;
+axiosInstance.defaults.timeout = 60 * 1000;
 
 
 const refreshAuthLogic = (failedRequest: any) =>
