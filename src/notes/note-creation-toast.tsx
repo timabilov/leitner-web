@@ -1,96 +1,138 @@
 "use client";
 
-import { GradientProgress } from "@/components/gradient-progress";
-import { ExternalLink, Loader2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Lottie from "lottie-react";
-import successAnimation from './assets/done.json';
-import sadCat from './assets/sad-cat.jpeg';
+import successAnimation from "./assets/done.json";
+import sadCat from "./assets/sad-cat.jpeg";
 import { useTranslation } from "react-i18next";
+
+// Spinning star SVG matching the reference design
+function SpinningStar({ className }: { className?: string }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z" />
+    </svg>
+  );
+}
 
 interface NoteCreationToastProps {
   step: string;
   progress: number;
   status: "loading" | "success" | "error";
-  noteId?: string | number;
-  name?: string;
   onClick?: () => void;
 }
 
-export function NoteCreationToast({ step, progress, status, name = "New Note", onClick }: NoteCreationToastProps) {
+export function NoteCreationToast({
+  step,
+  progress,
+  status,
+  onClick,
+}: NoteCreationToastProps) {
   const { t } = useTranslation();
 
+  const isDone = status === "success";
+  const isError = status === "error";
+
   return (
-    <div 
+    <div
       className={cn(
-        // Layout & Size (Standard Sonner Width)
-        "pointer-events-auto relative flex md:w-[356px] flex-col gap-3 overflow-hidden w-full",
-        // Visuals (Shadcn Toast Styles)
-        "rounded-xl border bg-background p-4 shadow-lg transition-all",
-        // Conditional Border Color
-        "border-border"
+        "pointer-events-auto relative flex w-[320px] max-w-[calc(100vw-32px)] flex-col overflow-hidden",
+        "rounded-2xl border p-[14px_15px] transition-all font-sans",
+        "border-[var(--v2-line)] shadow-[var(--v2-shadow)]"
       )}
+      style={{ background: "var(--v2-panel)" }}
     >
-      {/* Header Row */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 overflow-hidden w-full">
-          
-          {/* Icon Wrapper */}
-          <div className={cn(
-            "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border shadow-sm",
-            status === "loading" && "bg-secondary text-secondary-foreground",
-            // Remove bg color for success so Lottie shows clearly on white/dark
-            // status === "success" && "border-green-200 bg-green-50 dark:bg-green-900/10 dark:border-green-900", 
-            status === "error" && "bg-destructive/10 text-destructive border-destructive/20"
-          )}>
-            {status === "loading" && (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            )}
-            
-            {/* ✅ LOTTIE ANIMATION FOR SUCCESS */}
-            {status === "success" && (
-              <div className="w-[180%] h-[180%] flex items-center justify-center">
-                 <Lottie 
-                    animationData={successAnimation} 
-                    loop={false} 
-                    autoplay={true}
-                 />
-              </div>
-            )}
-
-            {status === "error" && (
-              <img src={sadCat} />
-              // <XCircle className="h-5 w-5" />
-            )}
+      {/* Header Row: icon + text + percentage */}
+      <div className="flex items-center gap-2.5 mb-[9px]">
+        {/* Icon */}
+        {isError ? (
+          <img
+            src={sadCat}
+            alt=""
+            className="w-5 h-5 rounded-full object-cover shrink-0"
+          />
+        ) : isDone ? (
+          <div className="w-5 h-5 shrink-0 flex items-center justify-center">
+            <Lottie
+              animationData={successAnimation}
+              loop={false}
+              autoplay={true}
+              style={{ width: 28, height: 28 }}
+            />
           </div>
+        ) : (
+          <span className="text-[var(--v2-ink)] shrink-0">
+            <SpinningStar className="v2-spin-star" />
+          </span>
+        )}
 
-          {/* Text Content */}
-          <div className="flex flex-col gap-1 overflow-hidden w-full">
-            <span onClick={onClick} className={`w-full text-sm font-semibold leading-none tracking-tight ${status === "success" ? "underline cursor-pointer" : ""}`}>
-              {status === "success" ? <div className=" w-full flex justify-between items-center">{`Analyzing ${t(name)}`}  <ExternalLink className="w-3 h-3 ml-2" /> </div> : status === "error" ? "Error" : "Creating Note"}
-            </span>
-            <span className="text-xs text-muted-foreground truncate">
-              {step}
-            </span>
-          </div>
+        {/* Title + subtitle */}
+        <div className="flex-1 min-w-0">
+          <strong className="text-[13.5px] text-[var(--v2-ink)] block leading-tight">
+            {isError
+              ? t("Error")
+              : isDone
+                ? t("Note is ready")
+                : t("Creating note")}
+          </strong>
+          <span className="text-[12px] text-[var(--v2-mut)] truncate block">
+            {isDone ? t("Everything is ready") : step}
+          </span>
         </div>
 
-        {/* Percentage Badge */}
-        {status === "loading" && (
-            <div className="flex h-6 min-w-[2.5rem] items-center justify-center rounded-md bg-secondary px-1.5 text-[10px] font-mono font-medium text-secondary-foreground">
-            {Math.round(progress)}%
-            </div>
+        {/* Percentage */}
+        {!isError && (
+          <span className="text-[14px] font-extrabold text-[var(--v2-ink)] tabular-nums shrink-0 ml-auto">
+            {isDone ? "100" : Math.round(progress)}%
+          </span>
         )}
       </div>
 
-      {/* Progress Bar Row */}
-      {/* Added padding-left to align visually with the text start, not the icon */}
-      <div className="w-full pl-[52px]"> 
-        <GradientProgress 
-          value={progress} 
-          className="h-1.5" 
+      {/* Progress bar */}
+      <div
+        className="h-[6px] rounded-full overflow-hidden mb-[10px]"
+        style={{ background: "var(--v2-panel2)" }}
+      >
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${isDone ? 100 : progress}%`,
+            background: "var(--v2-ink)",
+          }}
         />
       </div>
+
+      {/* Action button */}
+      {isDone ? (
+        <button
+          onClick={onClick}
+          className="w-full h-[34px] rounded-[10px] border-none text-[13px] font-bold cursor-pointer transition-all"
+          style={{
+            background: "var(--v2-ink)",
+            color: "var(--v2-bg)",
+          }}
+        >
+          {t("Open note")}
+        </button>
+      ) : isError ? null : (
+        <button
+          onClick={onClick}
+          className="w-full h-[34px] rounded-[10px] border text-[13px] font-bold cursor-pointer transition-all"
+          style={{
+            borderColor: "var(--v2-line)",
+            background: "var(--v2-panel)",
+            color: "var(--v2-ink)",
+          }}
+        >
+          {t("Watch it build")}
+        </button>
+      )}
     </div>
   );
 }

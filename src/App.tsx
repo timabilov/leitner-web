@@ -17,12 +17,10 @@ import { useTranslation } from "react-i18next";
 import { useInitPromo } from "./store/use-init-promo";
 import NoteDetailBase from "./note-detail/note-base2";
 import Login2 from "./login/login-claude-design";
-import { PromoBanner } from "./components/promo-banner";
-
 function App() {
     const { t } = useTranslation();
     useInitPromo();
-    
+
   return (
       <TooltipProvider>
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
@@ -33,7 +31,6 @@ function App() {
               </div>
             }
           >
-            <PromoBanner />
             <Routes>
               {/* --- PUBLIC ROUTES (Only accessible if NOT logged in) --- */}
               {/* <Route element={<PublicRoute />}>

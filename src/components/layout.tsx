@@ -1,102 +1,75 @@
 import { useRef } from "react";
 import { useUserStore } from "@/store/userStore";
-import { AppSidebar } from "./app-sidebar"; 
+import { AppSidebar } from "./app-sidebar";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "./ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Outlet, useLocation } from "react-router";
 import { PromoBanner } from "./promo-banner";
-import { useOfferCountdown } from "@/store/use-offer-countdown";
-import { useElementWidth } from "@/hooks/use-width";
 
-// Define outside component to prevent re-renders or wrap in React.memo
+// Kept as export for login page and other consumers
 export const ArchitecturalBackground = () => (
   <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
-    <div 
-      className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07]" 
-      style={{ 
-        backgroundImage: `
-          linear-gradient(to right, #000 1px, transparent 1px), 
-          linear-gradient(to bottom, #000 1px, transparent 1px)
-        `,
-        backgroundSize: '64px 64px' 
-      }} 
+    <div
+      className="absolute inset-0"
+      style={{
+        backgroundImage:
+          "linear-gradient(var(--v2-grid) 1px, transparent 1px), linear-gradient(90deg, var(--v2-grid) 1px, transparent 1px)",
+        backgroundSize: "36px 36px",
+      }}
     />
-
-    {/* 2. The Micro-Grid (Finer Detail) */}
-    <div 
-      className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" 
-      style={{ 
-        backgroundImage: `
-          linear-gradient(to right, #000 1px, transparent 1px), 
-          linear-gradient(to bottom, #000 1px, transparent 1px)
-        `,
-        backgroundSize: '16px 16px' 
-      }} 
-    />
-
-    {/* 3. The Organic Grain (Secret sauce for Shadcn Studio vibe) */}
-    <svg className="absolute inset-0 w-full h-full opacity-[0.15] contrast-125 pointer-events-none">
-      <filter id="noiseFilter">
-        <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="3" stitchTiles="stitch" />
-      </filter>
-      <rect width="100%" height="100%" filter="url(#noiseFilter)" />
-    </svg>
-
-    {/* 4. The Edge Vignette (Softens the corners) */}
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,var(--background)_90%)]" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,var(--v2-bg)_90%)]" />
   </div>
 );
 
-const Layout = ({  title, processingNotes, onProcessingClick }) => {
-  const { photo, fullName, email,
-     processingNotesCount, triggerFocusNotes 
-   } = useUserStore();
-  // 2. Handle "noGap" logic dynamically based on URL
+const Layout = () => {
+  const { photo, fullName, email } = useUserStore();
   const location = useLocation();
-  // Add paths here that need full width/no padding
-    const regex = /\/notes\/(\d+)$/;
-  const isNoteDetailPage = location.pathname.match(regex); 
-  const  containerRef = useRef<HTMLElement>(null);
-  const mainWidth = useElementWidth(containerRef);
-  // const hasPromo = true; ;
-  const noGap = location.pathname.includes("/notes/") || ((location.pathname.includes("/price-page") || location.search.includes("?sale=true"))) ; 
-  const { hasPromo } = useOfferCountdown();
+  const containerRef = useRef<HTMLElement>(null);
+
+  const regex = /\/notes\/(\d+)$/;
+  const isNoteDetailPage = location.pathname.match(regex);
+  const noGap =
+    location.pathname.includes("/notes/") ||
+    location.pathname.includes("/price-page") ||
+    location.search.includes("?sale=true");
 
   return (
-      <SidebarProvider
-        // Adding defaultOpen helps prevent initial flash if using local storage
-        defaultOpen={true} 
-        className="flex h-screen w-full bg-background overflow-hidden relative "
-      >
-        <AppSidebar photo={photo} fullName={fullName} email={email} />
-        <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
-          {/* <Header processingNotes={processingNotesCount} onProcessingClick={triggerFocusNotes} /> */}
-          <main 
-            ref={containerRef}
-            className={cn(
-              "flex-1 flex flex-col relative overflow-y-auto isolate w-full",
-            
-            )}
-          >
-            <ArchitecturalBackground />
-            <div className="relative z-10 w-full max-w-8xl mx-auto flex flex-1 flex-col">
-                
-                <div className={cn(
-                  isNoteDetailPage ? "" : ( noGap ?  "" : "p-4 sm:p-6"), 
-                  noGap && "p-0",
-                  hasPromo && !isNoteDetailPage ? "mt-14" : ""
-                  )}>
-                    {
-                      !isNoteDetailPage && (
-                        <SidebarTrigger  className=" z-[201] mt-2" />
-                      )
-                    }
-                    <Outlet />
-                </div>
+    <SidebarProvider
+      defaultOpen={false}
+      className="flex h-dvh w-full overflow-hidden relative"
+      style={{ background: "var(--v2-bg)", color: "var(--v2-ink)" }}
+    >
+      <AppSidebar photo={photo || ""} fullName={fullName || ""} email={email || ""} />
+
+      <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
+        {/* Sale banner */}
+        <PromoBanner />
+
+        <main
+          ref={containerRef}
+          className="flex-1 flex flex-col relative overflow-y-auto isolate w-full v2-grid-bg"
+          style={{ backgroundColor: "var(--v2-bg)" }}
+        >
+          <div className="relative z-10 w-full max-w-8xl mx-auto flex flex-1 flex-col">
+            <div
+              className={cn(
+                isNoteDetailPage
+                  ? ""
+                  : noGap
+                    ? ""
+                    : "p-4 sm:p-6 md:p-10",
+                noGap && "p-0"
+              )}
+            >
+              {!isNoteDetailPage && (
+                <SidebarTrigger className="z-[201] mb-2 text-[var(--v2-mut)] hover:text-[var(--v2-ink)] hover:bg-[var(--v2-panel2)] transition-colors rounded-xl md:hidden" />
+              )}
+              <Outlet />
             </div>
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
+          </div>
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
 

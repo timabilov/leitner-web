@@ -854,6 +854,8 @@ html, body, #root {
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-heading: 'Schibsted Grotesk', 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -966,6 +968,7 @@ html, body, #root {
   }
   body {
     @apply bg-background text-foreground font-sans;
+    text-rendering: optimizeLegibility;
   }
 }
 
@@ -1046,4 +1049,109 @@ a more noticeable opacity animation to it.
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   animation: draw 1s ease-out forwards;
+}
+
+/* ============================================================
+   V2 Design System Tokens
+   ============================================================ */
+
+:root {
+  /* Surface colors */
+  --v2-bg: #FAFAF8;
+  --v2-panel: #FFFFFF;
+  --v2-panel2: #F1F1EE;
+  /* Text colors */
+  --v2-ink: #17171B;
+  --v2-mut: #6E6E76;
+  /* Border & grid */
+  --v2-line: #E6E6E1;
+  --v2-grid: rgba(20, 20, 30, 0.03);
+  /* Accent */
+  --v2-accent: #F72585;
+  --v2-accent2: #FF8E3C;
+  --v2-accent-soft: rgba(247, 37, 133, 0.08);
+  /* Semantic */
+  --v2-ok: #1F9D63;
+  --v2-bad: #D2453B;
+  /* Elevation */
+  --v2-shadow: 0 1px 2px rgba(20, 20, 30, 0.05), 0 14px 34px -14px rgba(20, 20, 30, 0.14);
+  --v2-shadow-sm: 0 1px 2px rgba(20, 20, 30, 0.05);
+  /* Selection */
+  --v2-selbg: rgba(23, 23, 27, 0.16);
+}
+
+.dark {
+  --v2-bg: #131316;
+  --v2-panel: #1B1B1F;
+  --v2-panel2: #242429;
+  --v2-ink: #EFEEEA;
+  --v2-mut: #9A9AA3;
+  --v2-line: #2B2B31;
+  --v2-grid: rgba(255, 255, 255, 0.035);
+  --v2-accent: #FF4FA3;
+  --v2-accent2: #FFA05C;
+  --v2-accent-soft: rgba(255, 79, 163, 0.13);
+  --v2-ok: #3DD68C;
+  --v2-bad: #FF6B70;
+  --v2-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 44px -18px rgba(0, 0, 0, 0.6);
+  --v2-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --v2-selbg: rgba(255, 255, 255, 0.22);
+}
+
+/* V2 Keyframe Animations */
+@keyframes v2-fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes v2-popIn {
+  from { opacity: 0; transform: scale(0.92) translateY(5px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes v2-spinStar {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg) scale(1.18); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes v2-blinkDot {
+  0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-2px); }
+}
+@keyframes v2-toastIn {
+  from { opacity: 0; transform: translate(-50%, 14px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* V2 Responsive helpers */
+@media (max-width: 980px) {
+  [data-v2-hide-sm] { display: none !important; }
+}
+@media (pointer: coarse) {
+  [data-v2-hit] { min-height: 44px !important; min-width: 44px !important; }
+}
+
+/* V2 Utility classes */
+.v2-fade-up { animation: v2-fadeUp 0.4s ease both; }
+.v2-pop-in { animation: v2-popIn 0.22s ease both; }
+.v2-spin-star { animation: v2-spinStar 2.4s linear infinite; }
+
+/* YouTube link-checking animated dots */
+.yt-checking-dots::after {
+  content: '...';
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+  animation: yt-dots 1.4s steps(3, end) infinite;
+  vertical-align: bottom;
+}
+@keyframes yt-dots {
+  0%   { width: 0; }
+  33%  { width: 0.33em; }
+  66%  { width: 0.66em; }
+  100% { width: 1em; }
+}
+.v2-grid-bg {
+  background-image:
+    linear-gradient(var(--v2-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--v2-grid) 1px, transparent 1px);
+  background-size: 36px 36px;
 }

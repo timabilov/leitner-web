@@ -142,8 +142,6 @@ const CreateYoutubeNote = ({ component, refetch }) => {
           step={msg}
           progress={0}
           status={"error"}
-          noteId={noteId}
-          // name={flowContext.current.name}
         />
       ));
 

@@ -1,245 +1,189 @@
-import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { 
-  BellRing, BellOff, TriangleAlert, 
-  Folder, Clock, Sparkles 
-} from "lucide-react";
-import { getTypeIcon, getNoteLanguageIso } from "./note-utils";
-import ProcessingNoteCard from './processing-note-card';
-import { GradientProgress } from '@/components/gradient-progress';
-import { useFolders } from '@/hooks/use-folders';
-import { useSidebar } from '@/components/ui/sidebar';
+import { Folder } from "lucide-react";
+import ProcessingNoteCard from "./processing-note-card";
+import { useFolders } from "@/hooks/use-folders";
+import { useSidebar } from "@/components/ui/sidebar";
 
-// --- HELPER: Track Previous State ---
-function usePrevious(value) {
-  const ref = useRef();
+function usePrevious(value: any) {
+  const ref = useRef<any>();
   useEffect(() => {
     ref.current = value;
   }, [value]);
   return ref.current;
 }
 
-// --- SUB-COMPONENT: The AI Particle Burst ---
-// Renders small stars that shoot out from the card
-const AiParticleBurst = () => {
-  const particles = [
-    { x: -10, y: -10, delay: 0 },
-    { x: 110, y: -10, delay: 0.1 },
-    { x: -10, y: 110, delay: 0.2 },
-    { x: 110, y: 110, delay: 0.1 },
-    { x: 50, y: -20, delay: 0.05 },
-    { x: 50, y: 120, delay: 0.15 },
-  ];
-
+// Reference-style type icons
+function NoteTypeIcon({ type }: { type: string }) {
+  if (type === "youtube") {
+    return (
+      <span className="w-5 h-3.5 rounded-[4.5px] bg-[#E5484D] flex items-center justify-center">
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="#fff">
+          <path d="M8 5.5v13L19.5 12z" />
+        </svg>
+      </span>
+    );
+  }
+  if (type === "audio") {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="8.4" stroke="#E5484D" strokeWidth="1.8" />
+        <circle cx="12" cy="12" r="4" fill="#E5484D" />
+      </svg>
+    );
+  }
+  // Default: document/layers icon
   return (
-    <>
-      {particles.map((p, i) => (
-        <motion.div
-          key={i}
-          initial={{ opacity: 0, scale: 0, x: "50%", y: "50%" }}
-          animate={{ 
-            opacity: [0, 1, 0], 
-            scale: [0, 1.5, 0],
-            left: `${p.x}%`, 
-            top: `${p.y}%`,
-            rotate: [0, 180]
-          }}
-          transition={{ duration: 0.8, delay: p.delay, ease: "easeOut" }}
-          className="absolute w-4 h-4 text-[#C04796] z-50 pointer-events-none"
-        >
-          <Sparkles fill="currentColor" className="w-full h-full" />
-        </motion.div>
-      ))}
-    </>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round">
+      <path d="M12 3 3 8l9 5 9-5zM3 12.5l9 5 9-5M3 17l9 5 9-5" />
+    </svg>
   );
-};
+}
 
-export const NoteCard = ({ item, view }) => {
-  const { data = [] } = useFolders(); // Uses cached data if available
+function getNoteMeta(item: any): string {
+  const parts: string[] = [];
+  if (item.note_type === "youtube") parts.push("YouTube");
+  else if (item.note_type === "audio") parts.push("Audio");
+  else if (item.note_type === "pdf") parts.push("PDF");
+  else if (item.note_type === "image") parts.push("Image");
+  else if (item.note_type === "multi") parts.push("Multi");
+
+  if (item.duration_minutes) parts.push(`${item.duration_minutes} min`);
+  if (item.attachment_count) parts.push(`${item.attachment_count} file${item.attachment_count > 1 ? "s" : ""}`);
+
+  return parts.join(" · ") || "";
+}
+
+function getScoreInfo(item: any): { label: string; color: string; bg: string } | null {
+  if (item.quiz_score !== undefined && item.quiz_score !== null && item.quiz_total) {
+    return {
+      label: `Quiz ${item.quiz_score}/${item.quiz_total}`,
+      color: "var(--v2-ok)",
+      bg: "color-mix(in srgb, var(--v2-ok) 12%, transparent)",
+    };
+  }
+  if (item.quiz_alerts_enabled) {
+    return {
+      label: "New quiz ready",
+      color: "var(--v2-ink)",
+      bg: "var(--v2-panel2)",
+    };
+  }
+  return null;
+}
+
+export const NoteCard = ({ item, view }: { item: any; view: string }) => {
+  const { data = [] } = useFolders();
   const navigate = useNavigate();
   const { t } = useTranslation();
-const { setOpen } = useSidebar()
+  const { setOpen } = useSidebar();
 
-  const isProcessing = item?.status !== "failed" && item?.status !== "transcribed" && item?.status !== "draft";
-  const hasError = !!item?.processing_error_message;
-  const progress = item?.note_progress || 0;
-  const folderName = item.folder_id ? data?.folders?.find(f => f.id === item.folder_id)?.name : t("All notes");
+  const isProcessing =
+    item?.status !== "failed" &&
+    item?.status !== "transcribed" &&
+    item?.status !== "draft";
+  const folderName = item.folder_id
+    ? (data as any)?.folders?.find((f: any) => f.id === item.folder_id)?.name
+    : t("All notes");
 
-  // Track state transition
   const wasProcessing = usePrevious(isProcessing);
   const justFinished = wasProcessing === true && isProcessing === false;
 
-  const cardBase = "group relative bg-card border border-border transition-all duration-200 hover:border-foreground/30 overflow-hidden cursor-pointer rounded-xl";
+  const meta = getNoteMeta(item);
+  const score = getScoreInfo(item);
+  const dateStr = new Date(item.created_at)?.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 
   return (
-    <div key={item.id} className={cn("relative max-w-full", view === "grid" ? "h-full min-h-[180px]" : "h-auto")}>
-      {/* <AnimatePresence mode="popLayout"> */}
-        
-        {/* === STATE 1: PROCESSING === */}
-        {isProcessing ? (
-          <motion.div
-            key="processing"
-            // Exit: Implode into a singularity (Cyberpunk style)
-            exit={{ opacity: 0, scale: 0.8, filter: "brightness(2) blur(10px)" }}
-            transition={{ duration: 0.4 }}
-            className="h-full w-full"
-          >
-            <ProcessingNoteCard view={view} id={item.id} />
-          </motion.div>
-        ) : (
-          
-          /* === STATE 2: FINISHED === */
-         
-            <motion.div
-              layout
-              key="content"
-              onClick={() => {
-                setOpen(false)
-                navigate(`/notes/${item.id}`)
-              }}
-              
-              // Only animate if we just finished processing
-              initial={justFinished ? "hidden" : false}
-              animate="visible"
-              
-              variants={{
-                hidden: { opacity: 0, scale: 0.9 },
-                visible: { 
-                  opacity: 1, 
-                  scale: 1,
-                  transition: { type: "spring", stiffness: 200, damping: 20 }
-                }
-              }}
-              className={cn(
-                cardBase,
-                view === "grid" ? "flex flex-col p-5 h-full" : "flex items-center p-3 gap-4",
-                // If just finished, allow overflow for particles to fly out
-                justFinished ? "overflow-visible" : "overflow-hidden"
-              )}
+    <div className={cn("relative max-w-full", view === "grid" ? "h-full" : "h-auto")}>
+      {isProcessing ? (
+        <motion.div
+          key="processing"
+          exit={{ opacity: 0, scale: 0.8, filter: "brightness(2) blur(10px)" }}
+          transition={{ duration: 0.4 }}
+          className="h-full w-full"
+        >
+          <ProcessingNoteCard view={view} item={item} />
+        </motion.div>
+      ) : (
+        <motion.button
+          layout
+          key="content"
+          onClick={() => {
+            setOpen(false);
+            navigate(`/notes/${item.id}`);
+          }}
+          initial={justFinished ? "hidden" : false}
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0, scale: 0.9 },
+            visible: {
+              opacity: 1,
+              scale: 1,
+              transition: { type: "spring", stiffness: 200, damping: 20 },
+            },
+          }}
+          className={cn(
+            "group relative w-full text-left rounded-2xl border cursor-pointer transition-all duration-150",
+            "hover:-translate-y-0.5 hover:shadow-[var(--v2-shadow)]",
+            view === "grid"
+              ? "flex flex-col p-4 gap-2.5"
+              : "flex items-center p-3 gap-4"
+          )}
+          style={{
+            background: "var(--v2-panel)",
+            borderColor: "var(--v2-line)",
+            color: "var(--v2-ink)",
+          }}
+        >
+          {/* Row 1: Type icon + Folder tag */}
+          <div className="flex items-center justify-between w-full">
+            <div
+              className="w-8 h-8 rounded-[10px] flex items-center justify-center"
+              style={{ background: "var(--v2-panel2)", color: "var(--v2-mut)" }}
             >
-              
-              {/* === AI EFFECT 1: THE SCANNER BEAM === */}
-              {/* A laser beam that wipes down the card to "reveal" it */}
-              {justFinished && (
-                <motion.div
-                  initial={{ top: "-20%", opacity: 1 }}
-                  animate={{ top: "120%", opacity: 0 }}
-                  transition={{ duration: 1.2, ease: "easeInOut" }}
-                  className="absolute left-0 right-0 h-12 bg-gradient-to-b from-transparent via-[#FE5E5F]/50 to-transparent z-20 pointer-events-none mix-blend-screen"
-                >
-                  <div className="w-full h-[2px] bg-[#C04796] shadow-[0_0_10px_#C04796]" />
-                </motion.div>
-              )}
+              <NoteTypeIcon type={item.note_type} />
+            </div>
+            <span
+              className="text-[11px] font-bold tracking-[0.08em] uppercase inline-flex items-center gap-1.5"
+              style={{ color: "var(--v2-mut)" }}
+            >
+              <Folder className="w-3 h-3" strokeWidth={1.8} />
+              {folderName}
+            </span>
+          </div>
 
-              {/* === AI EFFECT 2: PRISMATIC BORDER FLASH === */}
-              {/* A rotating gradient border that flashes once */}
-              {justFinished && (
-                <motion.div
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 0 }}
-                  transition={{ duration: 1.5, delay: 0.2 }}
-                  className="absolute inset-0 z-10 pointer-events-none rounded-xl"
-                  style={{
-                    padding: '2px', // Border width
-                    background: 'conic-gradient(from 0deg, transparent, #FE5E5F, #C04796, transparent)',
-                    WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                    WebkitMaskComposite: 'xor',
-                    maskComposite: 'exclude',
-                  }}
-                />
-              )}
+          {/* Row 2: Title */}
+          <strong className="text-[15px] font-heading font-bold tracking-[-0.01em] leading-snug line-clamp-2">
+            {item.name || t("Untitled Note")}
+          </strong>
 
-              {/* === AI EFFECT 3: PARTICLE BURST === */}
-              {justFinished && <AiParticleBurst />}
+          {/* Row 3: Meta */}
+          {meta && (
+            <span className="text-[12.5px] text-[var(--v2-mut)]">{meta}</span>
+          )}
 
-              {/* === STANDARD CARD CONTENT === */}
-              {/* --- HEADER --- */}
-              <div className={cn("relative z-10 flex items-center  justify-between w-full",
-                  view === "grid" ? "mb-4" : "mb-0",
-      
-              )}>
-                <div className={cn(
-                  "flex items-center justify-center rounded-md border border-border/50 bg-muted/50 text-muted-foreground transition-colors group-hover:bg-background group-hover:text-foreground",
-                  view === "grid" ? "w-9 h-9" : "w-8 h-8"
-                )}>
-                  {getTypeIcon(item.note_type, 14)}
-                </div>
-                {view !== "grid" && (
-                  <h4 className="text-xs text-start font-bold truncate group-hover:text-foreground  transition-colors mr-auto">
-                    {item.name || t("Untitled Note")}
-                  </h4>
-                )}
-                <div className="flex items-center gap-1.5 text-muted-foreground/80">
-                  <Folder size={12} strokeWidth={2.5} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest transition-colors group-hover:text-muted-foreground">
-                    {folderName}
-                  </span>
-                </div>
-              </div>
-
-              {/* --- BODY --- */}
-              <div className="relative z-10 flex-1 min-w-0">
-                <div className="flex items-start gap-2 mb-1">
-                  {hasError && <TriangleAlert className="text-destructive w-4 h-4 shrink-0 mt-0.5" />}
-                  <h4 className="text-sm font-bold truncate group-hover:text-foreground transition-colors">
-                    {item.name || t("Untitled Note")}
-                  </h4>
-                </div>
-
-                {progress > 0 && progress < 1 && !isProcessing && (
-                  <div className="mt-3 w-full">
-                    <GradientProgress value={Math.round(progress * 100)} className="h-1" />
-                  </div>
-                )}
-              </div>
-
-              {/* --- FOOTER --- */}
-              <div className={cn(
-                "relative z-10 flex items-center",
-                view === "grid" ? " pt-4 border-t border-border/40 justify-between mt-4" : "ml-auto gap-6"
-              )}>
-                <div className="flex items-center gap-3">
-                  <span className="text-base select-none grayscale-[0.4] group-hover:grayscale-0 transition-all opacity-90">
-                    {getNoteLanguageIso(item.language)}
-                  </span>
-                  
-                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                    <Clock size={11} strokeWidth={2.5} />
-                    <span className="text-[11px] font-medium tracking-tight whitespace-nowrap">
-                      {new Date(item.created_at)?.toLocaleString("en-US", { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
-                  </div>
-                </div>
-
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className={cn(
-                      "flex items-center justify-center w-8 h-8 rounded-md transition-colors border",
-                      item?.quiz_alerts_enabled 
-                        ? "bg-primary border-primary text-primary-foreground" 
-                        : "bg-muted border-transparent text-muted-foreground group-hover:border-border group-hover:text-foreground"
-                    )}>
-                      {item?.quiz_alerts_enabled ? <BellRing size={14} strokeWidth={2.5} /> : <BellOff size={14} />}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="rounded-md bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-1 border-none">
-                    <p>{item?.quiz_alerts_enabled ? t("Alerts Active") : t("Alerts Off")}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </motion.div>
-        )}
-      {/* </AnimatePresence> */}
+          {/* Row 4: Score + Date */}
+          <div className="flex items-center justify-between w-full mt-auto pt-1">
+            {score ? (
+              <span
+                className="text-[11.5px] font-semibold rounded-full px-2.5 py-0.5"
+                style={{ color: score.color, background: score.bg }}
+              >
+                {score.label}
+              </span>
+            ) : (
+              <span />
+            )}
+            <span className="text-[11.5px] text-[var(--v2-mut)]">{dateStr}</span>
+          </div>
+        </motion.button>
+      )}
     </div>
   );
 };

@@ -32,7 +32,8 @@ module.exports = {
       },
     },
     fontFamily: {
-        sans: ["Montserrat", ...fontFamily.sans],
+        sans: ["'Instrument Sans'", ...fontFamily.sans],
+        heading: ["'Schibsted Grotesk'", "'Instrument Sans'", ...fontFamily.sans],
     },
   },
   plugins: [require("tailwindcss-animate")],

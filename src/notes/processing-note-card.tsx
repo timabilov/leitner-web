@@ -1,90 +1,130 @@
-import { motion } from 'framer-motion';
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
-const ProcessingNoteCard = ({ view, id }) => {
-   const { t } = useTranslation(); 
-  // Use semantic tokens: border-border, bg-background
-  const cardBase = "group relative bg-background border border-border overflow-hidden rounded-xl h-full cursor-pointer hover:border-foreground/30 ";
-  const navigate = useNavigate();
+// Spinning star matching the reference design
+function SpinningStar({ size = 20 }: { size?: number }) {
   return (
-    <div 
-     onClick={() => navigate(`/notes/${id}`)}
-     className={cn(
-      cardBase,
-      view === "grid" ? "flex flex-col p-5 min-h-[200px]" : "flex items-center p-3 gap-4"
-    )}>
-      
-      {/* 1. HEADER: Semantic Placeholders */}
-      <div className={cn("flex items-center justify-between w-full relative z-10",
-        view === "grid" ? "mb-6" : "mb-0"
-      )}>
-        {/* Icon placeholder using bg-muted */}
-        <div className="w-9 h-9 rounded-md bg-muted/80 border border-border/50" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="v2-spin-star"
+    >
+      <path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z" />
+    </svg>
+  );
+}
 
-        {/* Folder text placeholder using bg-muted */}
-        <div className="h-2 w-16 bg-muted rounded-full" />
+const STAGES = [
+  'Uploading files',
+  'Transcribing audio',
+  'Summarizing & structuring',
+  'Generating quiz & flashcards',
+];
+
+const FUN_MESSAGES = [
+  'Sending your files up — hold tight…',
+  'Listening closely… every word makes better quiz questions.',
+  'Finding the structure: key events, people, causes.',
+  'Almost there — writing questions you\u2019ll actually enjoy.',
+];
+
+/** Compute average attachment progress (0-1), returns null if no attachments */
+function getAttachmentProgress(attachments: any[]): number | null {
+  if (!attachments || attachments.length === 0) return null;
+  const total = attachments.reduce((sum: number, a: any) => sum + (a.progress ?? 0), 0);
+  return total / attachments.length;
+}
+
+/** Derive stage & overall percentage from note status + attachments */
+export function getNoteProgress(item: any): { stage: number; pct: number; stageLabel: string; funText: string } {
+  const status = item?.status;
+  const attachments: any[] = item?.attachments || [];
+  const avgProgress = getAttachmentProgress(attachments);
+
+  // Uploading (before transcription starts)
+  if (status === "pending" || status === "uploading") {
+    return { stage: 0, pct: Math.min(17, 10), stageLabel: STAGES[0], funText: FUN_MESSAGES[0] };
+  }
+
+  // Summarizing
+  if (status === "summarizing") {
+    return { stage: 2, pct: 65, stageLabel: STAGES[2], funText: FUN_MESSAGES[2] };
+  }
+
+  // Generating quiz
+  if (status === "generating" || status === "generating_quiz") {
+    return { stage: 3, pct: 88, stageLabel: STAGES[3], funText: FUN_MESSAGES[3] };
+  }
+
+  // For any other non-final status (processing, transcribing, or unknown),
+  // use attachment progress to drive the display
+  if (avgProgress !== null) {
+    // All attachments done → advance to summarizing stage
+    if (avgProgress >= 1.0) {
+      return { stage: 2, pct: 55, stageLabel: STAGES[2], funText: FUN_MESSAGES[2] };
+    }
+    // Map attachment progress (0-1) to overall pct range 18-52
+    const pct = Math.round(18 + avgProgress * 34);
+    return { stage: 1, pct: Math.min(52, pct), stageLabel: STAGES[1], funText: FUN_MESSAGES[1] };
+  }
+
+  // No attachments, unknown status — show transcribing at low progress
+  return { stage: 1, pct: 20, stageLabel: STAGES[1], funText: FUN_MESSAGES[1] };
+}
+
+const ProcessingNoteCard = ({ view, item }: { view: string; item: any }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { pct, stageLabel, funText } = getNoteProgress(item);
+
+  return (
+    <div
+      onClick={() => navigate(`/notes/${item.id}`)}
+      className={cn(
+        "relative cursor-pointer rounded-2xl",
+        view === "grid" ? "flex flex-col p-[18px] gap-3" : "flex items-center p-3 gap-4"
+      )}
+      style={{
+        border: "1px dashed var(--v2-mut)",
+        background: "var(--v2-panel)",
+      }}
+    >
+      {/* Header: spinning star + stage label + percentage */}
+      <div className="flex items-center gap-2.5">
+        <span className="text-[var(--v2-ink)]">
+          <SpinningStar />
+        </span>
+        <strong className="text-[14px] text-[var(--v2-ink)] flex-1 truncate">
+          {t(stageLabel)}
+        </strong>
+        <span className="text-[14px] font-bold text-[var(--v2-ink)] tabular-nums shrink-0">
+          {pct}%
+        </span>
       </div>
 
-      {/* 2. CONTENT: Structural Bars */}
-      <div className="flex-1 space-y-4 relative z-10">
-        <div className="space-y-2">
-          {/* Title and Subtitle placeholders */}
-          {
-            view === "list" ? null : (
-              <div className="h-4 w-3/4 bg-muted rounded-md" />
-            )
-          }
-          <div className="h-3 w-1/2 bg-muted/60 rounded-md" />
-        </div>
-
-        {/* STATUS: Using Shadcn Foreground for High Contrast */}
-        <div className={cn("flex items-center gap-2",
-          view === "list" ? "pt-0" : "pt-6"
-        )}>
-          <div className="relative flex h-1.5 w-1.5">
-            {/* The pulse uses the foreground (Black in light mode) */}
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-foreground/20 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-foreground"></span>
-          </div>
-          <span className="text-[10px] font-bold text-foreground uppercase tracking-[0.15em]">
-            {t("Processing")}
-          </span>
-        </div>
+      {/* Progress bar */}
+      <div
+        className="h-[6px] rounded-full overflow-hidden"
+        style={{ background: "var(--v2-panel2)" }}
+      >
+        <div
+          className="h-full rounded-full transition-[width] duration-300"
+          style={{
+            width: `${pct}%`,
+            background: "var(--v2-ink)",
+          }}
+        />
       </div>
 
-      {/* 3. FOOTER: Metadata Placeholders */}
-      <div className={cn(
-        "flex items-center mt-auto pt-4 border-t border-border/50 justify-between relative z-10",
-        view === "list" && "border-none pt-0 mt-0 ml-auto"
-      )}>
-        <div className="flex items-center gap-4">
-          {/* Ghost Flag */}
-          <div className="w-5 h-4 bg-muted rounded-sm" />
-          
-          {/* Ghost Timestamp */}
-          <div className="h-2 w-24 bg-muted/50 rounded-full" />
-        </div>
-
-        {/* Ghost Bell Toggle */}
-        <div className="w-8 h-8 rounded-md bg-muted/80 border border-border/50" />
-      </div>
-
-      {/* 4. THE SHIMMER: Synchronized sweep using a very subtle gradient */}
-      <motion.div
-        initial={{ x: "-100%" }}
-        animate={{ x: "100%" }}
-        transition={{
-          repeat: Infinity,
-          duration: 2,
-          ease: "linear",
-        }}
-        className="absolute inset-0 z-20 pointer-events-none"
-        style={{
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)",
-        }}
-      />
+      {/* Fun motivational text */}
+      {view === "grid" && (
+        <p className="text-[12.5px] text-[var(--v2-mut)] leading-relaxed">
+          {t(funText)}
+        </p>
+      )}
     </div>
   );
 };

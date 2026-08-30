@@ -766,6 +766,14 @@ const NoteDetailBase = () => {
                                 const capitalType = key.charAt(0).toUpperCase() + key.slice(1);
                                 return `${capitalType} ${count}`;
                               })();
+                              const confettiParticles = done ? Array.from({ length: 8 }, (_, i) => ({
+                                id: i,
+                                x: (Math.random() - 0.5) * 120,
+                                y: -(Math.random() * 40 + 15),
+                                rotate: Math.random() * 360,
+                                scale: Math.random() * 0.5 + 0.5,
+                                color: ["#FE5E5F", "#C04796", "#F9A8D4", "#FDA4AF", "#71717A", "#A1A1AA"][i % 6],
+                              })) : [];
                               return (
                                 <motion.div
                                   key={attachment.id}
@@ -790,28 +798,48 @@ const NoteDetailBase = () => {
                                       {done ? t("Done") : `${pct}%`}
                                     </span>
                                   </div>
-                                  <div className="h-2.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
-                                    <motion.div
-                                      className={cn(
-                                        "h-full rounded-full transition-colors duration-500",
-                                        done
-                                          ? "bg-gradient-to-r from-pink-400 to-rose-400"
-                                          : "bg-gradient-to-r from-pink-500 to-rose-500"
+                                  <div className="relative">
+                                    <div className="h-2.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
+                                      <motion.div
+                                        className={cn(
+                                          "h-full rounded-full transition-colors duration-700",
+                                          done
+                                            ? "bg-gradient-to-r from-pink-400 to-rose-400"
+                                            : "bg-gradient-to-r from-zinc-200 to-pink-100 dark:from-zinc-600 dark:to-pink-900/40"
+                                        )}
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.max(pct, 2)}%` }}
+                                        transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+                                      />
+                                      {!done && (
+                                        <div
+                                          className="absolute inset-0 rounded-full pointer-events-none"
+                                          style={{
+                                            backgroundImage: "linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%, transparent 100%)",
+                                            backgroundSize: "200% 100%",
+                                            animation: "shimmer 2s ease-in-out infinite",
+                                          }}
+                                        />
                                       )}
-                                      initial={{ width: 0 }}
-                                      animate={{ width: `${Math.max(pct, 2)}%` }}
-                                      transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                                    />
-                                    {!done && (
-                                      <div
-                                        className="absolute inset-0 rounded-full pointer-events-none"
+                                    </div>
+                                    {/* Mini confetti on completion */}
+                                    {done && confettiParticles.map((p) => (
+                                      <motion.div
+                                        key={p.id}
+                                        initial={{ opacity: 1, x: 0, y: 0, scale: 0 }}
+                                        animate={{ opacity: 0, x: p.x, y: p.y, scale: p.scale, rotate: p.rotate }}
+                                        transition={{ duration: 0.7, ease: "easeOut" }}
+                                        className="absolute pointer-events-none"
                                         style={{
-                                          backgroundImage: "linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%, transparent 100%)",
-                                          backgroundSize: "200% 100%",
-                                          animation: "shimmer 2s ease-in-out infinite",
+                                          left: "50%",
+                                          top: "50%",
+                                          width: 5,
+                                          height: 5,
+                                          borderRadius: p.id % 2 === 0 ? "50%" : "1px",
+                                          backgroundColor: p.color,
                                         }}
                                       />
-                                    )}
+                                    ))}
                                   </div>
                                 </motion.div>
                               );
