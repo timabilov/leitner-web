@@ -718,7 +718,7 @@ const NoteDetailBase = () => {
                   <Tabs value={activeTab} className="h-full flex flex-col">
                     {isNoteProcessing ? (
                       <div className="flex flex-col mt-20 h-full overflow-y-auto">
-                        <div className="mx-auto my-10 flex flex-col items-center">
+                        <div className="flex flex-col items-center my-10">
                           <AIIcon
                             hideStar
                             className="h-10 w-10 animate-spin-slow "
@@ -738,77 +738,87 @@ const NoteDetailBase = () => {
                           >
                             {t("Processing")}
                           </p>
-
-                          {/* Attachment progress */}
-                          {note?.attachments?.length > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 12 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.5, delay: 0.3 }}
-                              className="mt-8 w-full max-w-sm flex flex-col gap-3"
-                            >
-                              <p className="text-xs font-medium text-zinc-400 uppercase tracking-widest text-center">
-                                {note.attachments.filter((a: any) => a.progress >= 1).length} / {note.attachments.length} {t("files ready")}
-                              </p>
-                              {(() => {
-                                const sorted = [...note.attachments].sort((a: any, b: any) => a.id - b.id);
-                                return sorted.map((attachment: any, idx: number) => {
-                                const pct = Math.round((attachment.progress ?? 0) * 100);
-                                const done = pct >= 100;
-                                const label = (() => {
-                                  const ft = attachment.file_type || "file";
-                                  const key = ft.toLowerCase();
-                                  let count = 1;
-                                  for (let i = 0; i < idx; i++) {
-                                    if ((sorted[i].file_type || "file").toLowerCase() === key) count++;
-                                  }
-                                  const capitalType = key.charAt(0).toUpperCase() + key.slice(1);
-                                  return `${capitalType} ${count}`;
-                                })();
-                                return (
-                                  <motion.div
-                                    key={attachment.id}
-                                    initial={{ opacity: 0, x: -8 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.35, delay: 0.4 + idx * 0.1 }}
-                                    className="flex flex-col gap-1.5"
-                                  >
-                                    <div className="flex items-center justify-between text-xs">
-                                      <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 font-medium">
-                                        {(() => {
-                                          const ft = (attachment.file_type || "").toLowerCase();
-                                          if (ft === "audio") return <Play size={13} className="text-zinc-500 dark:text-zinc-400 shrink-0" />;
-                                          return <FileIcon size={13} className="text-zinc-500 dark:text-zinc-400 shrink-0" />;
-                                        })()}
-                                        {label}
-                                      </span>
-                                      <span className={cn(
-                                        "tabular-nums font-semibold ml-2 shrink-0 transition-colors duration-500",
-                                        done ? "text-emerald-500" : "text-zinc-400"
-                                      )}>
-                                        {done ? t("Done") : `${pct}%`}
-                                      </span>
-                                    </div>
-                                    <div className="h-1.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-                                      <motion.div
-                                        className={cn(
-                                          "h-full rounded-full transition-colors duration-500",
-                                          done
-                                            ? "bg-emerald-500"
-                                            : "bg-gradient-to-r from-pink-500 to-rose-500"
-                                        )}
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${pct}%` }}
-                                        transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                                      />
-                                    </div>
-                                  </motion.div>
-                                );
-                              });
-                              })()}
-                            </motion.div>
-                          )}
                         </div>
+
+                        {/* Attachment progress */}
+                        {note?.attachments?.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="w-full max-w-xl mx-auto px-6 flex flex-col gap-4"
+                          >
+                            <p className="text-sm font-medium text-zinc-400 uppercase tracking-widest text-center mb-1">
+                              {note.attachments.filter((a: any) => a.progress >= 1).length} / {note.attachments.length} {t("files ready")}
+                            </p>
+                            {(() => {
+                              const sorted = [...note.attachments].sort((a: any, b: any) => a.id - b.id);
+                              return sorted.map((attachment: any, idx: number) => {
+                              const pct = Math.round((attachment.progress ?? 0) * 100);
+                              const done = pct >= 100;
+                              const label = (() => {
+                                const ft = attachment.file_type || "file";
+                                const key = ft.toLowerCase();
+                                let count = 1;
+                                for (let i = 0; i < idx; i++) {
+                                  if ((sorted[i].file_type || "file").toLowerCase() === key) count++;
+                                }
+                                const capitalType = key.charAt(0).toUpperCase() + key.slice(1);
+                                return `${capitalType} ${count}`;
+                              })();
+                              return (
+                                <motion.div
+                                  key={attachment.id}
+                                  initial={{ opacity: 0, x: -8 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.35, delay: 0.4 + idx * 0.1 }}
+                                  className="flex flex-col gap-2"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300 font-medium">
+                                      {(() => {
+                                        const ft = (attachment.file_type || "").toLowerCase();
+                                        if (ft === "audio") return <Play size={15} className="text-zinc-400 shrink-0" />;
+                                        return <FileIcon size={15} className="text-zinc-400 shrink-0" />;
+                                      })()}
+                                      {label}
+                                    </span>
+                                    <span className={cn(
+                                      "tabular-nums text-sm font-semibold ml-2 shrink-0 transition-colors duration-500",
+                                      done ? "text-pink-400" : "text-zinc-400"
+                                    )}>
+                                      {done ? t("Done") : `${pct}%`}
+                                    </span>
+                                  </div>
+                                  <div className="h-2.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
+                                    <motion.div
+                                      className={cn(
+                                        "h-full rounded-full transition-colors duration-500",
+                                        done
+                                          ? "bg-gradient-to-r from-pink-400 to-rose-400"
+                                          : "bg-gradient-to-r from-pink-500 to-rose-500"
+                                      )}
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${Math.max(pct, 2)}%` }}
+                                      transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+                                    />
+                                    {!done && (
+                                      <div
+                                        className="absolute inset-0 rounded-full pointer-events-none"
+                                        style={{
+                                          backgroundImage: "linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255,255,255,0.25) 50%, transparent 60%, transparent 100%)",
+                                          backgroundSize: "200% 100%",
+                                          animation: "shimmer 2s ease-in-out infinite",
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                </motion.div>
+                              );
+                            });
+                            })()}
+                          </motion.div>
+                        )}
                       </div>
                     ) : (
                       <>
@@ -1020,7 +1030,7 @@ const NoteDetailBase = () => {
       </Dialog>
       <style
         dangerouslySetInnerHTML={{
-          __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow-text { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `,
+          __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow-text { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `,
         }}
       />
     </>
