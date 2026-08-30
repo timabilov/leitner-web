@@ -39,7 +39,7 @@ import { useFolders } from "@/hooks/use-folders";
 // YouTube URL helpers
 // ============================================================================
 const YOUTUBE_INLINE_REGEX =
-  /(?:https?:\/\/)?(?:www\.|m\.)?(?:(?:youtube\.com\/(?:watch\?v=|v\/|embed\/|live\/))|(?:youtu\.be|y2u\.be)\/)([a-zA-Z0-9_-]{11})(?:[?&]\S*)?/i;
+  /(?:https?:\/\/)?(?:www\.|m\.)?(?:(?:youtube\.com\/(?:watch\?v=|v\/|embed\/|live\/))|(?:youtu\.be|y2u\.be)\/)([a-zA-Z0-9_-]{11})[a-zA-Z0-9_-]*(?:[?&]\S*)?/i;
 
 function extractYouTubeUrl(text: string): { url: string; videoId: string } | null {
   const match = text.match(YOUTUBE_INLINE_REGEX);
@@ -323,12 +323,22 @@ export function AIPromptInput({ openFilePicker, files, setFiles, getInputProps, 
     }
   }, [prompt, ytDismissed]);
 
-  // Fake 0.4s checking delay then mark verified
+  // Probe YouTube oEmbed to verify the video actually exists
   useEffect(() => {
     if (!youtubeMatch) return;
     setLinkStatus("checking");
-    const timer = setTimeout(() => setLinkStatus("verified"), 400);
-    return () => clearTimeout(timer);
+    const controller = new AbortController();
+    fetch(
+      `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${youtubeMatch.videoId}&format=json`,
+      { signal: controller.signal }
+    )
+      .then((res) => {
+        setLinkStatus(res.ok ? "verified" : "failed");
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") setLinkStatus("failed");
+      });
+    return () => controller.abort();
   }, [youtubeMatch?.videoId]);
 
   const clearYouTube = () => {
