@@ -113,7 +113,7 @@ const NoteDetailBase = () => {
   const posthog = usePostHog();
 
   // --- UI State ---
-  const [isMediaExpanded, setIsMediaExpanded] = useState(true);
+  const [isMediaExpanded, setIsMediaExpanded] = useState(false);
   const [chatMode, setChatMode] = useState<"closed" | "half" | "full">("closed");
   const [sidebarActiveTab, setSidebarActiveTab] = useState("chat");
   const [isPolling, setIsPolling] = useState(false);
@@ -640,20 +640,26 @@ const NoteDetailBase = () => {
                 isMediaExpanded ? t("Hide video") : t("Show video")
               }
               style={{
-                width: 34,
                 height: 34,
+                padding: "0 12px",
                 borderRadius: 11,
                 border: "1px solid var(--v2-line)",
                 background: isMediaExpanded
-                  ? "var(--v2-accent-soft)"
-                  : "var(--v2-panel)",
-                color: "var(--v2-ink)",
+                  ? "rgba(128,128,128,0.12)"
+                  : "transparent",
+                color: "var(--v2-mut)",
                 cursor: "pointer",
-                display: "grid",
-                placeItems: "center",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 12,
+                fontWeight: 500,
+                transition: "background .15s, color .15s",
               }}
             >
-              <Play size={14} />
+              <Play size={13} />
+              {!isMediaExpanded && <span>{t("Watch video")}</span>}
+              {isMediaExpanded && <span>{t("Hide video")}</span>}
             </button>
           )}
         </div>
@@ -1405,6 +1411,7 @@ const NoteDetailBase = () => {
                         onActionComplete={() =>
                           setPendingAiAction(null)
                         }
+                        chatOpen={chatOpen}
                       />
                     ) : !note?.processing_error_message ? (
                       <div

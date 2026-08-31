@@ -19,13 +19,15 @@ interface ChatInterfaceProps {
   noteId: string;
   pendingAction?: { type: 'explain' | 'quiz', text: string } | null;
   onActionComplete?: () => void;
+  chatOpen?: boolean;
 }
 
 const ChatInterface = ({
   noteName,
   noteId,
   pendingAction,
-  onActionComplete
+  onActionComplete,
+  chatOpen
 }: ChatInterfaceProps) => {
   const { t } = useTranslation();
   const { companyId, email } = useUserStore();
@@ -126,6 +128,17 @@ const ChatInterface = ({
   }, [lastMessage?.content.length, streamingMessageId]);
 
   useEffect(() => { if (!isLoading) inputRef.current?.focus(); }, [isLoading]);
+
+  // Focus and scroll input into view when chat panel opens
+  useEffect(() => {
+    if (chatOpen) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [chatOpen]);
 
   const handleClearChat = useCallback(() => {
     if (isLoading) return;
@@ -319,6 +332,12 @@ const ChatInterface = ({
 
       // Execute logic
       executeSendMessage(prompt);
+
+      // Scroll chat input into view after action
+      setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 200);
     }
   }, [pendingAction, isLoading, executeSendMessage, onActionComplete, t]);
 
