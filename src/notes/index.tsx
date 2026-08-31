@@ -12,8 +12,6 @@ import { usePostHog } from "posthog-js/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import { NoteCard } from "./note-card";
-import CatPenIcon from "./assets/cat-pen-icon";
-import CatPenSvg from "./assets/cat-pen-svg";
 import { useTheme } from "@/components/theme-provider";
 import { OnboardingCard } from "./onboarding-card";
 
@@ -160,14 +158,14 @@ const Notes = () => {
           className="flex items-center gap-3.5 mb-5 v2-fade-up"
         >
           <div
-            className="w-[52px] h-[52px] rounded-[18px] border flex items-center justify-center shrink-0"
+            className="w-[44px] h-[44px] sm:w-[50px] sm:h-[50px] md:w-[56px] md:h-[56px] rounded-[16px] border flex items-center justify-center shrink-0"
             style={{
               background: "var(--v2-panel)",
               borderColor: "var(--v2-line)",
               boxShadow: "var(--v2-shadow)",
             }}
           >
-            {isDark ? <CatPenSvg size={32} /> : <CatPenIcon size={32} />}
+            {isDark ? <img src="/lightdrunkcat.PNG" alt="cat" className="w-[32px] h-[32px] sm:w-[36px] sm:h-[36px] md:w-[40px] md:h-[40px] object-contain" /> : <img src="/darkdrunkcat.PNG" alt="cat" className="w-[32px] h-[32px] sm:w-[36px] sm:h-[36px] md:w-[40px] md:h-[40px] object-contain" />}
           </div>
           <div>
             <h1 className="font-heading text-[22px] sm:text-[26px] font-bold tracking-[-0.02em] leading-tight text-[var(--v2-ink)]">
