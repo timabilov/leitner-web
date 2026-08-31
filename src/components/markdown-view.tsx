@@ -141,7 +141,7 @@ const MarkdownView = ({
   ), [children, customRenderers]);
 
   return (
-    <div ref={containerRef} className="markdown-content space-y-6 relative selection:bg-amber-100 selection:text-amber-900 dark:selection:bg-amber-900/30 dark:selection:text-amber-100">
+    <div ref={containerRef} className="markdown-content relative selection:bg-amber-100 selection:text-amber-900 dark:selection:bg-amber-900/30 dark:selection:text-amber-100">
       {markdownContent}
 
       {/* --- FLOATING SELECTION POPUP (dc.html style) --- */}
