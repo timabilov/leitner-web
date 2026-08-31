@@ -1,121 +1,88 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import JSZip from "jszip";
-import Zoom from "react-medium-image-zoom";
 
-// --- RESIZABLE PANELS ---
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-
-// --- Services & Store ---
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useUserStore } from "@/store/userStore";
 import MarkdownView from "@/components/markdown-view";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AudioPlayer } from "@/components/AudioPlayer";
 import { FilePreviewDialog } from "@/components/file-preview-dialog";
 import { StudyMaterials } from "./study-materials";
 import * as Sentry from "@sentry/react";
 
-// --- Icons ---
 import {
-  BellRing,
-  BellOff,
-  Calendar,
-  Globe,
-  Paperclip,
-  MessageSquare,
-  ScrollText,
-  NotepadText,
-  LayoutGrid,
-  MoreVertical,
-  ChevronDown,
-  ChevronUp,
-  Pencil,
+  ChevronLeft,
   CornerDownLeft,
   Loader2,
-  GripHorizontal,
+  Paperclip,
+  ChevronDown,
   ImageIcon,
   FileAudioIcon,
   FileTextIcon,
+  ScrollText,
+  X,
   Play,
   FileIcon,
-  PanelRight,
-  X,
-  PanelLeft,
-  MessageCircle,
-  YoutubeIcon,
 } from "lucide-react";
-import { getNoteLanguageIso, getTypeIcon } from "@/notes/note-utils";
 import AIIcon from "./assets/ai-icon";
 import ChatInterface from "./chat-interface";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { usePostHog } from "posthog-js/react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 
-// --- Sub-Components ---
-
-// 🟢 Wrap MetaItem in forwardRef so it works perfectly with Shadcn's DropdownMenuTrigger asChild
-const MetaItem = React.forwardRef<HTMLDivElement, any>(
-  ({ icon, label, value, onClick, active, iconEnd, ...props }, ref) => (
-    <div
-      ref={ref}
-      onClick={onClick}
-      {...props}
-      className={cn(
-        "flex items-center gap-2 px-2 py-1  transition-colors whitespace-nowrap border outline-none rounded-full",
-        onClick || props.onClick
-          ? "hover:bg-zinc-100 dark:hover:bg-zinc-800 cursor-pointer"
-          : "cursor-default",
-        active &&
-          "bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50",
-      )}
-    >
-      <span className="text-zinc-400">{icon}</span>
-      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-        {label}
-      </span>
-      <span className="text-[12px] font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">
-        {value}
-      </span>
-      {iconEnd}
-    </div>
-  ),
-);
-MetaItem.displayName = "MetaItem";
-
-const StudioTabTrigger = ({ value, icon, label }: any) => (
-  <TabsTrigger
-    value={value}
-    className={cn(
-      "relative h-9 px-3 sm:px-4 gap-2 rounded-md transition-all font-medium text-sm tracking-tight",
-      "data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-950 data-[state=active]:text-zinc-950 dark:data-[state=active]:text-zinc-50 data-[state=active]:shadow-sm",
-      "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200",
-    )}
-    title={label}
-  >
-    {icon}
-    <span className="hidden sm:inline">{label}</span>
-  </TabsTrigger>
+// --- Inline SVG icons matching dc.html design ---
+const StarHintIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <path d="M6 3.5 8 8l4.5 2L8 12l-2 4.5L4 12l-4.5-2L4 8z" transform="translate(6 3)" />
+  </svg>
 );
 
-// --- HELPER FUNCTIONS ---
+const QuizIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.4-3 4.4" />
+    <circle cx="12" cy="12" r="9.2" />
+    <circle cx="11.9" cy="17.8" r=".6" fill="currentColor" stroke="none" />
+  </svg>
+);
+
+const ChatBubbleIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round">
+    <path d="M21 12a8 8 0 0 1-8 8H4.5l2-2.6A8 8 0 1 1 21 12z" />
+  </svg>
+);
+
+const StudyBuddyIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
+    <path d="M11 21 8 8l12 5" fill="currentColor" />
+    <path d="M37 21 40 8 28 13" fill="currentColor" />
+    <circle cx="24" cy="28" r="15" fill="currentColor" />
+  </svg>
+);
+
+const LayoutHalfIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+    <rect x="3" y="4" width="18" height="16" rx="3" />
+    <path d="M14.5 4v16" />
+  </svg>
+);
+
+const LayoutFullIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+    <rect x="3" y="4" width="18" height="16" rx="3" />
+  </svg>
+);
+
+// --- HELPERS ---
 const extractYouTubeID = (url: string) => {
   if (!url) return null;
   const regex =
@@ -136,30 +103,33 @@ const sanitizeMarkdown = (text: string) => {
   return "";
 };
 
+// ============================================================
+// COMPONENT
+// ============================================================
 const NoteDetailBase = () => {
   const { t } = useTranslation();
   const { noteId } = useParams();
   const { companyId } = useUserStore();
   const posthog = usePostHog();
 
-  // Local UI State
+  // --- UI State ---
   const [isMediaExpanded, setIsMediaExpanded] = useState(true);
-  const [isChatSidebarOpen, setIsChatSidebarOpen] = useState(false);
-  const [isPolling, setIsPolling] = useState<boolean>(false);
+  const [chatMode, setChatMode] = useState<"closed" | "half" | "full">("closed");
+  const [sidebarActiveTab, setSidebarActiveTab] = useState("chat");
+  const [isPolling, setIsPolling] = useState(false);
   const [previewFile, setPreviewFile] = useState<any>(null);
-  const [noteName, setNoteName] = useState<string>("");
-  const [editNameMode, toggleEditNameMode] = useState<boolean>(false);
-  const [sidebarActiveTab, setSidebarActiveTab] = useState("chat"); // 🟢 NEW: State for the Sidebar's internal
-  // File State
+  const [noteName, setNoteName] = useState("");
+  const [editNameMode, toggleEditNameMode] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // --- File State ---
   const [imagePaths, setImagePaths] = useState<any[]>([]);
   const [audioPaths, setAudioPaths] = useState<any[]>([]);
   const [pdfPaths, setPdfPaths] = useState<any[]>([]);
-  const [textContent, setTextContent] = useState<string>("");
+  const [textContent, setTextContent] = useState("");
   const [isProcessingFiles, setProcessingFiles] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-
-  // Pending Action
+  // --- Pending AI Action ---
   const [pendingAiAction, setPendingAiAction] = useState<{
     type: "explain" | "quiz";
     text: string;
@@ -167,10 +137,13 @@ const NoteDetailBase = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") || "overview";
+  const chatOpen = chatMode !== "closed";
 
+  // --- Effects ---
   useEffect(() => {
     if (activeTab === "chat") {
-      setIsChatSidebarOpen(true);
+      setChatMode((prev) => (prev === "closed" ? "half" : prev));
+      setSidebarActiveTab("chat");
       setSearchParams(
         (prev) => {
           prev.set("tab", "overview");
@@ -181,28 +154,21 @@ const NoteDetailBase = () => {
     }
   }, [activeTab, setSearchParams]);
 
-      useEffect(() => {
-        // Only revoke if it's a real blob URL
-        if (selectedImage?.startsWith('blob:')) {
-          return () => {
-            console.log("Revoking blob URL to free memory:", selectedImage);
-            URL.revokeObjectURL(selectedImage);
-          };
-        }
-    }, [selectedImage]);
+  useEffect(() => {
+    if (selectedImage?.startsWith("blob:")) {
+      return () => {
+        URL.revokeObjectURL(selectedImage);
+      };
+    }
+  }, [selectedImage]);
 
   useEffect(() => {
-    if (noteId) {
-      posthog.capture("note_viewed", { note_id: noteId });
-    }
+    if (noteId) posthog.capture("note_viewed", { note_id: noteId });
   }, [noteId, posthog]);
 
+  // --- Handlers ---
   const handleTabChange = (value: string) => {
-    posthog.capture("note_tab_changed", {
-      note_id: noteId,
-      tab: value,
-    });
-
+    posthog.capture("note_tab_changed", { note_id: noteId, tab: value });
     setSearchParams(
       (prev) => {
         prev.set("tab", value);
@@ -218,10 +184,21 @@ const NoteDetailBase = () => {
       action_type: type,
     });
     setPendingAiAction({ type, text });
-    setIsChatSidebarOpen(true);
+    setChatMode((prev) => (prev === "closed" ? "half" : prev));
+    setSidebarActiveTab("chat");
   };
 
-  // 1. Data Fetching
+  const handleQuizMe = () => {
+    posthog.capture("quiz_me_clicked", { note_id: noteId });
+    setPendingAiAction({
+      type: "quiz",
+      text: t("Can you generate hard quiz for me?"),
+    });
+    setChatMode((prev) => (prev === "closed" ? "half" : prev));
+    setSidebarActiveTab("chat");
+  };
+
+  // --- Data Fetching ---
   const { data: noteQueryResponse, refetch } = useQuery({
     queryKey: [`notes-${noteId}`],
     queryFn: () =>
@@ -245,9 +222,7 @@ const NoteDetailBase = () => {
   });
 
   useEffect(() => {
-    if (isPolling) {
-      refetch();
-    }
+    if (isPolling) refetch();
   }, [isPolling, refetch]);
 
   const isNoteProcessing = useMemo(() => {
@@ -276,7 +251,7 @@ const NoteDetailBase = () => {
       axiosInstance.get(
         `${API_BASE_URL}/company/${companyId}/notes/${noteId}/documents-url`,
       ),
-    enabled:  note && note.note_type !== "youtube",
+    enabled: note && note.note_type !== "youtube",
   });
 
   useEffect(() => {
@@ -289,6 +264,7 @@ const NoteDetailBase = () => {
     }
   }, [filesResponse]);
 
+  // --- Name Editing ---
   const saveNameMutation = useMutation({
     mutationFn: async (newName: string) => {
       return axiosInstance.put(
@@ -323,6 +299,7 @@ const NoteDetailBase = () => {
     saveNameMutation.mutate(noteName);
   };
 
+  // --- File Unzip ---
   const handleUnzip = async (url: string) => {
     setProcessingFiles(true);
     try {
@@ -334,7 +311,7 @@ const NoteDetailBase = () => {
       let txt = "";
 
       const promises: any[] = [];
-      zip.forEach((path, entry) => {
+      zip.forEach((_path, entry) => {
         promises.push(
           (async () => {
             const rawBlob = await entry.async("blob");
@@ -382,657 +359,1077 @@ const NoteDetailBase = () => {
     pdfPaths.length +
     (textContent ? 1 : 0);
 
-  const hasMedia = attachmentCount > 0 || note?.youtube_url;
+  // --- Grid columns based on chat mode ---
+  const gridCols =
+    chatMode === "closed"
+      ? "minmax(0,1fr)"
+      : chatMode === "full"
+        ? "1fr"
+        : "minmax(0,1fr) minmax(300px,380px)";
 
+  // ============================================================
+  // RENDER
+  // ============================================================
   return (
     <>
-      {/* 🟢 OUTERMOST WRAPPER: Flex Row makes Sidebar go to the right, and h-full makes it full height */}
-      <div className="flex flex-row h-[100vh] w-full overflow-hidden bg-transparent relative">
-        {/* --- LEFT COLUMN: HEADER & MAIN CONTENT --- */}
-        <div className="flex-1 flex flex-col min-w-0 h-full bg-transparent transition-all duration-300">
-          {/* FIXED HEADER */}
-          <div className="flex-none bg-white dark:bg-zinc-950 z-40 border-b border-zinc-200/50">
-            <div className="px-6 py-4">
-              <div className="mx-auto">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-zinc-400 max-w-3xl">
-                    <Link
-                      to="/notes"
-                      className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-                    >
-                      <LayoutGrid size={16} />
-                    </Link>
-                    <span className="text-zinc-300 dark:text-zinc-800">/</span>
-                    <div className="flex items-center gap-2 text-zinc-900 dark:text-zinc-100 font-bold text-lg">
-                      {note?.note_type === "youtube" ? (
-                        <div className="w-6 h-6">
-                          {getTypeIcon(note?.note_type)}
-                        </div>
-                      ) : (
-                        getTypeIcon(note?.note_type, 6)
-                      )}
-                      {editNameMode ? (
-                        <Input
-                          placeholder="Type here..."
-                          className="border-none md:text-xl/4 md:max-h-[26px] shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-0 px-0 w-[200px] sm:w-[400px] md:w-[600px]"
-                          value={noteName}
-                          onChange={(e) => setNoteName(e.target.value)}
-                          name="noteName"
-                          type="text"
-                          autoFocus
-                          disabled={saveNameMutation.isPending}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              e.currentTarget.blur();
-                              handleSaveName();
-                            }
-                            if (e.key === "Escape") {
-                              e.currentTarget.blur();
-                              setNoteName(note.name);
-                              toggleEditNameMode(false);
-                            }
-                          }}
-                        />
-                      ) : isNoteProcessing ? (
-                        t("Loading...")
-                      ) : (
-                        <span className="md:text-xl h-auto w-auto py-0 px-0 truncate max-w-[200px] sm:max-w-[400px] md:max-w-[600px]">
-                          {note?.name || "-"}
-                        </span>
-                      )}
-                      {!isNoteProcessing && (
-                        <>
-                          <Tooltip delayDuration={300}>
-                            <TooltipContent>
-                              {editNameMode
-                                ? t("Save (Enter)")
-                                : t("Edit name")}
-                            </TooltipContent>
-                            <TooltipTrigger>
-                              <button
-                                onClick={() =>
-                                  editNameMode
-                                    ? handleSaveName()
-                                    : toggleEditNameMode(true)
-                                }
-                                disabled={saveNameMutation.isPending}
-                                className="relative flex items-center justify-center h-8 w-8 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
-                              >
-                                <AnimatePresence mode="wait" initial={false}>
-                                  {saveNameMutation.isPending ? (
-                                    <motion.div
-                                      key="loading"
-                                      initial={{ opacity: 0 }}
-                                      animate={{ opacity: 1 }}
-                                      exit={{ opacity: 0 }}
-                                    >
-                                      <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400" />
-                                    </motion.div>
-                                  ) : editNameMode ? (
-                                    <motion.div
-                                      key="save"
-                                      initial={{ y: 5, opacity: 0 }}
-                                      animate={{ y: 0, opacity: 1 }}
-                                      exit={{ y: -5, opacity: 0 }}
-                                    >
-                                      <CornerDownLeft className="w-3 h-3 text-zinc-900 dark:text-zinc-100" />
-                                    </motion.div>
-                                  ) : (
-                                    <motion.div
-                                      key="edit"
-                                      initial={{ y: 5, opacity: 0 }}
-                                      animate={{ y: 0, opacity: 1 }}
-                                      exit={{ y: -5, opacity: 0 }}
-                                    >
-                                      <Pencil className="w-3.5 h-3.5 text-zinc-400" />
-                                    </motion.div>
-                                  )}
-                                </AnimatePresence>
-                              </button>
-                            </TooltipTrigger>
-                          </Tooltip>
-                          <Tooltip>
-                            <TooltipContent>
-                              <p>
-                                {note?.quiz_alerts_enabled
-                                  ? t("Quiz reminders enabled")
-                                  : t("Quiz reminders disabled")}
-                              </p>
-                            </TooltipContent>
-                            <TooltipTrigger>
-                              {note?.quiz_alerts_enabled ? (
-                                <BellRing
-                                  size={12}
-                                  strokeWidth={3}
-                                  className="w-3.5 h-3.5 text-zinc-400"
-                                />
-                              ) : (
-                                <BellOff
-                                  size={12}
-                                  className="w-3.5 h-3.5 text-zinc-400"
-                                />
-                              )}
-                            </TooltipTrigger>
-                          </Tooltip>
-                          {note?.youtube_url && (
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <button
-                                  className={cn(
-                                    "h-8 w-8 flex items-center justify-center rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors",
-                                    isMediaExpanded
-                                      ? "text-primary"
-                                      : "text-zinc-500",
-                                  )}
-                                  onClick={() =>
-                                    setIsMediaExpanded(!isMediaExpanded)
-                                  }
-                                >
-                                  <YoutubeIcon
-                                    size={16}
-                                    className="w-3.5 h-3.5 text-zinc-400"
-                                  />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-background">
-                                  {t("Show Youtube video")}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
+      <div
+        className="v2-note-page-pad"
+        style={{
+          maxWidth: 1240,
+          margin: "0 auto",
+          padding: "26px 34px 60px",
+          fontSize: 14,
+          lineHeight: 1.55,
+        }}
+      >
+        {/* ====== HEADER ROW ====== */}
+        <div
+          className="v2-note-header"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 8,
+          }}
+        >
+          {/* Back button */}
+          <Link
+            to="/notes"
+            title={t("Back")}
+            className="v2-back-btn"
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 11,
+              border: "1px solid var(--v2-line)",
+              background: "var(--v2-panel)",
+              color: "var(--v2-ink)",
+              display: "grid",
+              placeItems: "center",
+              textDecoration: "none",
+              flexShrink: 0,
+            }}
+          >
+            <ChevronLeft size={16} />
+          </Link>
 
-              {/* Meta Stats Row */}
-              <div className="flex items-center gap-2 sm:gap-2 overflow-x-auto no-scrollbar">
-                <MetaItem
-                  icon={<Calendar size={12} />}
-                  label={t("Created")}
-                  value={new Date(note?.created_at).toLocaleDateString()}
-                />
-                <MetaItem
-                  icon={<Globe size={12} />}
-                  label={t("Language")}
-                  value={getNoteLanguageIso(note?.language)}
-                />
+          {/* Title + edit */}
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              minWidth: 0,
+            }}
+          >
+            {editNameMode ? (
+              <Input
+                placeholder="Type here..."
+                value={noteName}
+                onChange={(e) => setNoteName(e.target.value)}
+                autoFocus
+                disabled={saveNameMutation.isPending}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.currentTarget.blur();
+                    handleSaveName();
+                  }
+                  if (e.key === "Escape") {
+                    e.currentTarget.blur();
+                    setNoteName(note.name);
+                    toggleEditNameMode(false);
+                  }
+                }}
+                className="font-heading border-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                  background: "transparent",
+                  padding: 0,
+                  width: "100%",
+                  maxWidth: 500,
+                }}
+              />
+            ) : (
+              <h1
+                className="font-heading"
+                style={{
+                  margin: 0,
+                  fontSize: 22,
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {isNoteProcessing ? t("Loading...") : note?.name || "-"}
+              </h1>
+            )}
 
-                {/* ATTACHMENTS DROPDOWN */}
-                {!note?.youtube_url && attachmentCount > 0 ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <MetaItem
-                        icon={<Paperclip size={12} />}
-                        label={t("Attachments")}
-                        value={`${attachmentCount} items`}
-                        iconEnd={
-                          <ChevronDown size={14} className="opacity-50" />
-                        }
-                      />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="start"
-                      sideOffset={8}
-                      className="w-64 p-1 rounded-xl shadow-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 z-50"
-                    >
-                      {pdfPaths.map((pdf, i) => (
-                        <DropdownMenuItem
-                          key={`pdf-${i}`}
-                          onClick={() => setPreviewFile(pdf)}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
-                        >
-                          <ScrollText
-                            size={16}
-                            className="text-red-500 shrink-0"
-                          />
-                          <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
-                            {pdf.name}
-                          </span>
-                        </DropdownMenuItem>
-                      ))}
-                      {imagePaths.map((img, i) => {
-                        console.log("img", img)
-                        return (
-                        <DropdownMenuItem
-                          key={`img-${i}`}
-                          onClick={() => setSelectedImage(img.url)} 
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
-                        >
-                          <ImageIcon
-                            size={16}
-                            className="text-blue-500 shrink-0"
-                          />
-                          <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
-                            {img.name}
-                          </span>
-                        </DropdownMenuItem>
-                      )})}
-                      {audioPaths.map((aud, i) => (
-                        <DropdownMenuItem
-                          key={`aud-${i}`}
-                          onClick={() => window.open(aud.url, "_blank")}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors"
-                        >
-                          <FileAudioIcon
-                            size={16}
-                            className="text-amber-500 shrink-0"
-                          />
-                          <span className="truncate text-zinc-700 dark:text-zinc-200 font-medium">
-                            {aud.name}
-                          </span>
-                        </DropdownMenuItem>
-                      ))}
-                      {textContent && (
-                        <DropdownMenuItem className="flex items-center gap-3 px-3 py-2.5 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-900 transition-colors">
-                          <FileTextIcon
-                            size={16}
-                            className="shrink-0 text-zinc-400"
-                          />
-                          <span className="truncate text-zinc-500 dark:text-zinc-400 font-medium">
-                            Extracted Text
-                          </span>
-                        </DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {/* Retitle / Save button */}
+            {!isNoteProcessing && (
+              <button
+                onClick={() =>
+                  editNameMode ? handleSaveName() : toggleEditNameMode(true)
+                }
+                disabled={saveNameMutation.isPending}
+                title={editNameMode ? t("Save (Enter)") : t("AI title ideas")}
+                style={{
+                  height: 30,
+                  padding: "0 11px",
+                  borderRadius: 999,
+                  border: "1px solid var(--v2-line)",
+                  background: "var(--v2-panel2)",
+                  color: "var(--v2-ink)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  flex: "0 0 auto",
+                }}
+              >
+                {saveNameMutation.isPending ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : editNameMode ? (
+                  <CornerDownLeft size={13} />
                 ) : (
-                  !note?.youtube_url && (
-                    <MetaItem
-                      icon={<Paperclip size={12} />}
-                      label={t("Attachments")}
-                      value={`0 items`}
-                    />
-                  )
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z" /></svg>
                 )}
-
-              </div>
-            </div>
+                {editNameMode ? t("Save") : t("Retitle")}
+              </button>
+            )}
           </div>
 
-          {/* MAIN CONTENT AREA */}
-          <div className="flex-1 min-h-0 flex flex-col bg-transparent">
-            {/* Vertical Media + Tabs PanelGroup */}
-            <div className="flex-1 min-h-0 flex flex-col">
-              {/* 🟢 FIXED FRAGMENT ISSUE: No more <></> wrapping these panels */}
-              {note?.youtube_url && isMediaExpanded && (
-                <div className="w-full h-full flex flex-col px-6 py-4">
-                  <div className="flex-1 w-full h-full flex items-center justify-center overflow-hidden">
-                    <div className="w-full max-w-5xl flex flex-col gap-4 h-full">
-                      <div className="flex-1 min-h-0 flex items-center justify-center">
-                        <div className="relative h-full w-auto max-w-full aspect-video rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm bg-black mx-auto">
-                          <iframe
-                            className="w-full h-full"
-                            src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`}
-                            allowFullScreen
-                            title="YouTube Video"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+          <div style={{ flex: 1 }} />
 
-              {/* PANEL 2: TABS & CONTENT */}
+          {/* Date pill */}
+          <span
+            data-v2-hide-sm=""
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 12,
+              color: "var(--v2-mut)",
+              border: "1px solid var(--v2-line)",
+              borderRadius: 999,
+              padding: "5px 11px",
+              background: "var(--v2-panel)",
+            }}
+          >
+            {note?.created_at
+              ? new Date(note.created_at).toLocaleDateString()
+              : ""}
+          </span>
 
-              <div className="flex flex-col h-full bg-transparent">
-                {/* Tabs Header */}
-                <div className="px-6 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950">
-                  <Tabs
-                    value={activeTab}
-                    onValueChange={handleTabChange}
-                    asChild={false}
+          {/* Attachments pill / dropdown */}
+          {!note?.youtube_url && attachmentCount > 0 ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  data-v2-hide-sm=""
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12,
+                    color: "var(--v2-mut)",
+                    border: "1px solid var(--v2-line)",
+                    borderRadius: 999,
+                    padding: "5px 11px",
+                    background: "var(--v2-panel)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Paperclip size={12} />
+                  {attachmentCount} {t("files")}
+                  <ChevronDown size={12} style={{ opacity: 0.5 }} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={8}
+                className="w-64 p-1 rounded-xl shadow-xl z-50"
+                style={{
+                  background: "var(--v2-panel)",
+                  border: "1px solid var(--v2-line)",
+                }}
+              >
+                {pdfPaths.map((pdf, i) => (
+                  <DropdownMenuItem
+                    key={`pdf-${i}`}
+                    onClick={() => setPreviewFile(pdf)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer"
+                    style={{ color: "var(--v2-ink)" }}
                   >
-                    <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 w-full justify-start overflow-x-auto no-scrollbar">
-                      <StudioTabTrigger
-                        value="overview"
-                        icon={<NotepadText size={14} />}
-                        label={t("Overview")}
-                        active={activeTab === "overview"}
-                      />
-                      <StudioTabTrigger
-                        value="transcript"
-                        icon={<ScrollText size={14} />}
-                        label={t("Transcript")}
-                        active={activeTab === "transcript"}
-                      />
-                      {/* {!note?.processing_error_message && (
-                              <StudioTabTrigger
-                                value="ai"
-                                icon={<AIIcon size={31} className="w-31 h-31" />}
-                                label={t("AI Tools")}
-                                active={activeTab === "ai"}
-                              />
-                            )} */}
-                    </TabsList>
-                  </Tabs>
-                </div>
+                    <ScrollText size={16} className="text-red-500 shrink-0" />
+                    <span className="truncate font-medium">{pdf.name}</span>
+                  </DropdownMenuItem>
+                ))}
+                {imagePaths.map((img, i) => (
+                  <DropdownMenuItem
+                    key={`img-${i}`}
+                    onClick={() => setSelectedImage(img.url)}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer"
+                    style={{ color: "var(--v2-ink)" }}
+                  >
+                    <ImageIcon size={16} className="text-blue-500 shrink-0" />
+                    <span className="truncate font-medium">{img.name}</span>
+                  </DropdownMenuItem>
+                ))}
+                {audioPaths.map((aud, i) => (
+                  <DropdownMenuItem
+                    key={`aud-${i}`}
+                    onClick={() => window.open(aud.url, "_blank")}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer"
+                    style={{ color: "var(--v2-ink)" }}
+                  >
+                    <FileAudioIcon
+                      size={16}
+                      className="text-amber-500 shrink-0"
+                    />
+                    <span className="truncate font-medium">{aud.name}</span>
+                  </DropdownMenuItem>
+                ))}
+                {textContent && (
+                  <DropdownMenuItem
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg"
+                    style={{ color: "var(--v2-mut)" }}
+                  >
+                    <FileTextIcon size={16} className="shrink-0" />
+                    <span className="truncate font-medium">
+                      {t("Extracted Text")}
+                    </span>
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            !note?.youtube_url && (
+              <span
+                data-v2-hide-sm=""
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 12,
+                  color: "var(--v2-mut)",
+                  border: "1px solid var(--v2-line)",
+                  borderRadius: 999,
+                  padding: "5px 11px",
+                  background: "var(--v2-panel)",
+                }}
+              >
+                <Paperclip size={12} /> 0 {t("files")}
+              </span>
+            )
+          )}
 
-                {/* Content */}
-                <div className="flex-1 min-h-0 overflow-hidden relative">
-                  <Tabs value={activeTab} className="h-full flex flex-col">
-                    {isNoteProcessing ? (
-                      <div className="flex flex-col mt-20 h-full overflow-y-auto">
-                        <div className="flex flex-col items-center my-10">
-                          <AIIcon
-                            hideStar
-                            className="h-10 w-10 animate-spin-slow "
-                          />
-                          <p
-                            className="text-xl mt-5"
-                            style={{
-                              backgroundImage:
-                                "linear-gradient(to right, #71717a, #e4e4e7, #71717a)",
-                              backgroundSize: "200% auto",
-                              backgroundClip: "text",
-                              WebkitBackgroundClip: "text",
-                              color: "transparent",
-                              animation:
-                                "gradient-flow-text 4s linear infinite",
-                            }}
-                          >
-                            {t("Processing")}
-                          </p>
-                        </div>
-
-                        {/* Attachment progress */}
-                        {note?.attachments?.length > 0 && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 12 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.3 }}
-                            className="w-full max-w-xl mx-auto px-6 flex flex-col gap-4"
-                          >
-                            <p className="text-sm font-medium text-zinc-400 uppercase tracking-widest text-center mb-1">
-                              {note.attachments.filter((a: any) => a.progress >= 1).length} / {note.attachments.length} {t("files ready")}
-                            </p>
-                            {(() => {
-                              const sorted = [...note.attachments].sort((a: any, b: any) => a.id - b.id);
-                              return sorted.map((attachment: any, idx: number) => {
-                              const pct = Math.round((attachment.progress ?? 0) * 100);
-                              const done = pct >= 100;
-                              const label = (() => {
-                                const ft = attachment.file_type || "file";
-                                const key = ft.toLowerCase();
-                                let count = 1;
-                                for (let i = 0; i < idx; i++) {
-                                  if ((sorted[i].file_type || "file").toLowerCase() === key) count++;
-                                }
-                                const capitalType = key.charAt(0).toUpperCase() + key.slice(1);
-                                return `${capitalType} ${count}`;
-                              })();
-                              const confettiParticles = done ? Array.from({ length: 8 }, (_, i) => ({
-                                id: i,
-                                x: (Math.random() - 0.5) * 120,
-                                y: -(Math.random() * 40 + 15),
-                                rotate: Math.random() * 360,
-                                scale: Math.random() * 0.5 + 0.5,
-                                color: ["#FE5E5F", "#C04796", "#F9A8D4", "#FDA4AF", "#71717A", "#A1A1AA"][i % 6],
-                              })) : [];
-                              return (
-                                <motion.div
-                                  key={attachment.id}
-                                  initial={{ opacity: 0, x: -8 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.35, delay: 0.4 + idx * 0.1 }}
-                                  className="flex flex-col gap-2"
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <span className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300 font-medium">
-                                      {(() => {
-                                        const ft = (attachment.file_type || "").toLowerCase();
-                                        if (ft === "audio") return <Play size={15} className="text-zinc-400 shrink-0" />;
-                                        return <FileIcon size={15} className="text-zinc-400 shrink-0" />;
-                                      })()}
-                                      {label}
-                                    </span>
-                                    <span className={cn(
-                                      "tabular-nums text-sm font-semibold ml-2 shrink-0 transition-colors duration-500",
-                                      done ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-400"
-                                    )}>
-                                      {done ? t("Done") : `${pct}%`}
-                                    </span>
-                                  </div>
-                                  <div className="relative">
-                                    <div className="h-2.5 w-full rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
-                                      <motion.div
-                                        className={cn(
-                                          "h-full rounded-full transition-colors duration-700",
-                                          done
-                                            ? "bg-zinc-700 dark:bg-zinc-300"
-                                            : "bg-zinc-400 dark:bg-zinc-500"
-                                        )}
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${Math.max(pct, 2)}%` }}
-                                        transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                                      />
-                                      {!done && (
-                                        <div
-                                          className="absolute inset-0 rounded-full pointer-events-none"
-                                          style={{
-                                            backgroundImage: "linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%, transparent 100%)",
-                                            backgroundSize: "200% 100%",
-                                            animation: "shimmer 2s ease-in-out infinite",
-                                          }}
-                                        />
-                                      )}
-                                    </div>
-                                    {/* Mini confetti on completion */}
-                                    {done && confettiParticles.map((p) => (
-                                      <motion.div
-                                        key={p.id}
-                                        initial={{ opacity: 1, x: 0, y: 0, scale: 0 }}
-                                        animate={{ opacity: 0, x: p.x, y: p.y, scale: p.scale, rotate: p.rotate }}
-                                        transition={{ duration: 0.7, ease: "easeOut" }}
-                                        className="absolute pointer-events-none"
-                                        style={{
-                                          left: "50%",
-                                          top: "50%",
-                                          width: 5,
-                                          height: 5,
-                                          borderRadius: p.id % 2 === 0 ? "50%" : "1px",
-                                          backgroundColor: p.color,
-                                        }}
-                                      />
-                                    ))}
-                                  </div>
-                                </motion.div>
-                              );
-                            });
-                            })()}
-                          </motion.div>
-                        )}
-                      </div>
-                    ) : (
-                      <>
-                        <TabsContent
-                          value="overview"
-                          className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
-                        >
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="prose prose-zinc dark:prose-invert max-w-none pb-20"
-                          >
-                            {note?.processing_error_message ? (
-                              <div className="p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 font-medium">
-                                {note.processing_error_message}
-                              </div>
-                            ) : (
-                              <MarkdownView
-                                onExplain={(text) =>
-                                  handleMarkdownAction(text, "explain")
-                                }
-                                onQuiz={(text) =>
-                                  handleMarkdownAction(text, "quiz")
-                                }
-                              >
-                                {sanitizeMarkdown(note?.md_summary_ai)}
-                              </MarkdownView>
-                            )}
-                          </motion.div>
-                        </TabsContent>
-
-                        <TabsContent
-                          value="transcript"
-                          className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
-                        >
-                          <div className="bg-zinc-50/50 dark:bg-zinc-900/30 rounded-2xl p-6 border border-zinc-100 dark:border-zinc-800 pb-20">
-                            <MarkdownView
-                              onExplain={(text) =>
-                                handleMarkdownAction(text, "explain")
-                              }
-                              onQuiz={(text) =>
-                                handleMarkdownAction(text, "quiz")
-                              }
-                            >
-                              {note?.transcript}
-                            </MarkdownView>
-                          </div>
-                        </TabsContent>
-
-                        <TabsContent
-                          value="ai"
-                          className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
-                        >
-                          <div className="pb-20">
-                            <StudyMaterials
-                              noteId={noteId!}
-                              noteQuery={noteQueryResponse}
-                              setIsPolling={setIsPolling}
-                            />
-                          </div>
-                        </TabsContent>
-                      </>
-                    )}
-                  </Tabs>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* YouTube toggle */}
+          {note?.youtube_url && (
+            <button
+              onClick={() => setIsMediaExpanded(!isMediaExpanded)}
+              title={
+                isMediaExpanded ? t("Hide video") : t("Show video")
+              }
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 11,
+                border: "1px solid var(--v2-line)",
+                background: isMediaExpanded
+                  ? "var(--v2-accent-soft)"
+                  : "var(--v2-panel)",
+                color: "var(--v2-ink)",
+                cursor: "pointer",
+                display: "grid",
+                placeItems: "center",
+              }}
+            >
+              <Play size={14} />
+            </button>
+          )}
         </div>
 
-        {/* 🟢 FLOATING "OPEN CHAT" BUTTON (Docks to the right edge) */}
-        {/* 🟢 FLOATING "OPEN AI TOOLS" BUTTON (Horizontal, docked to the right) */}
-        <AnimatePresence>
-          {!isChatSidebarOpen && !isNoteProcessing && (
-            <motion.button
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 50, opacity: 0 }}
-              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              onClick={() => {
-                setIsChatSidebarOpen(true);
-                setSidebarActiveTab("chat");
+        {/* ====== YOUTUBE EMBED ====== */}
+        {note?.youtube_url && isMediaExpanded && (
+          <div
+            style={{
+              margin: "0 0 16px",
+              borderRadius: 14,
+              overflow: "hidden",
+              border: "1px solid var(--v2-line)",
+              aspectRatio: "16/9",
+              maxHeight: 400,
+              background: "#000",
+            }}
+          >
+            <iframe
+              style={{ width: "100%", height: "100%", border: "none" }}
+              src={`https://www.youtube.com/embed/${extractYouTubeID(note.youtube_url)}`}
+              allowFullScreen
+              title="YouTube Video"
+            />
+          </div>
+        )}
+
+        {/* ====== PROCESSING STATE (old UI) ====== */}
+        {isNoteProcessing ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              minHeight: 400,
+              paddingTop: 80,
+            }}
+          >
+            <AIIcon hideStar className="h-10 w-10 v2-animate-spin-slow" />
+            <p
+              className="text-xl mt-5"
+              style={{
+                backgroundImage:
+                  "linear-gradient(to right, #71717a, #e4e4e7, #71717a)",
+                backgroundSize: "200% auto",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+                animation: "v2-gradient-flow-text 4s linear infinite",
               }}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-40 flex items-center gap-2.5 py-3 pl-4 pr-3 rounded-l-2xl shadow-[-8px_0_20px_rgba(236,72,153,0.15)] cursor-pointer group overflow-hidden border border-r-0 border-pink-500/20 dark:border-rose-500/30 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 transition-all duration-300"
             >
-              {/* Content */}
-              <div className="relative z-10 flex items-center gap-2">
-                <div className="flex -space-x-1.5 items-center">
-                  <div className="h-6 w-6 rounded-full bg-white/20 dark:bg-white/10 flex items-center justify-center border border-white/30 shadow-sm backdrop-blur-sm">
-                    <MessageCircle size={12} className="text-white" />
-                  </div>
-                </div>
-              </div>
-            </motion.button>
-          )}
-        </AnimatePresence>
+              {t("Processing")}
+            </p>
 
-        {/* --- RIGHT COLUMN: CHAT SIDEBAR (Desktop & Mobile Unified) --- */}
-        <AnimatePresence>
-          {isChatSidebarOpen && (
-            <motion.div
-              // Mobile: start at 100% width | Desktop: start at 0px width
-              initial={{ width: "0px", opacity: 0 }}
-              animate={{ width: typeof window !== "undefined" && window.innerWidth < 768 ? "100%" : 500, opacity: 1 }}
-              exit={{ width: "0px", opacity: 0 }}
-              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
-              // REMOVED 'hidden md:flex'. Now it shows on all screens.
-              // Added absolute positioning on mobile, and standard flow on desktop
-              className="flex flex-col border-l border-zinc-200/50 dark:border-zinc-800 bg-white/50 dark:bg-zinc-950/50 overflow-hidden z-50 shrink-0 h-full absolute inset-0 md:relative"
-            >
-              {/* Inner wrapper matches the animated width */}
-              <div className="w-full md:w-[500px] flex flex-col h-full bg-white dark:bg-zinc-950">
-                <Tabs
-                  value={sidebarActiveTab}
-                  onValueChange={setSidebarActiveTab}
-                  className="flex flex-col h-full bg-transparent"
+            {note?.attachments?.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="w-full max-w-xl mx-auto px-6 flex flex-col gap-4"
+                style={{ marginTop: 24 }}
+              >
+                <p
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 500,
+                    color: "var(--v2-mut)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                    textAlign: "center",
+                    marginBottom: 4,
+                  }}
                 >
-                  {/* Tabs Header (Close Button + Centered Tabs) */}
-                  <div className="flex-none px-4 py-2 border-b border-zinc-200/50 bg-white dark:bg-zinc-950 h-[61px] flex items-center justify-between">
-                    
-                    {/* 🟢 LEFT: The Close Button */}
-                    <button
-                      onClick={() => setIsChatSidebarOpen(false)}
-                      className="flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors shrink-0 outline-none cursor-pointer"
+                  {
+                    note.attachments.filter((a: any) => a.progress >= 1)
+                      .length
+                  }{" "}
+                  / {note.attachments.length} {t("files ready")}
+                </p>
+                {(() => {
+                  const sorted = [...note.attachments].sort(
+                    (a: any, b: any) => a.id - b.id,
+                  );
+                  return sorted.map((attachment: any, idx: number) => {
+                    const pct = Math.round(
+                      (attachment.progress ?? 0) * 100,
+                    );
+                    const done = pct >= 100;
+                    const label = (() => {
+                      const ft = attachment.file_type || "file";
+                      const key = ft.toLowerCase();
+                      let count = 1;
+                      for (let i = 0; i < idx; i++) {
+                        if (
+                          (sorted[i].file_type || "file").toLowerCase() ===
+                          key
+                        )
+                          count++;
+                      }
+                      return `${key.charAt(0).toUpperCase() + key.slice(1)} ${count}`;
+                    })();
+                    const confettiParticles = done
+                      ? Array.from({ length: 8 }, (_, i) => ({
+                          id: i,
+                          x: (Math.random() - 0.5) * 120,
+                          y: -(Math.random() * 40 + 15),
+                          rotate: Math.random() * 360,
+                          scale: Math.random() * 0.5 + 0.5,
+                          color: [
+                            "#FE5E5F",
+                            "#C04796",
+                            "#F9A8D4",
+                            "#FDA4AF",
+                            "#71717A",
+                            "#A1A1AA",
+                          ][i % 6],
+                        }))
+                      : [];
+                    return (
+                      <motion.div
+                        key={attachment.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          duration: 0.35,
+                          delay: 0.4 + idx * 0.1,
+                        }}
+                        className="flex flex-col gap-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="flex items-center gap-2 text-sm font-medium"
+                            style={{ color: "var(--v2-ink)" }}
+                          >
+                            {(
+                              attachment.file_type || ""
+                            ).toLowerCase() === "audio" ? (
+                              <Play
+                                size={15}
+                                style={{ color: "var(--v2-mut)" }}
+                              />
+                            ) : (
+                              <FileIcon
+                                size={15}
+                                style={{ color: "var(--v2-mut)" }}
+                              />
+                            )}
+                            {label}
+                          </span>
+                          <span
+                            className="tabular-nums text-sm font-semibold ml-2 shrink-0"
+                            style={{
+                              color: done
+                                ? "var(--v2-ink)"
+                                : "var(--v2-mut)",
+                              transition: "color 0.5s",
+                            }}
+                          >
+                            {done ? t("Done") : `${pct}%`}
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <div
+                            className="h-2.5 w-full rounded-full overflow-hidden relative"
+                            style={{ background: "var(--v2-panel2)" }}
+                          >
+                            <motion.div
+                              className="h-full rounded-full"
+                              style={{
+                                background: done
+                                  ? "var(--v2-ink)"
+                                  : "var(--v2-mut)",
+                                transition: "background-color 0.7s",
+                              }}
+                              initial={{ width: 0 }}
+                              animate={{
+                                width: `${Math.max(pct, 2)}%`,
+                              }}
+                              transition={{
+                                duration: 0.8,
+                                ease: [0.4, 0, 0.2, 1],
+                              }}
+                            />
+                            {!done && (
+                              <div
+                                className="absolute inset-0 rounded-full pointer-events-none"
+                                style={{
+                                  backgroundImage:
+                                    "linear-gradient(90deg, transparent 0%, transparent 40%, rgba(255,255,255,0.35) 50%, transparent 60%, transparent 100%)",
+                                  backgroundSize: "200% 100%",
+                                  animation:
+                                    "v2-shimmer 2s ease-in-out infinite",
+                                }}
+                              />
+                            )}
+                          </div>
+                          {done &&
+                            confettiParticles.map((p) => (
+                              <motion.div
+                                key={p.id}
+                                initial={{
+                                  opacity: 1,
+                                  x: 0,
+                                  y: 0,
+                                  scale: 0,
+                                }}
+                                animate={{
+                                  opacity: 0,
+                                  x: p.x,
+                                  y: p.y,
+                                  scale: p.scale,
+                                  rotate: p.rotate,
+                                }}
+                                transition={{
+                                  duration: 0.7,
+                                  ease: "easeOut",
+                                }}
+                                className="absolute pointer-events-none"
+                                style={{
+                                  left: "50%",
+                                  top: "50%",
+                                  width: 5,
+                                  height: 5,
+                                  borderRadius:
+                                    p.id % 2 === 0 ? "50%" : "1px",
+                                  backgroundColor: p.color,
+                                }}
+                              />
+                            ))}
+                        </div>
+                      </motion.div>
+                    );
+                  });
+                })()}
+              </motion.div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* ====== STICKY TOOLBAR (hidden in full chat mode) ====== */}
+            <div
+              className="v2-note-toolbar"
+            >
+              {/* Tab group */}
+              <div
+                style={{
+                  display: "inline-flex",
+                  background: "var(--v2-panel)",
+                  border: "1px solid var(--v2-line)",
+                  borderRadius: 13,
+                  padding: 4,
+                  gap: 2,
+                  boxShadow: "var(--v2-shadow)",
+                }}
+              >
+                <button
+                  onClick={() => handleTabChange("overview")}
+                  style={{
+                    height: 32,
+                    padding: "0 16px",
+                    borderRadius: 10,
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background:
+                      activeTab === "overview"
+                        ? "var(--v2-ink)"
+                        : "transparent",
+                    color:
+                      activeTab === "overview"
+                        ? "var(--v2-bg)"
+                        : "var(--v2-mut)",
+                    transition: "all .15s",
+                  }}
+                >
+                  {t("Overview")}
+                </button>
+                <button
+                  onClick={() => handleTabChange("transcript")}
+                  style={{
+                    height: 32,
+                    padding: "0 16px",
+                    borderRadius: 10,
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background:
+                      activeTab === "transcript"
+                        ? "var(--v2-ink)"
+                        : "transparent",
+                    color:
+                      activeTab === "transcript"
+                        ? "var(--v2-bg)"
+                        : "var(--v2-mut)",
+                    transition: "all .15s",
+                  }}
+                >
+                  {t("Transcript")}
+                </button>
+              </div>
+
+              {/* Selection hint */}
+              <span
+                data-v2-hide-sm=""
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  fontSize: 12.5,
+                  color: "var(--v2-mut)",
+                  background: "var(--v2-panel)",
+                  border: "1px solid var(--v2-line)",
+                  borderRadius: 999,
+                  padding: "7px 13px",
+                  fontWeight: 500,
+                }}
+              >
+                <StarHintIcon />
+                {t("Select any text to ask or quiz")}
+              </span>
+
+              <div style={{ flex: 1 }} />
+
+              {/* Quiz me button — opens chat */}
+              <button
+                onClick={handleQuizMe}
+                data-v2-hit=""
+                style={{
+                  height: 36,
+                  padding: "0 14px",
+                  borderRadius: 12,
+                  border: "1px solid var(--v2-line)",
+                  background: "var(--v2-panel)",
+                  color: "var(--v2-ink)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                }}
+              >
+                <QuizIcon />
+                {t("Quiz me")}
+              </button>
+
+              {/* Chat toggle */}
+              <button
+                onClick={() =>
+                  setChatMode(chatOpen ? "closed" : "half")
+                }
+                data-v2-hit=""
+                style={{
+                  height: 36,
+                  padding: "0 15px",
+                  borderRadius: 12,
+                  border: chatOpen
+                    ? "1px solid var(--v2-line)"
+                    : "none",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  background: chatOpen
+                    ? "var(--v2-panel2)"
+                    : "var(--v2-ink)",
+                  color: chatOpen ? "var(--v2-ink)" : "var(--v2-bg)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  transition: "transform .15s",
+                }}
+              >
+                <ChatBubbleIcon />
+                {chatOpen ? t("Chat on") : t("Chat")}
+              </button>
+            </div>
+
+            {/* ====== CONTENT GRID ====== */}
+            <div
+              className="v2-note-grid"
+              style={{
+                gridTemplateColumns: gridCols,
+                gap: chatMode === "full" ? 0 : 18,
+              }}
+            >
+              {/* --- Content Panel --- */}
+              <div
+                style={{
+                  position: "relative",
+                  background: "var(--v2-panel)",
+                  border: "1px solid var(--v2-line)",
+                  borderRadius: 18,
+                  boxShadow: "var(--v2-shadow)",
+                  padding: "34px 40px 44px",
+                  minWidth: 0,
+                  overflow: "hidden",
+                  display: chatMode === "full" ? "none" : undefined,
+                }}
+              >
+                {activeTab === "overview" && (
+                  <article
+                    className="v2-fade-up"
+                    style={{ maxWidth: 760, fontSize: 15 }}
+                  >
+                    {note?.processing_error_message ? (
+                      <div
+                        style={{
+                          padding: 16,
+                          borderRadius: 12,
+                          background: "rgba(210,69,59,.08)",
+                          border: "1px solid rgba(210,69,59,.2)",
+                          color: "var(--v2-bad)",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {note.processing_error_message}
+                      </div>
+                    ) : (
+                      <div className="prose prose-zinc dark:prose-invert max-w-none">
+                        <MarkdownView
+                          onExplain={(text) =>
+                            handleMarkdownAction(text, "explain")
+                          }
+                          onQuiz={(text) =>
+                            handleMarkdownAction(text, "quiz")
+                          }
+                        >
+                          {sanitizeMarkdown(note?.md_summary_ai)}
+                        </MarkdownView>
+                      </div>
+                    )}
+                  </article>
+                )}
+
+                {activeTab === "transcript" && (
+                  <article
+                    className="v2-fade-up"
+                    style={{
+                      maxWidth: 760,
+                      fontSize: 15,
+                      lineHeight: 1.75,
+                    }}
+                  >
+                    <MarkdownView
+                      onExplain={(text) =>
+                        handleMarkdownAction(text, "explain")
+                      }
+                      onQuiz={(text) =>
+                        handleMarkdownAction(text, "quiz")
+                      }
                     >
-                      <X size={16} className="text-zinc-400" />
-                    </button>
+                      {note?.transcript}
+                    </MarkdownView>
+                  </article>
+                )}
+              </div>
 
-                    {/* 🟢 CENTER: The Tabs */}
-                    <TabsList className="bg-zinc-100/50 dark:bg-zinc-900/50 p-1 border border-zinc-200/50 dark:border-zinc-800/50 h-11 mx-auto flex shrink-0">
-                      <StudioTabTrigger
-                        value="chat"
-                        icon={<MessageSquare size={14} />}
-                        label={t("AI Chat")}
-                        active={sidebarActiveTab === "chat"}
-                      />
-                      {!note?.processing_error_message && (
-                        <StudioTabTrigger
-                          value="ai"
-                          icon={<AIIcon size={31} className="w-31 h-31" />}
-                          label={t("AI Tools")}
-                          active={sidebarActiveTab === "ai"}
+              {/* --- Chat Panel --- */}
+              {chatOpen && (
+                <aside
+                  className="v2-chat-panel"
+                  data-mode={chatMode}
+                  style={{
+                    background: "var(--v2-panel)",
+                    border: "1px solid var(--v2-line)",
+                    borderRadius: 18,
+                    boxShadow: "var(--v2-shadow)",
+                    height: "calc(100dvh - 170px)",
+                    justifySelf: "stretch",
+                  }}
+                >
+                  {/* Chat header */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding: "11px 13px",
+                      borderBottom: "1px solid var(--v2-line)",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {/* Avatar */}
+                    <div
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 11,
+                        background: "var(--v2-ink)",
+                        display: "grid",
+                        placeItems: "center",
+                        color: "var(--v2-bg)",
+                      }}
+                    >
+                      <StudyBuddyIcon />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <strong
+                        style={{ fontSize: 13.5, display: "block" }}
+                      >
+                        {t("Study buddy")}
+                      </strong>
+                      <span
+                        style={{
+                          fontSize: 11.5,
+                          color: "var(--v2-ok)",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5,
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: "var(--v2-ok)",
+                          }}
                         />
-                      )}
-                    </TabsList>
+                        {t("knows this note")}
+                      </span>
+                    </div>
 
-                    {/* 🟢 RIGHT: Invisible Spacer (Keeps the tabs perfectly centered) */}
-                    <div className="w-[40px] shrink-0" aria-hidden="true" />
+                    <div
+                      style={{
+                        marginLeft: "auto",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      {/* Layout toggle */}
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          background: "var(--v2-panel2)",
+                          borderRadius: 10,
+                          padding: 2,
+                          gap: 2,
+                        }}
+                      >
+                        <button
+                          onClick={() => setChatMode("half")}
+                          title={t("Side-by-side")}
+                          style={{
+                            width: 30,
+                            height: 26,
+                            border: "none",
+                            borderRadius: 8,
+                            cursor: "pointer",
+                            display: "grid",
+                            placeItems: "center",
+                            background:
+                              chatMode === "half"
+                                ? "var(--v2-panel)"
+                                : "transparent",
+                            color:
+                              chatMode === "half"
+                                ? "var(--v2-ink)"
+                                : "var(--v2-mut)",
+                            boxShadow:
+                              chatMode === "half"
+                                ? "var(--v2-shadow-sm)"
+                                : "none",
+                            transition: "all .15s",
+                          }}
+                        >
+                          <LayoutHalfIcon />
+                        </button>
+                        <button
+                          onClick={() => setChatMode("full")}
+                          title={t("Full chat")}
+                          style={{
+                            width: 30,
+                            height: 26,
+                            border: "none",
+                            borderRadius: 8,
+                            cursor: "pointer",
+                            display: "grid",
+                            placeItems: "center",
+                            background:
+                              chatMode === "full"
+                                ? "var(--v2-panel)"
+                                : "transparent",
+                            color:
+                              chatMode === "full"
+                                ? "var(--v2-ink)"
+                                : "var(--v2-mut)",
+                            boxShadow:
+                              chatMode === "full"
+                                ? "var(--v2-shadow-sm)"
+                                : "none",
+                            transition: "all .15s",
+                          }}
+                        >
+                          <LayoutFullIcon />
+                        </button>
+                      </div>
+
+                      {/* Close */}
+                      <button
+                        onClick={() => setChatMode("closed")}
+                        title={t("Close chat")}
+                        data-v2-hit=""
+                        style={{
+                          width: 28,
+                          height: 28,
+                          border: "none",
+                          borderRadius: 9,
+                          background: "transparent",
+                          color: "var(--v2-mut)",
+                          cursor: "pointer",
+                          display: "grid",
+                          placeItems: "center",
+                        }}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Tab Content Area */}
-                  <div className="flex-1 min-h-0 overflow-hidden relative">
-                    <TabsContent
-                      value="chat"
-                      className="h-full flex flex-col mt-0 p-0 focus-visible:ring-0 overflow-hidden"
+                  {/* Full-mode breadcrumb */}
+                  {chatMode === "full" && (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "8px 14px",
+                        borderBottom: "1px solid var(--v2-line)",
+                        background: "var(--v2-panel2)",
+                        fontSize: 12,
+                        color: "var(--v2-mut)",
+                        flexShrink: 0,
+                      }}
                     >
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M12 3 3 8l9 5 9-5zM3 12.5l9 5 9-5" />
+                      </svg>
+                      {t("Full chat over")}{" "}
+                      <strong
+                        style={{
+                          color: "var(--v2-ink)",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {note?.name}
+                      </strong>
+                      <button
+                        onClick={() => setChatMode("half")}
+                        style={{
+                          marginLeft: "auto",
+                          border: "none",
+                          background: "transparent",
+                          color: "var(--v2-ink)",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        {t("Show note")}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Panel content tabs (Chat / AI Tools) */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 2,
+                      padding: "6px 13px",
+                      borderBottom: "1px solid var(--v2-line)",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <button
+                      onClick={() => setSidebarActiveTab("chat")}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: 8,
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background:
+                          sidebarActiveTab === "chat"
+                            ? "var(--v2-accent-soft)"
+                            : "transparent",
+                        color:
+                          sidebarActiveTab === "chat"
+                            ? "var(--v2-ink)"
+                            : "var(--v2-mut)",
+                      }}
+                    >
+                      {t("Chat")}
+                    </button>
+                    {!note?.processing_error_message && (
+                      <button
+                        onClick={() => setSidebarActiveTab("ai")}
+                        style={{
+                          padding: "4px 10px",
+                          borderRadius: 8,
+                          border: "none",
+                          cursor: "pointer",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          background:
+                            sidebarActiveTab === "ai"
+                              ? "var(--v2-accent-soft)"
+                              : "transparent",
+                          color:
+                            sidebarActiveTab === "ai"
+                              ? "var(--v2-ink)"
+                              : "var(--v2-mut)",
+                        }}
+                      >
+                        {t("AI Tools")}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Chat / AI content */}
+                  <div
+                    style={{
+                      flex: 1,
+                      minHeight: 0,
+                      overflow: "hidden",
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                    {sidebarActiveTab === "chat" ? (
                       <ChatInterface
                         noteName={note?.name}
                         noteId={noteId!}
                         pendingAction={pendingAiAction}
-                        onActionComplete={() => setPendingAiAction(null)}
+                        onActionComplete={() =>
+                          setPendingAiAction(null)
+                        }
                       />
-                    </TabsContent>
-                    {!note?.processing_error_message && (
-                      <TabsContent
-                        value="ai"
-                        className="h-full overflow-y-auto p-6 mt-0 focus-visible:ring-0"
+                    ) : !note?.processing_error_message ? (
+                      <div
+                        style={{
+                          height: "100%",
+                          overflowY: "auto",
+                          padding: 16,
+                        }}
                       >
-                        <div className="pb-20">
-                          <StudyMaterials
-                            noteId={noteId!}
-                            noteQuery={noteQueryResponse}
-                            setIsPolling={setIsPolling}
-                          />
-                        </div>
-                      </TabsContent>
-                    )}
+                        <StudyMaterials
+                          noteId={noteId!}
+                          noteQuery={noteQueryResponse}
+                          setIsPolling={setIsPolling}
+                        />
+                      </div>
+                    ) : null}
                   </div>
-                </Tabs>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                </aside>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Dialogs & Styles */}
+      {/* ====== DIALOGS ====== */}
       {previewFile && (
         <FilePreviewDialog
           name={previewFile?.name || ""}
@@ -1041,24 +1438,92 @@ const NoteDetailBase = () => {
           onClose={() => setPreviewFile(null)}
         />
       )}
-      {/* The Modal remains closed until selectedImage is not null */}
-      <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
-        {/* Use max-w-full and adjust width based on screen size */}
+      <Dialog
+        open={!!selectedImage}
+        onOpenChange={(open) => !open && setSelectedImage(null)}
+      >
         <DialogContent className="max-w-[95vw] md:max-w-3xl lg:max-w-5xl p-2 md:p-6 overflow-hidden">
           <div className="relative flex items-center justify-center w-full max-h-[85vh]">
             {selectedImage && (
-              <img 
-                src={selectedImage} 
-                alt="Preview" 
+              <img
+                src={selectedImage}
+                alt="Preview"
                 className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-sm"
               />
             )}
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ====== SCOPED STYLES ====== */}
       <style
         dangerouslySetInnerHTML={{
-          __html: ` .perspective-1000 { perspective: 1000px; } .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; } .animate-spin-slow { animation: spin 2s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } @keyframes gradient-flow-text { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } `,
+          __html: `
+        .v2-note-toolbar {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin: 14px 0 16px;
+          position: sticky;
+          top: 10px;
+          z-index: 20;
+        }
+        .v2-note-grid {
+          display: grid;
+          align-items: start;
+          transition: grid-template-columns 0.3s ease, gap 0.3s ease;
+        }
+        .v2-chat-panel {
+          position: sticky;
+          top: 74px;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          animation: v2-popIn 0.2s ease both;
+          width: 100%;
+          min-height: 420px;
+        }
+        .v2-back-btn:hover {
+          border-color: var(--v2-ink) !important;
+        }
+        .v2-animate-spin-slow {
+          animation: v2-spin 2s linear infinite;
+        }
+        @keyframes v2-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes v2-gradient-flow-text {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes v2-shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @media (max-width: 980px) {
+          .v2-note-grid { grid-template-columns: 1fr !important; }
+          .v2-chat-panel {
+            position: fixed !important;
+            top: auto !important;
+            inset: auto 6px 6px 6px !important;
+            height: 82dvh !important;
+            min-height: 0 !important;
+            max-width: none !important;
+            margin: 0 !important;
+            z-index: 75;
+            box-shadow: 0 -10px 44px -10px rgba(0,0,0,.35) !important;
+          }
+          .v2-chat-panel[data-mode="full"] {
+            inset: 0 !important;
+            height: 100dvh !important;
+            border-radius: 0 !important;
+          }
+          .v2-note-page-pad { padding: 22px 18px 90px !important; }
+          .v2-note-header { flex-wrap: wrap; }
+          .v2-note-toolbar { flex-wrap: wrap; position: static !important; }
+        }
+      `,
         }}
       />
     </>
@@ -1066,7 +1531,3 @@ const NoteDetailBase = () => {
 };
 
 export default NoteDetailBase;
-
-function cn(...inputs: any) {
-  return inputs.filter(Boolean).join(" ");
-}

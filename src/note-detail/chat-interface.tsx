@@ -371,7 +371,7 @@ const ChatInterface = ({
         </div>
       </div>
       
-      <div className="flex-none pt-4 pb-6 border-t border-zinc-200/50 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm z-10 px-2">
+      <div className="flex-none pt-4 pb-6 border-t z-10 px-2" style={{ borderColor: 'var(--v2-line)', background: 'var(--v2-panel)' }}>
         {/* Quick Action Prefills */}
         {!isLoading && (
           <div className="flex flex-nowrap gap-1.5 mb-3 justify-center">
@@ -428,7 +428,7 @@ const ChatInterface = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="pr-24 py-3 px-3 rounded-2xl shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary min-h-[50px] max-h-[150px] resize-none bg-white dark:bg-zinc-900"
+            className="pr-24 py-3 px-3 rounded-2xl shadow-sm border-muted-foreground/20 focus-visible:ring-1 focus-visible:ring-primary min-h-[50px] max-h-[150px] resize-none" style={{ background: 'var(--v2-panel2)' }}
             rows={1}
           />
           <div className="absolute right-1.5 flex items-center gap-1">
@@ -441,7 +441,7 @@ const ChatInterface = ({
             />
             <Tooltip>
               <TooltipTrigger>
-                <Button type="button" size="icon" variant="ghost" onClick={handleClearChat} disabled={isLoading || messages.length === 0} className="rounded-full bg-white dark:bg-zinc-900rounded-full h-9 w-9 shrink-0">
+                <Button type="button" size="icon" variant="ghost" onClick={handleClearChat} disabled={isLoading || messages.length === 0} className="rounded-full h-9 w-9 shrink-0" style={{ background: 'var(--v2-panel2)' }}>
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>

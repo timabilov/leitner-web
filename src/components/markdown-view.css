@@ -6,7 +6,7 @@
 
 /* This is the equivalent of the 'body' and 'list_item' styles */
 .markdown-content {
-  color: var(--on-surface-color, #333); /* theme.colors.onSurface */
+  color: var(--v2-ink, #333);
   font-family: 'Your-Common-Font', sans-serif; /* styles.common.fontFamily */
   padding: 25px;
 }
@@ -34,16 +34,16 @@
 
 /* Equivalent of 'code_inline' */
 .markdown-content code {
-  color: var(--tertiary-color, #007bff);
-  background-color: var(--background-color, #f8f9fa);
+  color: var(--v2-accent, #007bff);
+  background-color: var(--v2-panel2, #f8f9fa);
   padding: 2px 4px;
   border-radius: 4px;
 }
 
 /* Equivalent of 'fence' (code blocks) */
 .markdown-content pre {
-  color: var(--tertiary-color, #007bff);
-  background-color: var(--background-color, #f8f9fa);
+  color: var(--v2-accent, #007bff);
+  background-color: var(--v2-panel2, #f8f9fa);
   padding: 1rem;
   border-radius: 6px;
   overflow-x: auto; /* For horizontal scrolling */
@@ -64,8 +64,8 @@
 
 /* Blockquotes */
 .markdown-content blockquote {
-  color: var(--black-color, #000); /* theme.colors.black */
-  border-left: 4px solid #ccc;
+  color: var(--v2-ink, #000);
+  border-left: 4px solid var(--v2-line, #ccc);
   padding-left: 1rem;
   margin-left: 0;
   font-style: italic;
@@ -73,14 +73,14 @@
 
 /* Horizontal Rule */
 .markdown-content hr {
-  background-color: var(--on-surface-color, #333);
+  background-color: var(--v2-line, #333);
   height: 1px;
   border: none;
 }
 
 /* Table styling */
 .markdown-content table {
-  border: 1px solid var(--on-surface-color, #ccc);
+  border: 1px solid var(--v2-line, #ccc);
   border-radius: 3px;
   border-collapse: collapse; /* Essential for web table styling */
   margin: 1em 0;
@@ -88,12 +88,12 @@
 
 .markdown-content th,
 .markdown-content td {
-  border: 1px solid var(--on-surface-color, #ccc);
+  border: 1px solid var(--v2-line, #ccc);
   padding: 8px;
 }
 
 .markdown-content tr {
-  border-bottom: 1px solid var(--on-surface-color, #ccc);
+  border-bottom: 1px solid var(--v2-line, #ccc);
 }
 
 

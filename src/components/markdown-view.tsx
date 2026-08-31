@@ -2,9 +2,6 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './markdown-view.css';
-import { Button } from './ui/button';
-import AIIcon from '@/note-detail/assets/ai-icon';
-import QuizPenIcon from '@/note-detail/assets/quiz-pen-icon';
 import { useTranslation } from 'react-i18next';
 
 // --- Helper function ---
@@ -24,85 +21,76 @@ interface SelectionState {
   text: string;
 }
 
-const MarkdownView = ({ 
-  children, 
-  onExplain, 
-  onQuiz 
-}: { 
-  children: string, 
-  onExplain?: (text: string) => void, 
-  onQuiz?: (text: string) => void 
+const MarkdownView = ({
+  children,
+  onExplain,
+  onQuiz
+}: {
+  children: string,
+  onExplain?: (text: string) => void,
+  onQuiz?: (text: string) => void
 }) => {
   const { t } = useTranslation();
 
   const [selectionMenu, setSelectionMenu] = useState<SelectionState>({ x: 0, y: 0, show: false, text: '' });
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // Ref to track when the menu was last opened to prevent immediate closing by inertia scroll
   const lastOpenTime = useRef<number>(0);
 
   // --- 1. SELECTION HANDLER ---
   useEffect(() => {
-    const handleSelectionChange = (e: Event) => {
+    const handleSelectionChange = () => {
       const selection = window.getSelection();
-      // Basic checks: ensure selection exists and is inside this container
       if (!selection || selection.isCollapsed || !containerRef.current?.contains(selection.anchorNode)) {
-        // Only hide if we aren't currently "ignoring" scrolls (though mouseup usually implies intention)
-        // We handle hiding logic mostly in handleScroll/mousedown
-        return; 
+        return;
       }
 
       const text = selection.toString().trim();
-      if (!text) return;
-      let x = 0;
-      let y = 0;
+      if (!text || text.length < 3) return;
 
-      if (e instanceof MouseEvent) {
-        x = e.clientX;
-        y = e.clientY - 50;
-      } else {
-        // Fallback for keyboard selection
-        const range = selection.getRangeAt(0);
-        const rect = range.getBoundingClientRect();
-        console.log("rect.top", rect.top);
-        x = rect.right; 
-        y = rect.top;
-      }
+      const range = selection.getRangeAt(0);
+      const rangeRect = range.getBoundingClientRect();
+      const containerRect = containerRef.current.getBoundingClientRect();
 
-      // Show the menu and record the timestamp
-      setSelectionMenu({ x , y , show: true, text });
+      // Center popup above the selection, clamped to container edges
+      const x = Math.max(140, Math.min(
+        containerRect.width - 140,
+        rangeRect.left + rangeRect.width / 2 - containerRect.left
+      ));
+      // Position above selection (52px for popup height + gap), min 8px from top
+      const isCoarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+      const y = isCoarse
+        ? rangeRect.bottom - containerRect.top + 14
+        : Math.max(8, rangeRect.top - containerRect.top - 52);
+
+      setSelectionMenu({ x, y, show: true, text });
       lastOpenTime.current = Date.now();
     };
 
     const handleScroll = () => {
-      // 1. If menu is not shown, do nothing.
-      // 2. CRITICAL FIX: If the menu was opened less than 500ms ago, ignore the scroll.
-      //    This prevents trackpad inertia or browser auto-scroll from closing the menu immediately after mouseup.
       if (Date.now() - lastOpenTime.current < 1000) return;
-
       setSelectionMenu(prev => prev.show ? { ...prev, show: false } : prev);
     };
 
-    // Close menu when clicking elsewhere to start a new selection
     const handleMouseDown = () => {
        setSelectionMenu(prev => prev.show ? { ...prev, show: false } : prev);
     };
 
-    document.addEventListener('mouseup', handleSelectionChange as EventListener);
-    document.addEventListener('keyup', handleSelectionChange as EventListener);
+    document.addEventListener('mouseup', handleSelectionChange);
+    document.addEventListener('keyup', handleSelectionChange);
     document.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('scroll', handleScroll, true); 
+    document.addEventListener('scroll', handleScroll, true);
 
     return () => {
-      document.removeEventListener('mouseup', handleSelectionChange as EventListener);
-      document.removeEventListener('keyup', handleSelectionChange as EventListener);
+      document.removeEventListener('mouseup', handleSelectionChange);
+      document.removeEventListener('keyup', handleSelectionChange);
       document.removeEventListener('mousedown', handleMouseDown);
-      document.removeEventListener('scroll', handleScroll, true); 
+      document.removeEventListener('scroll', handleScroll, true);
     };
   }, []);
 
   const handleAction = (action: 'explain' | 'quiz') => {
-    console.log("Action:", action, "Text:", selectionMenu.text);  
     if (action === 'explain' && onExplain) onExplain(selectionMenu.text);
     if (action === 'quiz' && onQuiz) onQuiz(selectionMenu.text);
     setSelectionMenu(prev => ({ ...prev, show: false }));
@@ -143,7 +131,7 @@ const MarkdownView = ({
       const elementId = slugify(textValue);
       return <strong id={elementId} className="markdown-strong text-xl font-bold text-balance" {...props} />;
     }
-  }), []); 
+  }), []);
 
   // --- 3. MEMOIZE CONTENT ---
   const markdownContent = useMemo(() => (
@@ -156,53 +144,66 @@ const MarkdownView = ({
     <div ref={containerRef} className="markdown-content space-y-6 relative selection:bg-amber-100 selection:text-amber-900 dark:selection:bg-amber-900/30 dark:selection:text-amber-100">
       {markdownContent}
 
-      {/* --- FLOATING TOOLBOX --- */}
+      {/* --- FLOATING SELECTION POPUP (dc.html style) --- */}
       {selectionMenu.show && (
-       <div 
-          className="fixed z-50 flex items-center gap-1 p-1 rounded-lg border border-border/50 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-sm shadow-xl transition-all animate-in fade-in zoom-in-95 duration-200"
-          style={{ 
-            left: selectionMenu.x, 
+        <div
+          style={{
+            position: 'absolute',
+            zIndex: 50,
+            left: selectionMenu.x,
             top: selectionMenu.y,
-            transform: 'translate(10px, 10px)' 
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            background: 'var(--v2-ink)',
+            color: 'var(--v2-bg)',
+            borderRadius: 13,
+            boxShadow: '0 10px 30px -8px rgba(0,0,0,.45)',
+            padding: 5,
+            gap: 2,
+            animation: 'v2-popIn .15s ease both',
           }}
-          onMouseDown={(e) =>{
-            e.preventDefault();
-            e.stopPropagation();
-          }
-          }
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
         >
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={(e) => {
-               e.preventDefault();
-              e.stopPropagation();
-              handleAction('explain')
+          <button
+            onPointerDown={(e) => { e.preventDefault(); handleAction('explain'); }}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: 'inherit',
+              fontSize: 13,
+              fontWeight: 600,
+              padding: '7px 12px',
+              borderRadius: 9,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
             }}
-            className="h-8 px-3 rounded-md cursor-pointer text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
           >
-            {t("Ask")} 
-            <AIIcon className="w-4 h-4" />
-          </Button>
-
-          <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-700" />
-
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={(e) => {
-               e.preventDefault();
-              e.stopPropagation();
-              handleAction('quiz')
-            }
-            }
-            className="h-8 cursor-pointer px-3 rounded-md text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 flex items-center gap-2 font-medium"
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4.5l2-2.6A8 8 0 1 1 21 12z" /></svg>
+            {t("Ask")}
+          </button>
+          <span style={{ width: 1, height: 16, background: 'rgba(255,255,255,.2)' }} />
+          <button
+            onPointerDown={(e) => { e.preventDefault(); handleAction('quiz'); }}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: 'inherit',
+              fontSize: 13,
+              fontWeight: 600,
+              padding: '7px 12px',
+              borderRadius: 9,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}
           >
-            {t("Generate quiz")}
-            <span className="text-rose-500">
-              <QuizPenIcon className="w-4 h-4" /> 
-            </span>
-          </Button>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.4-3 4.4" /><circle cx="12" cy="12" r="9.2" /></svg>
+            {t("Make quiz")}
+          </button>
         </div>
       )}
     </div>
