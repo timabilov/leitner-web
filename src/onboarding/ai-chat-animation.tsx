@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Sparkles, Send, FileText } from "lucide-react";
-import CatPenIcon from "@/notes/assets/cat-pen-icon";
+import CatPenSvg from "@/notes/assets/cat-pen-svg";
 
 // You can swap this for your actual AI icon component if you prefer!
 const AIIcon = ({ size = 16, className = "" }: any) => (
@@ -102,7 +102,7 @@ useEffect(() => {
                   className="self-start w-full flex gap-2"
                 >
                   <div className="w-6 h-6 rounded-full bg-slate-900 border border-slate-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <CatPenIcon size={14} />
+                    <CatPenSvg size={14} />
                   </div>
                   
                   <div className="bg-slate-100 text-slate-800 text-[11px] px-3 py-2.5 rounded-2xl rounded-tl-sm shadow-sm flex-1 leading-relaxed">

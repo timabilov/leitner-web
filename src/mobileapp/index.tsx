@@ -3,7 +3,7 @@ import QRCode from "react-qr-code";
 import { Download, Cloud, Bell, Mic } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { useEffect } from "react";
-import CatPenIcon from "@/notes/assets/cat-pen-icon";
+import CatPenSvg from "@/notes/assets/cat-pen-svg";
 
 const MobileApp = () => {
   const { t } = useTranslation();
@@ -23,7 +23,7 @@ const MobileApp = () => {
         <div className="relative flex flex-col lg:flex-row items-center gap-10 mb-16">
           {/* Left: Text + CTA */}
           <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left gap-6">
-            <CatPenIcon className="h-14 w-14" />
+            <CatPenSvg className="h-14 w-14" />
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 leading-tight">
               {t("Get Bycat AI on iOS")}
             </h1>

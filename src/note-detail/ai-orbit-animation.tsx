@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import QuizHardPenIcon from "./assets/quiz-hard-pen-icon.tsx";
 import FlashcardIcon from "./assets/flashcard-icon.tsx";
-import CatPenIcon from "@/notes/assets/cat-pen-icon.tsx";
+import CatPenSvg from "@/notes/assets/cat-pen-svg";
 
 export const AiOrbitAnimation = ({ className }: { className?: string }) => {
   return (
@@ -18,7 +18,7 @@ export const AiOrbitAnimation = ({ className }: { className?: string }) => {
         />
         
         <div className="relative z-20">
-          <CatPenIcon size={48} className="text-zinc-900 dark:text-zinc-100" />
+          <CatPenSvg size={48} />
         </div>
       </div>
 

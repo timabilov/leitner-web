@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import CatPenIcon from "@/notes/assets/cat-pen-icon";
+import CatPenSvg from "@/notes/assets/cat-pen-svg";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
 
@@ -22,7 +22,7 @@ export const QuizSlide = ({ t }) => (
        <QuizOption label="B" text="Oxidative phosphorylation" active />
        <QuizOption label="C" text="Krebs cycle" />
        <div className="bg-zinc-50/50 p-3 rounded-lg border border-zinc-100 flex gap-3 text-left">
-          <CatPenIcon className="w-5 h-5 shrink-0" />
+          <CatPenSvg className="w-5 h-5 shrink-0" />
           <div><p className="text-[11px] font-bold leading-none">Correct — Oxidative phosphorylation</p><p className="text-[10px] text-zinc-400 mt-1">Produces ~30-32 ATP via the electron transport chain.</p></div>
        </div>
     </div>

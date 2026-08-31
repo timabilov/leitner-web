@@ -13,6 +13,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import { NoteCard } from "./note-card";
 import CatPenIcon from "./assets/cat-pen-icon";
+import CatPenSvg from "./assets/cat-pen-svg";
+import { useTheme } from "@/components/theme-provider";
 import { OnboardingCard } from "./onboarding-card";
 
 const isNoteInLoadingState = (note: any) => {
@@ -46,6 +48,11 @@ const Notes = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [files, setFiles] = useState<any[]>([]);
   const { t } = useTranslation();
+  const { theme } = useTheme();
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   useEffect(() => {
     posthog.capture("dashboard_viewed");
@@ -160,7 +167,7 @@ const Notes = () => {
               boxShadow: "var(--v2-shadow)",
             }}
           >
-            <CatPenIcon size={32} />
+            {isDark ? <CatPenSvg size={32} /> : <CatPenIcon size={32} />}
           </div>
           <div>
             <h1 className="font-heading text-[22px] sm:text-[26px] font-bold tracking-[-0.02em] leading-tight text-[var(--v2-ink)]">

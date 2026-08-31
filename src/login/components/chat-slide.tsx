@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import CatPenIcon from "@/notes/assets/cat-pen-icon";
+import CatPenSvg from "@/notes/assets/cat-pen-svg";
 import { motion } from "framer-motion";
 
 
@@ -16,7 +16,7 @@ export const TutorSlide = ({ t }) => (
        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
              <div className="w-6 h-6 rounded-full bg-zinc-50 flex items-center justify-center border border-zinc-100">
-                <CatPenIcon className="w-4 h-4" />
+                <CatPenSvg className="w-4 h-4" />
              </div>
              <div className="text-left"><p className="text-xs font-bold leading-none">Bycat Tutor</p><p className="text-[10px] text-green-500 font-bold tracking-tight italic">● Live session</p></div>
           </div>

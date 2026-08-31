@@ -25,7 +25,7 @@ import { AIQuizTab } from "@/note-detail/quiz-tab";
 import { GenericAILoading } from "../components/generic-ai-loading";
 import { Switch } from "../components/ui/switch";
 import { Avatar } from "../components/ui/avatar";
-import CatPenIcon from "@/notes/assets/cat-pen-icon";
+import CatPenSvg from "@/notes/assets/cat-pen-svg";
 import { useTranslation } from "react-i18next";
 import * as Sentry from "@sentry/react";
 import { motion } from "framer-motion";
@@ -220,7 +220,7 @@ const AiModal = ({ noteId, noteQuery, isPolling, setIsPolling, startPollingForQu
           /* --- STATE 3: UNLOCK / INITIAL --- */
           <div className="flex flex-col items-center justify-center text-center p-8 mt-4">
             <Avatar className="h-16 w-16 rounded-md bg-gray-950 flex items-center mb-8">
-              <CatPenIcon />
+              <CatPenSvg />
             </Avatar>
             <h3 className="text-xl font-semibold text-foreground mb-2">
               {t("Unlock Your AI Tools")}

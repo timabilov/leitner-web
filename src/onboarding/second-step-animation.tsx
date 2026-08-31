@@ -4,7 +4,7 @@ import { Battery, Bell, CatIcon, CheckCircle2, Smartphone, Sparkles } from 'luci
 import AIIcon from '@/note-detail/assets/ai-icon';
 import { useNavigate } from "react-router-dom";
 import { Trans } from 'react-i18next';
-import CatPenIcon from '@/notes/assets/cat-pen-icon';
+import CatPenSvg from '@/notes/assets/cat-pen-svg';
 import BackgroundSvg from './assets/background.svg';
 
 /**
@@ -127,7 +127,7 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
                       >
                         <div className="flex w-full items-start gap-2 opacity-80 blur-[1px]">
                           <div className="shrink-0 mt-0.5 grayscale-[20%] scale-90">
-                            <CatPenIcon />
+                            <CatPenSvg />
                           </div>
                           
                           <div className="flex-1 flex flex-col pt-0.5 gap-1.5">
@@ -162,7 +162,7 @@ const SecondStepAnimation = ({ t }: { t: any }) => {
                     <div className="bg-white/95 backdrop-blur-xl rounded-[20px] p-3 flex items-start gap-2 shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-slate-100">
                       
                       <div className="shrink-0 mt-0.5 scale-90">
-                        <CatPenIcon />
+                        <CatPenSvg />
                       </div>
 
                       <div className="flex-1 flex flex-col pt-0.5">

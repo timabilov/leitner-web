@@ -6,7 +6,7 @@ import {
   useSpring,
   useMotionValue,
 } from "framer-motion";
-import CatPenIcon from "@/notes/assets/cat-pen-icon";
+import CatPenSvg from "@/notes/assets/cat-pen-svg";
 import { useTranslation, Trans } from "react-i18next";
 import { useUserStore } from "@/store/userStore";
 import { axiosInstance } from "@/services/auth";
@@ -566,9 +566,8 @@ const LoginBase = () => {
           <main className="flex flex-1 flex-col items-center justify-center px-4 pb-20 pt-10 text-center relative z-10">
             <div className="mb-2 flex flex-col items-center gap-2">
               <div className="flex items-center justify-center text-white ">
-                <CatPenIcon
+                <CatPenSvg
                   className="h-30 w-30 animate-slow-bounce"
-                  strokeWidth={2.5}
                 />
                 {/* <AiOrbitAnimation /> */}
               </div>

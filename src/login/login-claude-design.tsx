@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   AnimatePresence,
 } from "framer-motion";
-import CatPenIcon from "@/notes/assets/cat-pen-icon";
+import CatPenSvg from "@/notes/assets/cat-pen-svg";
 import { useTranslation } from "react-i18next";
 import { useUserStore } from "@/store/userStore";
 import { axiosInstance } from "@/services/auth";
@@ -281,7 +281,7 @@ const LoginBase = () => {
           <div className="w-full max-w-md flex flex-col items-center z-50">
             {/* Logo/Icon */}
             <div className="mb-8">
-              <CatPenIcon className="h-20 w-20 animate-slow-bounce" strokeWidth={2} />
+              <CatPenSvg className="h-20 w-20 animate-slow-bounce" />
             </div>
 
             {/* Typography */}
