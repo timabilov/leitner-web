@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
 import { API_BASE_URL } from "@/services/config";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2Icon, Search, SearchX } from "lucide-react";
+import { Loader2Icon, Search, SearchX, X, Check, Play } from "lucide-react";
 import { AIPromptInput } from "./ai-prompt-textarea";
 import debounce from "lodash.debounce";
 import { useTranslation } from "react-i18next";
@@ -13,6 +13,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import { NoteCard } from "./note-card";
 import CatPenIcon from "./assets/cat-pen-icon";
+import { OnboardingCard } from "./onboarding-card";
 
 const isNoteInLoadingState = (note: any) => {
   return (
@@ -172,6 +173,9 @@ const Notes = () => {
             </p>
           </div>
         </div>
+
+        {/* --- Onboarding Getting Started --- */}
+        <OnboardingCard />
 
         {/* --- Composer --- */}
         <section
