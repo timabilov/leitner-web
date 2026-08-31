@@ -12,11 +12,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Schibsted+Grotesk:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
 <style>
-:root{--bg:#FAFAF8;--panel:#FFFFFF;--panel2:#F1F1EE;--ink:#17171B;--mut:#6E6E76;--line:#E6E6E1;--grid:rgba(20,20,30,.03);--accent:#17171B;--accent2:#4A4A52;--accent-soft:rgba(23,23,27,.06);--grad:#17171B;--grad-ink:#FFFFFF;--selbg:rgba(23,23,27,.16);--hl:#F3E9D2;--hl-ink:#6b4d00;--ok:#1F9D63;--bad:#D2453B;--shadow:0 1px 2px rgba(20,20,30,.05),0 14px 34px -14px rgba(20,20,30,.14);}
+:root{--bg:#FAFAF8;--panel:#FFFFFF;--panel2:#F1F1EE;--ink:#17171B;--mut:#6E6E76;--line:#E6E6E1;--grid:rgba(20,20,30,.03);--accent:#17171B;--accent2:#4A4A52;--accent-soft:rgba(23,23,27,.06);--grad:#17171B;--grad-ink:#FFFFFF;--selbg:rgba(23,23,27,.16);--hl:#F3E9D2;--hl-ink:#6b4d00;--ok:#1F9D63;--bad:#D2453B;--streak:#EA580C;--streak-soft:rgba(234,88,12,.1);--shadow:0 1px 2px rgba(20,20,30,.05),0 14px 34px -14px rgba(20,20,30,.14);}
 [data-palette="warm"]{--accent:#F72585;--accent2:#FF8E3C;--accent-soft:rgba(247,37,133,.08);--grad:linear-gradient(135deg,var(--accent),var(--accent2));--grad-ink:#fff;--selbg:rgba(247,37,133,.25);}
 [data-paper="cream"]{--bg:#FAF9F6;--panel2:#F3F1EC;--line:#E8E5DE;--grid:rgba(20,20,25,.04);}
 [data-paper="blush"]{--bg:#FBF4F6;--panel2:#F6ECEF;--line:#EBDEE3;--grid:rgba(180,40,100,.045);}
-[data-theme="dark"]{--bg:#131316;--panel:#1B1B1F;--panel2:#242429;--ink:#EFEEEA;--mut:#9A9AA3;--line:#2B2B31;--grid:rgba(255,255,255,.035);--accent:#EFEEEA;--accent2:#B9B9C0;--accent-soft:rgba(255,255,255,.08);--grad:#EFEEEA;--grad-ink:#151519;--selbg:rgba(255,255,255,.22);--hl:#3E3517;--hl-ink:#FFD877;--ok:#3DD68C;--bad:#FF6B70;--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -18px rgba(0,0,0,.6);}
+[data-theme="dark"]{--bg:#131316;--panel:#1B1B1F;--panel2:#242429;--ink:#EFEEEA;--mut:#9A9AA3;--line:#2B2B31;--grid:rgba(255,255,255,.035);--accent:#EFEEEA;--accent2:#B9B9C0;--accent-soft:rgba(255,255,255,.08);--grad:#EFEEEA;--grad-ink:#151519;--selbg:rgba(255,255,255,.22);--hl:#3E3517;--hl-ink:#FFD877;--ok:#3DD68C;--bad:#FF6B70;--streak:#FF8B47;--streak-soft:rgba(255,139,71,.13);--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -18px rgba(0,0,0,.6);}
 [data-theme="dark"][data-palette="warm"]{--accent:#FF4FA3;--accent2:#FFA05C;--accent-soft:rgba(255,79,163,.13);--grad:linear-gradient(135deg,var(--accent),var(--accent2));--grad-ink:#fff;--selbg:rgba(255,79,163,.3);}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Instrument Sans',sans-serif;}
 *{box-sizing:border-box}
@@ -54,7 +54,7 @@ textarea::placeholder,input::placeholder{color:var(--mut)}
     </div>
     <a href="./Home.dc.html" title="Home" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);transition:background .15s;" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></a>
     <a href="./Note.dc.html" title="Notes" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--ink);transition:background .15s;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></a>
-    <button title="Alerts" style="width:42px;height:42px;border-radius:12px;border:none;cursor:pointer;display:grid;place-items:center;background:transparent;color:var(--mut);position:relative;" style-hover="background:var(--panel2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--bad);border:2px solid var(--panel);"></span></button>
+    <a href="./Reviews.dc.html" title="Reviews" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);position:relative;transition:background .15s;" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--streak,#EA580C);border:2px solid var(--panel);"></span></a>
     <a href="./Pricing.dc.html" title="Upgrade to Pro" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg></a>
     <div style="flex:1"></div>
     <button onClick="{{ toggleTheme }}" title="Theme" style="width:42px;height:42px;border-radius:12px;border:1px solid var(--line);cursor:pointer;display:grid;place-items:center;background:var(--panel2);color:var(--ink);" style-hover="border-color:var(--accent)">
@@ -84,6 +84,42 @@ textarea::placeholder,input::placeholder{color:var(--mut)}
             </sc-if>
           </div>
           <div style="flex:1"></div>
+          <div style="position:relative;flex:0 0 auto;">
+            <button onClick="{{ toggleRemindPop }}" data-hit="1" title="Lock-screen reviews for this note" style="display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:{{ remindPillC }};border:1px solid {{ remindPillBorder }};border-radius:999px;padding:5px 12px;background:{{ remindPillBg }};cursor:pointer;transition:border-color .15s;" style-hover="border-color:{{ remindPillC }}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>{{ remindPillText }}
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"></path></svg>
+            </button>
+            <sc-if value="{{ remindPop }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:40px;right:0;z-index:45;width:330px;max-width:86vw;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;animation:popIn .18s ease both;text-align:left;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+                  <span style="width:32px;height:32px;border-radius:10px;background:var(--streak-soft);color:var(--streak);display:grid;place-items:center;flex:0 0 32px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg></span>
+                  <strong style="font-size:14px;flex:1;">Quiz me on this</strong>
+                  <button onClick="{{ toggleRemind }}" data-hit="1" style="display:inline-flex;align-items:center;gap:8px;border:none;background:transparent;cursor:pointer;padding:2px;">
+                    <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:{{ remindTgLabelC }};">{{ remindTgLabel }}</span>
+                    <span style="width:40px;height:23px;border-radius:99px;background:{{ remindTgBg }};position:relative;display:inline-block;transition:background .2s;"><span style="position:absolute;top:2.5px;left:{{ remindTgKnob }};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s;"></span></span>
+                  </button>
+                </div>
+                <div style="border-radius:13px;overflow:hidden;height:118px;position:relative;background:radial-gradient(150% 120% at 25% 0%,#FFB47A 0%,#F0703F 36%,#B23A48 66%,#4A1530 100%);margin-bottom:10px;">
+                  <div style="width:56px;height:12px;border-radius:99px;background:rgba(0,0,0,.55);margin:8px auto 4px;"></div>
+                  <div style="text-align:center;color:rgba(255,255,255,.95);font-family:'Schibsted Grotesk',sans-serif;font-size:24px;font-weight:600;line-height:1;margin-bottom:8px;">14:20</div>
+                  <div style="margin:0 12px;background:rgba(250,250,252,.94);border-radius:12px;padding:8px 10px;color:#17171B;box-shadow:0 6px 18px rgba(0,0,0,.3);">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span style="width:16px;height:16px;border-radius:5px;background:#17171B;display:grid;place-items:center;color:#fff;flex:0 0 16px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg></span>
+                      <strong style="font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;">Cat Care Tips</strong>
+                      <span style="margin-left:auto;font-size:9.5px;color:#6E6E76;flex:0 0 auto;">now</span>
+                    </div>
+                    <span style="display:block;font-size:10.5px;color:#4A4A52;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Why does your cat stare at the wall at 3am?</span>
+                  </div>
+                </div>
+                <p style="margin:0 0 10px;font-size:12.5px;color:var(--mut);line-height:1.5;">A few short quizzes a day, timed before you forget.</p>
+                <div style="display:flex;align-items:center;gap:8px;background:var(--panel2);border-radius:10px;padding:7px 11px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect><circle cx="12" cy="18" r="1" fill="var(--ink)" stroke="none"></circle></svg>
+                  <span style="font-size:12px;color:var(--ink);flex:1;">Via the mobile app</span>
+                  <a href="#" style="font-size:12px;font-weight:700;">Get the app</a>
+                </div>
+              </div>
+            </sc-if>
+          </div>
           <span data-hide-sm="1" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--panel);">Aug 30, 2026</span>
           <span data-hide-sm="1" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--panel);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.5l-8.2 8.2a5.5 5.5 0 0 1-7.8-7.8L13.6 4.3a3.7 3.7 0 0 1 5.2 5.2l-8.4 8.4a1.9 1.9 0 0 1-2.7-2.7L15 8"></path></svg>3 files</span>
         </div>
@@ -303,6 +339,7 @@ class Component extends DCLogic {
       msgs: [{ id: 1, role: 'ai', kind: 'text', text: 'Привет! Я прочитал всю заметку — спрашивай что угодно, или выдели текст слева, чтобы начать с конкретного места.' }],
       quizPicked: null, selPop: null,
       schedOpen: q.get('schedule') === '1', schedPick: 0,
+      remindOn: true, remindPop: false,
       schedQuote: 'Но за бурными аплодисментами никто не услышал, что в самом Ираке уже началась другая война.',
       toast: null, retitleOpen: false,
       processing: q.get('processing') === '1',
@@ -453,7 +490,7 @@ class Component extends DCLogic {
       hasSel: !!s.selPop, selLeft: s.selPop ? Math.round(s.selPop.left) : 0, selTop: s.selPop ? Math.round(s.selPop.top) : 0,
       askSelection: (e) => { e.preventDefault(); const q = s.selPop.text; this.setState({ selPop: null }); this.send('Расскажи подробнее про это место', q); },
       quizSelection: (e) => { e.preventDefault(); this.setState({ selPop: null }); this.makeQuiz(); },
-      scheduleSelection: (e) => { e.preventDefault(); this.setState({ schedOpen: true, schedQuote: s.selPop.text, selPop: null }); },
+      scheduleSelection: (e) => { e.preventDefault(); const q = s.selPop.text; this.setState({ selPop: null }); this.send('Schedule a quiz on this part', q); },
       quizWholeNote: () => this.makeQuiz(),
       chatOpen, chatFull: full,
       chatModeAttr: mode,
@@ -499,6 +536,22 @@ class Component extends DCLogic {
         color: 'var(--ink)',
       })),
       schedLabelShort: times[s.schedPick],
+      openSched: () => this.setState({ schedOpen: true }),
+      remindPop: s.remindPop,
+      toggleRemindPop: () => this.setState({ remindPop: !s.remindPop }),
+      remindPillText: s.remindOn ? 'Quizzes you · on your phone' : 'Quiz reminders off',
+      remindPillC: s.remindOn ? 'var(--streak)' : 'var(--mut)',
+      remindPillBg: s.remindOn ? 'var(--streak-soft)' : 'var(--panel2)',
+      remindPillBorder: s.remindOn ? 'color-mix(in srgb, var(--streak) 35%, transparent)' : 'var(--line)',
+      remindTgLabel: s.remindOn ? 'ON' : 'OFF',
+      remindTgLabelC: s.remindOn ? 'var(--ok)' : 'var(--mut)',
+      remindTgBg: s.remindOn ? 'var(--ok)' : 'var(--line)',
+      remindTgKnob: s.remindOn ? '19.5px' : '2.5px',
+      toggleRemind: () => {
+        const on = !s.remindOn;
+        this.setState({ remindOn: on });
+        this.showToast(on ? 'Lock-screen reviews on — first one arrives today' : 'Lock-screen reviews off for this note');
+      },
       confirmSched: () => { this.setState({ schedOpen: false }); this.showToast('Quiz scheduled · ' + times[s.schedPick] + ' — we\u2019ll push it to your phone'); },
       hasToast: !!s.toast, toast: s.toast,
     };

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Schibsted+Grotesk:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAFAF8;--panel:#FFFFFF;--panel2:#F1F1EE;--ink:#17171B;--mut:#6E6E76;--line:#E6E6E1;--grid:rgba(20,20,30,.03);--accent:#17171B;--accent2:#4A4A52;--accent-soft:rgba(23,23,27,.06);--grad:#17171B;--grad-ink:#FFFFFF;--selbg:rgba(23,23,27,.16);--hl:#F3E9D2;--hl-ink:#6b4d00;--ok:#1F9D63;--bad:#D2453B;--streak:#EA580C;--streak-soft:rgba(234,88,12,.1);--shadow:0 1px 2px rgba(20,20,30,.05),0 14px 34px -14px rgba(20,20,30,.14);}
+[data-palette="warm"]{--accent:#F72585;--accent2:#FF8E3C;--accent-soft:rgba(247,37,133,.08);--grad:linear-gradient(135deg,var(--accent),var(--accent2));--grad-ink:#fff;--selbg:rgba(247,37,133,.25);}
+[data-paper="cream"]{--bg:#FAF9F6;--panel2:#F3F1EC;--line:#E8E5DE;--grid:rgba(20,20,25,.04);}
+[data-paper="blush"]{--bg:#FBF4F6;--panel2:#F6ECEF;--line:#EBDEE3;--grid:rgba(180,40,100,.045);}
+[data-theme="dark"]{--bg:#131316;--panel:#1B1B1F;--panel2:#242429;--ink:#EFEEEA;--mut:#9A9AA3;--line:#2B2B31;--grid:rgba(255,255,255,.035);--accent:#EFEEEA;--accent2:#B9B9C0;--accent-soft:rgba(255,255,255,.08);--grad:#EFEEEA;--grad-ink:#151519;--selbg:rgba(255,255,255,.22);--hl:#3E3517;--hl-ink:#FFD877;--ok:#3DD68C;--bad:#FF6B70;--streak:#FF8B47;--streak-soft:rgba(255,139,71,.13);--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -18px rgba(0,0,0,.6);}
+[data-theme="dark"][data-palette="warm"]{--accent:#FF4FA3;--accent2:#FFA05C;--accent-soft:rgba(255,79,163,.13);--grad:linear-gradient(135deg,var(--accent),var(--accent2));--grad-ink:#fff;--selbg:rgba(255,79,163,.3);}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Instrument Sans',sans-serif;}
+*{box-sizing:border-box}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent2)}
+button{font-family:inherit}input,textarea{font-family:inherit;color:inherit}
+::selection{background:var(--selbg)}
+[data-motion="off"] *{animation:none!important;transition:none!important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(5px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes flameUp{0%,100%{transform:scale(1)}50%{transform:scale(1.12) rotate(-3deg)}}
+@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(190px) rotate(560deg);opacity:0}}
+@keyframes notifIn{from{opacity:0;transform:translateY(-14px) scale(.96)}to{opacity:1;transform:none}}
+@media (max-width:980px){
+  [data-pagepad]{padding:22px 18px 90px!important}
+  [data-hero]{grid-template-columns:1fr!important}
+  [data-hide-sm]{display:none!important}
+  [data-row]{flex-wrap:wrap!important}
+}
+@media (pointer:coarse){
+  [data-hit]{min-height:44px!important;min-width:44px!important}
+}
+</style>
+</helmet>
+
+<div data-screen-label="Reviews" style="display:flex;height:100dvh;overflow:hidden;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;">
+  <nav style="width:64px;flex:0 0 64px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0;border-right:1px solid var(--line);background:var(--panel);z-index:30;">
+    <div style="width:36px;height:36px;border-radius:12px;background:var(--grad);display:grid;place-items:center;margin-bottom:10px;box-shadow:var(--shadow);color:var(--grad-ink);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg>
+    </div>
+    <a href="./Home.dc.html" title="Home" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);transition:background .15s;" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></a>
+    <a href="./Note.dc.html" title="Notes" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);transition:background .15s;" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></a>
+    <a href="./Reviews.dc.html" title="Reviews" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--ink);position:relative;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><sc-if value="{{ hasDue }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--streak);border:2px solid var(--panel);"></span></sc-if></a>
+    <a href="./Pricing.dc.html" title="Upgrade to Pro" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg></a>
+    <button title="Mobile app" style="width:42px;height:42px;border-radius:12px;border:none;cursor:pointer;display:grid;place-items:center;background:transparent;color:var(--mut);" style-hover="background:var(--panel2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect><circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"></circle></svg></button>
+    <div style="flex:1"></div>
+    <button onClick="{{ toggleTheme }}" title="Theme" style="width:42px;height:42px;border-radius:12px;border:1px solid var(--line);cursor:pointer;display:grid;place-items:center;background:var(--panel2);color:var(--ink);" style-hover="border-color:var(--accent)">
+      <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"></path></svg></sc-if>
+      <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.4 13.6A8.5 8.5 0 1 1 10.4 3.6a6.8 6.8 0 0 0 10 10z"></path></svg></sc-if>
+    </button>
+    <div style="width:36px;height:36px;border-radius:50%;background:#3D4757;color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;margin-top:6px;">T</div>
+  </nav>
+
+  <main style="flex:1;min-width:0;overflow-y:auto;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;">
+    <div data-pagepad="1" style="max-width:1060px;margin:0 auto;padding:40px 40px 80px;">
+
+      <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:24px;animation:fadeUp .4s ease both;">
+        <div style="min-width:0;">
+          <h1 style="margin:0;font-family:'Schibsted Grotesk',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:11px;">
+            <span style="width:38px;height:38px;border-radius:12px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:var(--shadow);"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg></span>
+            Reviews
+          </h1>
+          <p style="margin:8px 0 0;color:var(--mut);font-size:14.5px;max-width:52ch;text-wrap:pretty;">Your notes quiz you on the lock screen before you forget them. One quick review a day keeps your streak alive.</p>
+        </div>
+        <div style="flex:1"></div>
+        <button data-hit="1" style="height:38px;padding:0 16px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;" style-hover="border-color:var(--ink)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v11M7.5 10.5 12 15l4.5-4.5M4.5 19.5h15"></path></svg>Get the app</button>
+      </div>
+
+      <section data-hero="1" style="display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;margin-bottom:30px;animation:fadeUp .45s .06s ease both;">
+
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:24px 26px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:18px;">
+          <sc-if value="{{ confetti }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;inset:0;pointer-events:none;z-index:5;">
+              <sc-for list="{{ confettiPieces }}" as="c" hint-placeholder-count="0">
+                <span style="position:absolute;top:-8px;left:{{ c.left }};width:7px;height:11px;border-radius:2px;background:{{ c.bg }};animation:confettiFall {{ c.dur }} {{ c.delay }} cubic-bezier(.3,.6,.6,1) both;"></span>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:16px;">
+            <span style="width:54px;height:54px;border-radius:16px;background:var(--streak-soft);display:grid;place-items:center;color:var(--streak);flex:0 0 54px;"><svg width="27" height="27" viewBox="0 0 24 24" fill="currentColor" style="animation:flameUp 2.2s ease-in-out infinite;"><path d="M12 12c2-2.96 0-7-1-8 0 3.04-1.77 4.74-3 6-1.23 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.53-1.06-3.94-2-5-1.79 3-2.79 3-4 2z"></path></svg></span>
+            <div style="min-width:0;">
+              <div style="font-family:'Schibsted Grotesk',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.1;">{{ streakN }}-day streak</div>
+              <span style="font-size:13px;color:var(--mut);">Best: 14 days · one review a day keeps it alive</span>
+            </div>
+            <div style="flex:1"></div>
+            <span data-hide-sm="1" style="font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--streak);background:var(--streak-soft);border-radius:999px;padding:5px 11px;">THIS WEEK</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;">
+                <span style="font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--mut);">{{ d.label }}</span>
+                <span style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:{{ d.bg }};border:{{ d.border }};color:{{ d.color }};font-size:11px;font-weight:800;transition:all .3s;">
+                  <sc-if value="{{ d.done }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></sc-if>
+                  <sc-if value="{{ d.pending }}" hint-placeholder-val="{{ false }}">{{ d.text }}</sc-if>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="border-top:1px solid var(--line);padding-top:16px;display:flex;align-items:center;gap:14px;" data-row="1">
+            <div style="flex:1;min-width:180px;">
+              <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+                <strong style="font-size:13.5px;">Today</strong>
+                <span style="font-size:12.5px;color:var(--mut);">{{ todayLabel }}</span>
+              </div>
+              <div style="height:7px;border-radius:99px;background:var(--panel2);overflow:hidden;"><div style="height:100%;width:{{ todayPct }};border-radius:99px;background:var(--streak);transition:width .5s;"></div></div>
+            </div>
+            <sc-if value="{{ hasDue }}" hint-placeholder-val="{{ true }}">
+              <button onClick="{{ takeQuiz }}" data-hit="1" style="height:40px;padding:0 18px;border-radius:12px;border:none;background:var(--streak);color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;flex:0 0 auto;transition:opacity .15s;" style-hover="opacity:.88" style-active="transform:scale(.98)"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13L19.5 12z"></path></svg>Take review 2 now</button>
+            </sc-if>
+            <sc-if value="{{ allDone }}" hint-placeholder-val="{{ false }}">
+              <span style="display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:var(--ok);flex:0 0 auto;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg>Perfect day — next reviews tomorrow</span>
+            </sc-if>
+          </div>
+        </div>
+
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 0;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <span style="font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--mut);">ON YOUR LOCK SCREEN</span>
+            <div style="flex:1"></div>
+            <span style="font-size:11.5px;color:var(--mut);">no app open needed</span>
+          </div>
+          <p style="margin:2px 0 14px;font-size:12.5px;color:var(--mut);">Reviews arrive as a push — answer right from the notification.</p>
+          <div style="flex:1;display:flex;justify-content:center;">
+            <div style="width:250px;border:6px solid #26262C;border-bottom:none;border-radius:34px 34px 0 0;background:radial-gradient(130% 100% at 25% 8%,#FFB47A 0%,#F0703F 34%,#B23A48 62%,#4A1530 88%,#220B1C 100%);padding:8px 12px 12px;position:relative;">
+              <div style="width:76px;height:16px;border-radius:99px;background:#0C0C0F;margin:2px auto 8px;"></div>
+              <div style="text-align:center;color:rgba(255,255,255,.94);margin-bottom:10px;">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="opacity:.8;display:block;margin:0 auto 3px;"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 0 1 6 0v3z"></path></svg>
+                <div style="font-size:11px;font-weight:600;opacity:.75;">Tuesday, September 1</div>
+                <div style="font-family:'Schibsted Grotesk',sans-serif;font-size:44px;font-weight:600;letter-spacing:-.02em;line-height:1;">19:00</div>
+              </div>
+              <div style="background:rgba(248,248,250,.92);backdrop-filter:blur(6px);border-radius:18px;padding:11px 12px;box-shadow:0 8px 24px rgba(0,0,0,.35);animation:notifIn .5s .3s ease both;color:#17171B;">
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
+                  <span style="width:20px;height:20px;border-radius:6px;background:#17171B;display:grid;place-items:center;color:#fff;flex:0 0 20px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg></span>
+                  <strong style="font-size:11.5px;">Quick review</strong>
+                  <span style="margin-left:auto;font-size:10.5px;color:#6E6E76;">now</span>
+                </div>
+                <strong style="display:block;font-size:12.5px;line-height:1.4;">Cat Care Tips — Q1 of 5</strong>
+                <span style="display:block;font-size:12px;color:#4A4A52;line-height:1.45;margin:2px 0 9px;">Why does your cat knock your mug off the table?</span>
+                <div style="display:flex;gap:6px;">
+                  <span style="flex:1;text-align:center;font-size:10.5px;font-weight:700;border:1px solid #E6E6E1;border-radius:9px;padding:6px 3px;background:#fff;">Out of spite</span>
+                  <span style="flex:1;text-align:center;font-size:10.5px;font-weight:700;border:1px solid #E6E6E1;border-radius:9px;padding:6px 3px;background:#fff;">Hunting instinct</span>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:16px 6px 0;">
+                <span style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;color:#fff;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M8 2h8l1.5 5h-11zM9.5 7h5l.5 15h-6z"></path></svg></span>
+                <span style="width:110px;height:4px;border-radius:99px;background:rgba(255,255,255,.55);margin-bottom:2px;"></span>
+                <span style="width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;color:#fff;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l2-2.5h6L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><circle cx="12" cy="13" r="3.5"></circle></svg></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section style="margin-bottom:30px;animation:fadeUp .45s .12s ease both;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <h3 style="margin:0;font-family:'Schibsted Grotesk',sans-serif;font-size:17px;font-weight:700;">Today's reviews</h3>
+          <span style="font-size:12px;color:var(--mut);background:var(--panel2);border-radius:999px;padding:3px 9px;font-weight:600;">{{ todayCount }}</span>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;">
+          <div data-row="1" style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line);">
+            <span style="width:30px;height:30px;border-radius:10px;background:rgba(31,157,99,.12);color:var(--ok);display:grid;place-items:center;flex:0 0 30px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>
+            <div style="flex:1;min-width:200px;">
+              <strong style="font-size:14px;">Начало Второй мировой войны (1939 год)</strong>
+              <span style="display:block;font-size:12.5px;color:var(--mut);">Morning review · 5 questions · done at 8:04</span>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:var(--ok);background:rgba(31,157,99,.1);border-radius:999px;padding:4px 11px;">5/5</span>
+          </div>
+          <div data-row="1" style="display:flex;align-items:center;gap:14px;padding:14px 18px;">
+            <sc-if value="{{ hasDue }}" hint-placeholder-val="{{ true }}"><span style="width:30px;height:30px;border-radius:10px;background:var(--streak-soft);color:var(--streak);display:grid;place-items:center;flex:0 0 30px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg></span></sc-if>
+            <sc-if value="{{ allDone }}" hint-placeholder-val="{{ false }}"><span style="width:30px;height:30px;border-radius:10px;background:rgba(31,157,99,.12);color:var(--ok);display:grid;place-items:center;flex:0 0 30px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span></sc-if>
+            <div style="flex:1;min-width:200px;">
+              <strong style="font-size:14px;">Клеточное дыхание: гликолиз и цикл Кребса</strong>
+              <span style="display:block;font-size:12.5px;color:var(--mut);">{{ dueMeta }}</span>
+            </div>
+            <sc-if value="{{ hasDue }}" hint-placeholder-val="{{ true }}"><button onClick="{{ takeQuiz }}" data-hit="1" style="height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--streak);background:transparent;color:var(--streak);font-size:12.5px;font-weight:700;cursor:pointer;" style-hover="background:var(--streak-soft)">Take now</button></sc-if>
+            <sc-if value="{{ allDone }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;font-weight:700;color:var(--ok);background:rgba(31,157,99,.1);border-radius:999px;padding:4px 11px;">4/5</span></sc-if>
+          </div>
+        </div>
+      </section>
+
+      <section style="animation:fadeUp .45s .18s ease both;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <h3 style="margin:0;font-family:'Schibsted Grotesk',sans-serif;font-size:17px;font-weight:700;">Notes that quiz you</h3>
+          <span style="font-size:12px;color:var(--mut);background:var(--panel2);border-radius:999px;padding:3px 9px;font-weight:600;">{{ onCount }} of {{ rowCount }} on</span>
+          <div style="flex:1"></div>
+          <span data-hide-sm="1" style="font-size:12.5px;color:var(--mut);display:inline-flex;align-items:center;gap:7px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect><circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"></circle></svg>Pushes go to your phone</span>
+        </div>
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;">
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+            <div data-row="1" style="display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:1px solid var(--line);opacity:{{ r.opacity }};transition:opacity .25s;">
+              <span style="width:32px;height:32px;border-radius:10px;background:var(--panel2);display:grid;place-items:center;color:var(--mut);flex:0 0 32px;">
+                <sc-if value="{{ r.isVideo }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:14px;border-radius:4.5px;background:#E5484D;display:grid;place-items:center;"><svg width="8" height="8" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13L19.5 12z"></path></svg></span></sc-if>
+                <sc-if value="{{ r.isAudio }}" hint-placeholder-val="{{ true }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.4" stroke="#E5484D" stroke-width="1.8"></circle><circle cx="12" cy="12" r="4" fill="#E5484D"></circle></svg></sc-if>
+              </span>
+              <div style="flex:1;min-width:220px;">
+                <a href="./Note.dc.html" style="font-size:14px;font-weight:700;color:var(--ink);" style-hover="color:var(--accent2)">{{ r.title }}</a>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:3px;flex-wrap:wrap;">
+                  <span style="font-size:11.5px;font-weight:700;color:{{ r.schedC }};background:{{ r.schedBg }};border-radius:999px;padding:3px 9px;">{{ r.sched }}</span>
+                  <span style="font-size:12px;color:var(--mut);">{{ r.next }}</span>
+                </div>
+              </div>
+              <span data-hide-sm="1" style="font-size:12px;font-weight:600;color:var(--mut);">{{ r.last }}</span>
+              <button onClick="{{ r.toggle }}" data-hit="1" title="Quiz reminders" style="display:inline-flex;align-items:center;gap:9px;border:none;background:transparent;cursor:pointer;padding:4px;flex:0 0 auto;">
+                <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:{{ r.tgLabelC }};">{{ r.tgLabel }}</span>
+                <span style="width:40px;height:23px;border-radius:99px;background:{{ r.tgBg }};position:relative;display:inline-block;transition:background .2s;"><span style="position:absolute;top:2.5px;left:{{ r.tgKnob }};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s;"></span></span>
+              </button>
+            </div>
+          </sc-for>
+          <div style="display:flex;align-items:center;gap:10px;padding:13px 18px;background:var(--panel2);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 7.8v.4"></path></svg>
+            <span style="font-size:12.5px;color:var(--mut);">Reviews arrive through the day — no fixed times yet, exam mode just adds more of them. Set it inside each note via <a href="./Note.dc.html?schedule=1" style="font-weight:700;">Schedule</a>, or select any text to quiz just that part.</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:26px;z-index:90;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:14px;padding:12px 18px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 14px 34px -10px rgba(0,0,0,.4);animation:toastIn .25s ease both;max-width:calc(100vw - 32px);">
+      <span style="width:20px;height:20px;border-radius:7px;background:{{ toastBg }};display:grid;place-items:center;color:#fff;flex:0 0 20px;">
+        <sc-if value="{{ toastFlame }}" hint-placeholder-val="{{ false }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2-2.96 0-7-1-8 0 3.04-1.77 4.74-3 6-1.23 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.53-1.06-3.94-2-5-1.79 3-2.79 3-4 2z"></path></svg></sc-if>
+        <sc-if value="{{ toastCheck }}" hint-placeholder-val="{{ true }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></sc-if>
+      </span>
+      {{ toast }}
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;palette&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;graphite&quot;,&quot;warm&quot;],&quot;default&quot;:&quot;graphite&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Brand&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:[&quot;#F72585&quot;,&quot;#FF8E3C&quot;],&quot;options&quot;:[[&quot;#F72585&quot;,&quot;#FF8E3C&quot;],[&quot;#7C3AED&quot;,&quot;#22D3EE&quot;],[&quot;#0E9F6E&quot;,&quot;#84CC16&quot;],[&quot;#C96F45&quot;,&quot;#E8A87C&quot;]],&quot;tsType&quot;:&quot;string | string[]&quot;,&quot;section&quot;:&quot;Brand (warm palette only)&quot;},&quot;paper&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;neutral&quot;,&quot;cream&quot;,&quot;blush&quot;],&quot;default&quot;:&quot;neutral&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Brand&quot;},&quot;celebrations&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Streak&quot;},&quot;reduceMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Comfort&quot;}}">
+class Component extends DCLogic {
+  state = {
+    theme: localStorage.getItem('lapp-theme') || 'light',
+    streak: 7, done: 1, confetti: false,
+    toast: null, toastKind: 'check',
+    off: {},
+  };
+  componentDidMount() { this.applyPrefs(); }
+  componentDidUpdate() { this.applyPrefs(); }
+  componentWillUnmount() { clearTimeout(this._tt); clearTimeout(this._cf); }
+  applyPrefs() {
+    const el = document.documentElement;
+    el.setAttribute('data-theme', this.state.theme);
+    el.setAttribute('data-motion', (this.props.reduceMotion ?? false) ? 'off' : 'on');
+    el.setAttribute('data-paper', this.props.paper ?? 'neutral');
+    const palette = this.props.palette ?? 'graphite';
+    el.setAttribute('data-palette', palette);
+    const a = this.props.accent;
+    const pair = Array.isArray(a) ? a : (a ? [a, a] : null);
+    if (palette === 'warm' && pair) {
+      el.style.setProperty('--accent', pair[0]); el.style.setProperty('--accent2', pair[1] || pair[0]);
+    } else { el.style.removeProperty('--accent'); el.style.removeProperty('--accent2'); }
+  }
+  showToast(t, kind) {
+    clearTimeout(this._tt);
+    this.setState({ toast: t, toastKind: kind || 'check' });
+    this._tt = setTimeout(() => this.setState({ toast: null }), 3800);
+  }
+  takeQuiz() {
+    if (this.state.done >= 2) return;
+    const celebrate = this.props.celebrations ?? true;
+    this.setState({ done: 2, confetti: celebrate });
+    this.showToast('Perfect day — 2 of 2 reviews done. Streak: ' + this.state.streak + ' days.', 'flame');
+    clearTimeout(this._cf);
+    this._cf = setTimeout(() => this.setState({ confetti: false }), 2600);
+  }
+  renderVals() {
+    const s = this.state;
+    const allDone = s.done >= 2;
+    const labels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    // Mon–Fri done, Sat = today, Sun upcoming
+    const weekArr = labels.map((label, i) => {
+      const isPast = i <= 4, isToday = i === 5;
+      const done = isPast || (isToday && s.done >= 1);
+      return {
+        label,
+        done,
+        pending: !done,
+        text: isToday ? (s.done + '/2') : '',
+        bg: done ? 'var(--streak)' : (isToday ? 'var(--streak-soft)' : 'var(--panel2)'),
+        border: isToday && !done ? '1.5px dashed var(--streak)' : '1.5px solid transparent',
+        color: done ? '#fff' : (isToday ? 'var(--streak)' : 'var(--mut)'),
+      };
+    });
+    const rowsData = [
+      { id: 'ww2', title: 'Начало Второй мировой войны (1939 год)', kind: 'audio', sched: 'Through the day', schedKind: 'daily', next: 'Next push later today', last: 'Last 5/5' },
+      { id: 'cell', title: 'Клеточное дыхание: гликолиз и цикл Кребса', kind: 'audio', sched: 'Exam mode · until Oct 12', schedKind: 'exam', next: 'Next push later today', last: 'Last 4/5' },
+      { id: 'quant', title: 'Квантовая запутанность — просто о сложном', kind: 'video', sched: 'Weekly recap', schedKind: 'weekly', next: 'Next push this Sunday', last: 'Last 5/5' },
+    ];
+    const rows = rowsData.map(r => {
+      const on = !s.off[r.id];
+      return {
+        ...r,
+        isVideo: r.kind === 'video', isAudio: r.kind === 'audio',
+        sched: on ? r.sched : 'Paused',
+        schedC: !on ? 'var(--mut)' : (r.schedKind === 'exam' ? 'var(--streak)' : 'var(--ink)'),
+        schedBg: !on ? 'var(--panel2)' : (r.schedKind === 'exam' ? 'var(--streak-soft)' : 'var(--accent-soft)'),
+        next: on ? r.next : 'No pushes until you turn it back on',
+        opacity: on ? '1' : '.55',
+        tgLabel: on ? 'ON' : 'OFF',
+        tgLabelC: on ? 'var(--ok)' : 'var(--mut)',
+        tgBg: on ? 'var(--ok)' : 'var(--line)',
+        tgKnob: on ? '19.5px' : '2.5px',
+        toggle: () => {
+          const off = { ...this.state.off, [r.id]: on };
+          this.setState({ off });
+          this.showToast(on ? 'Reminders off — ' + r.title.slice(0, 28) + '… won\u2019t quiz you' : 'Reminders back on — next push later today', 'check');
+        },
+      };
+    });
+    const onCount = rows.filter(r => !s.off[r.id]).length;
+    const confettiPieces = s.confetti ? Array.from({ length: 16 }, (_, i) => ({
+      left: (4 + i * 6) + '%',
+      bg: ['var(--streak)', 'var(--ok)', '#F72585', 'var(--hl-ink)'][i % 4],
+      dur: (1.3 + (i % 5) * .18) + 's',
+      delay: ((i % 7) * .07) + 's',
+    })) : [];
+    return {
+      isDark: s.theme === 'dark', isLight: s.theme === 'light',
+      toggleTheme: () => { const t = s.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('lapp-theme', t); this.setState({ theme: t }); },
+      streakN: s.streak,
+      week: weekArr,
+      hasDue: !allDone, allDone,
+      todayLabel: allDone ? '2 of 2 — perfect day' : s.done + ' of 2 done · streak already safe · one more arrives today',
+      todayPct: (s.done / 2 * 100) + '%',
+      todayCount: '2 scheduled',
+      dueMeta: allDone ? 'Second review · 5 questions · done just now' : 'Second review · 5 questions · arrives later today',
+      takeQuiz: () => this.takeQuiz(),
+      rows, rowCount: rows.length, onCount,
+      confetti: s.confetti, confettiPieces,
+      hasToast: !!s.toast, toast: s.toast,
+      toastFlame: s.toastKind === 'flame', toastCheck: s.toastKind !== 'flame',
+      toastBg: s.toastKind === 'flame' ? 'var(--streak)' : 'var(--ok)',
+    };
+  }
+}
+</script>
+</body>
+</html>
