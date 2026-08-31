@@ -149,7 +149,7 @@ const Notes = () => {
       <div className="max-w-[1060px] mx-auto w-full pb-20 pt-2">
         {/* --- Greeting --- */}
         <div
-          className="flex items-center gap-4 mb-6 v2-fade-up"
+          className="flex items-center gap-3.5 mb-5 v2-fade-up"
         >
           <div
             className="w-[52px] h-[52px] rounded-[18px] border flex items-center justify-center shrink-0"
@@ -165,11 +165,10 @@ const Notes = () => {
             <h1 className="font-heading text-[22px] sm:text-[26px] font-bold tracking-[-0.02em] leading-tight text-[var(--v2-ink)]">
               {t(getGreeting())}, {fullName?.split(" ")[0]}
             </h1>
-            <p className="text-[14px] text-[var(--v2-mut)] mt-0.5">
-              {t("Hey , do you want to create new note", {
-                fullName: fullName?.split(" ")[0],
+            <p className="text-[13px] text-[var(--v2-mut)] mt-1.5">
+              {t("Hey {{name}}, ask a question, or add material to build a full note.", {
+                name: fullName?.split(" ")[0],
               })}
-              ?
             </p>
           </div>
         </div>

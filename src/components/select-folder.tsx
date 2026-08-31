@@ -76,10 +76,11 @@ const FolderSelect = ({ data, variant = "outline", size="sm" }: any) => {
             role="combobox"
             aria-label={t("Select folder...")}
             aria-expanded={open}
-            className="flex-1 justify-between md:max-w-[200px] lg:max-w-[300px] cursor-pointer"
+            className="flex-1 justify-between md:max-w-[200px] lg:max-w-[300px] cursor-pointer rounded-xl"
+            style={{ borderColor: "var(--v2-line)", background: "transparent", boxShadow: "none" }}
           >
             <div className="flex items-center gap-2">
-              <Folders className="h-4 w-4" />
+              <Folder className="h-4 w-4" />
                <span className={`hidden lg:block text-${size === "sm" ? "sm" : "lg"}`}>{selectedFolder?.id ? selectedFolder.name : t("All folders")}</span>
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

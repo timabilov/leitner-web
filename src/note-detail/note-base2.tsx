@@ -793,7 +793,7 @@ const NoteDetailBase = () => {
                                     </span>
                                     <span className={cn(
                                       "tabular-nums text-sm font-semibold ml-2 shrink-0 transition-colors duration-500",
-                                      done ? "text-pink-400" : "text-zinc-400"
+                                      done ? "text-zinc-600 dark:text-zinc-300" : "text-zinc-400"
                                     )}>
                                       {done ? t("Done") : `${pct}%`}
                                     </span>
@@ -804,8 +804,8 @@ const NoteDetailBase = () => {
                                         className={cn(
                                           "h-full rounded-full transition-colors duration-700",
                                           done
-                                            ? "bg-gradient-to-r from-pink-400 to-rose-400"
-                                            : "bg-gradient-to-r from-zinc-200 to-pink-100 dark:from-zinc-600 dark:to-pink-900/40"
+                                            ? "bg-zinc-700 dark:bg-zinc-300"
+                                            : "bg-zinc-400 dark:bg-zinc-500"
                                         )}
                                         initial={{ width: 0 }}
                                         animate={{ width: `${Math.max(pct, 2)}%` }}

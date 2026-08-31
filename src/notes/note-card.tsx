@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Folder } from "lucide-react";
 import ProcessingNoteCard from "./processing-note-card";
+import { FileTypeIcon } from "./processing-note-card";
 import { useFolders } from "@/hooks/use-folders";
 import { useSidebar } from "@/components/ui/sidebar";
 
@@ -168,7 +169,7 @@ export const NoteCard = ({ item, view }: { item: any; view: string }) => {
             <span className="text-[12.5px] text-[var(--v2-mut)]">{meta}</span>
           )}
 
-          {/* Row 4: Score + Date */}
+          {/* Row 4: Score + Attachment icons + Date */}
           <div className="flex items-center justify-between w-full mt-auto pt-1">
             {score ? (
               <span
@@ -180,7 +181,16 @@ export const NoteCard = ({ item, view }: { item: any; view: string }) => {
             ) : (
               <span />
             )}
-            <span className="text-[11.5px] text-[var(--v2-mut)]">{dateStr}</span>
+            <div className="flex items-center gap-2">
+              {item.attachments?.length > 1 && (
+                <div className="flex items-center gap-1.5" style={{ color: "var(--v2-mut)" }}>
+                  {[...item.attachments].sort((a: any, b: any) => (a.id ?? 0) - (b.id ?? 0)).map((a: any) => (
+                    <FileTypeIcon key={a.id} type={a.file_type} size={13} />
+                  ))}
+                </div>
+              )}
+              <span className="text-[11.5px] text-[var(--v2-mut)]">{dateStr}</span>
+            </div>
           </div>
         </motion.button>
       )}

@@ -213,10 +213,12 @@ const AudioPreview = ({ file, loading, onRemove }: { file: any, loading: boolean
 // ============================================================================
 function YouTubePreviewCard({
   url,
+  videoId,
   onRemove,
   linkStatus,
 }: {
   url: string;
+  videoId: string;
   onRemove: () => void;
   linkStatus: "checking" | "verified" | "failed";
 }) {
@@ -240,11 +242,19 @@ function YouTubePreviewCard({
       className="flex items-center gap-3 rounded-2xl border-2 px-4 py-3 mx-1 mb-1"
       style={{ borderColor, background: bgMix }}
     >
-      {/* Play icon */}
-      <div className="w-10 h-10 rounded-xl bg-[var(--v2-ink)] flex items-center justify-center shrink-0">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--v2-bg)">
-          <path d="M8 5.5v13L19.5 12z" />
-        </svg>
+      {/* Thumbnail with play overlay */}
+      <div className="w-16 h-10 rounded-lg overflow-hidden relative shrink-0 bg-[var(--v2-ink)]">
+        <img
+          src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+          alt=""
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+            <path d="M8 5.5v13L19.5 12z" />
+          </svg>
+        </div>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -667,7 +677,7 @@ export function AIPromptInput({ openFilePicker, files, setFiles, getInputProps, 
         <AnimatePresence>
           {youtubeMatch && !ytDismissed && (
             <div className="px-[14px] pb-1 pt-2">
-              <YouTubePreviewCard url={youtubeMatch.url} onRemove={clearYouTube} linkStatus={linkStatus} />
+              <YouTubePreviewCard url={youtubeMatch.url} videoId={youtubeMatch.videoId} onRemove={clearYouTube} linkStatus={linkStatus} />
             </div>
           )}
         </AnimatePresence>
@@ -741,7 +751,7 @@ export function AIPromptInput({ openFilePicker, files, setFiles, getInputProps, 
                   <TooltipTrigger asChild>
                     <button
                       onClick={openFilePicker}
-                      className="w-9 h-9 rounded-full border flex items-center justify-center cursor-pointer transition-colors bg-transparent hover:bg-[var(--v2-panel2)]"
+                      className="w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition-colors bg-transparent hover:bg-[var(--v2-panel2)]"
                       style={{ borderColor: "var(--v2-line)", color: "var(--v2-mut)" }}
                     >
                       <Paperclip className="w-[16px] h-[16px]" strokeWidth={1.8} />
@@ -759,7 +769,7 @@ export function AIPromptInput({ openFilePicker, files, setFiles, getInputProps, 
                         posthog.capture('audio_recording_started');
                         recorder.start();
                       }}
-                      className="w-9 h-9 rounded-full border flex items-center justify-center cursor-pointer transition-colors bg-transparent hover:bg-[var(--v2-panel2)]"
+                      className="w-9 h-9 rounded-xl border flex items-center justify-center cursor-pointer transition-colors bg-transparent hover:bg-[var(--v2-panel2)]"
                       style={{ borderColor: "var(--v2-line)", color: "var(--v2-mut)" }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -856,39 +866,39 @@ export function AIPromptInput({ openFilePicker, files, setFiles, getInputProps, 
           {recorder.status === "idle" && (
             <div className="flex items-center gap-1.5">
               <div
-                className="flex items-center rounded-full border p-0.5"
+                className="flex items-center rounded-xl border p-0.5"
                 style={{ borderColor: "var(--v2-line)", background: "var(--v2-panel2)" }}
               >
                 <button
                   onClick={() => setMode("answer")}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold border-none cursor-pointer transition-all",
+                    "flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[12px] font-semibold border-none cursor-pointer transition-all",
                     mode === "answer"
                       ? "bg-[var(--v2-panel)] text-[var(--v2-ink)] shadow-sm"
                       : "bg-transparent text-[var(--v2-mut)]"
                   )}
                 >
-                  <MessageCircle className="w-3.5 h-3.5" strokeWidth={1.8} />
+                  <MessageCircle className="w-3 h-3" strokeWidth={1.8} />
                   {t("Answer")}
                 </button>
                 <button
                   onClick={() => setMode("note")}
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold border-none cursor-pointer transition-all",
+                    "flex items-center gap-1.5 rounded-[10px] px-3 py-1.5 text-[12px] font-semibold border-none cursor-pointer transition-all",
                     mode === "note"
                       ? "bg-[var(--v2-panel)] text-[var(--v2-ink)] shadow-sm"
                       : "bg-transparent text-[var(--v2-mut)]"
                   )}
                 >
-                  <Layers className="w-3.5 h-3.5" strokeWidth={1.8} />
+                  <Layers className="w-3 h-3" strokeWidth={1.8} />
                   {t("Note")}
                 </button>
               </div>
 
               {/* AUTO label */}
               <span
-                className="hidden sm:inline-block text-[11px] font-bold tracking-[0.06em] px-2 py-1 rounded-md"
-                style={{ background: "var(--v2-panel2)", color: "var(--v2-mut)" }}
+                className="hidden sm:inline-block text-[11px] font-bold tracking-[0.06em] px-2.5 py-1 rounded-full"
+                style={{ background: "var(--v2-panel2)", color: "var(--v2-ink)" }}
               >
                 AUTO
               </span>
@@ -900,13 +910,19 @@ export function AIPromptInput({ openFilePicker, files, setFiles, getInputProps, 
 
               {/* Submit button */}
               <button
-                onClick={saveNote}
-                disabled={isSubmitting || !canSubmit}
+                onClick={() => {
+                  if (!canSubmit) {
+                    toast(t("Add some text or files first"), { duration: 2000 });
+                    return;
+                  }
+                  saveNote();
+                }}
+                disabled={isSubmitting}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-full px-5 h-[38px] border-none text-white text-[13px] font-bold cursor-pointer transition-all active:scale-[0.97]",
+                  "inline-flex items-center gap-2 rounded-xl px-5 h-[42px] border-none text-[13px] font-bold cursor-pointer transition-all active:scale-[0.97]",
                   "disabled:opacity-50 disabled:cursor-not-allowed"
                 )}
-                style={{ background: "var(--v2-ink)" }}
+                style={{ background: "var(--v2-ink)", color: "var(--v2-bg)" }}
               >
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -1133,6 +1133,8 @@ a more noticeable opacity animation to it.
 .v2-fade-up { animation: v2-fadeUp 0.4s ease both; }
 .v2-pop-in { animation: v2-popIn 0.22s ease both; }
 .v2-spin-star { animation: v2-spinStar 2.4s linear infinite; }
+.v2-pulse-active { animation: v2-pulse 1.6s ease-in-out infinite; }
+@keyframes v2-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
 /* YouTube link-checking animated dots */
 .yt-checking-dots::after {
