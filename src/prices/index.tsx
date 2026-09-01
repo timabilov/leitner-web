@@ -624,7 +624,7 @@ export default function PricingSection() {
     : null;
 
   // AppLovin view_item
-  useEffect(() => { window.axon?.("track", "view_item"); }, []);
+  useEffect(() => { console.log("[axon] view_item event fired"); window.axon?.("track", "view_item"); }, []);
 
   // Paddle init + price fetch
   useEffect(() => {
@@ -639,14 +639,20 @@ export default function PricingSection() {
             const attribution = getLastTouch();
             const firstAttribution = getFirstTouch();
             const purchaseValue = parseFloat(txn?.totals?.total || "0");
-            window.axon?.("track", "purchase", {
+            const firstItem = txn?.items?.[0];
+            const axonPurchaseData = {
+              item_id: firstItem?.price?.id || "",
+              user_email: email || "",
+              item_price: purchaseValue,
               value: purchaseValue,
               currency: txn?.currency_code || "USD",
               transaction_id: txn?.transaction_id || "",
               items: (txn?.items || []).map((item: any) => ({ id: item?.price?.id, quantity: item?.quantity })),
               shipping: 0,
               tax: parseFloat(txn?.totals?.tax || "0"),
-            });
+            };
+            console.log("[axon] purchase event:", axonPurchaseData);
+            window.axon?.("track", "purchase", axonPurchaseData);
             posthog.capture("purchase", {
               value: purchaseValue,
               currency: txn?.currency_code || "USD",
@@ -698,8 +704,19 @@ export default function PricingSection() {
   const openCheckout = (priceId: string, discountId?: string) => {
     const attribution = getLastTouch();
     setLoadingPriceId(priceId);
-    window.axon?.("track", "add_to_cart");
-    window.axon?.("track", "begin_checkout");
+    const liveData = prices[priceId];
+    const itemPrice = liveData?.current || 0;
+    const axonCartData = {
+      item_id: priceId,
+      user_email: email || "",
+      item_price: itemPrice,
+      value: itemPrice,
+      currency: "USD",
+    };
+    console.log("[axon] add_to_cart event:", axonCartData);
+    window.axon?.("track", "add_to_cart", axonCartData);
+    console.log("[axon] begin_checkout event:", axonCartData);
+    window.axon?.("track", "begin_checkout", axonCartData);
     paddle.Checkout.open({
       items: [{ priceId, quantity: 1 }],
       discountId,
