@@ -11,6 +11,8 @@ export default function PostHogPageview() {
     if (posthog) {
       posthog.capture('$pageview');
     }
+    // AppLovin Axon page_view
+    window.axon?.("track", "page_view");
   }, [location, posthog]);
 
   return null;

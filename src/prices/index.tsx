@@ -18,6 +18,7 @@ import { PRICING_TIERS, PRICING_TIERS_CLAIM } from "./assets/pricing-data";
 import { useOfferCountdown } from "@/hooks/use-offer-countdown";
 import { useSearchParams } from "react-router-dom";
 import { usePostHog } from "posthog-js/react";
+import { getLastTouch, getFirstTouch } from "@/lib/attribution";
 import SettingsDialog from "@/settings/settings-dialog2";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/services/auth";
@@ -258,9 +259,39 @@ export default function PricingSection() {
       const paddleInstance = await initializePaddle({
         environment: import.meta.env.VITE_PADDLE_ENV,
         token: import.meta.env.VITE_PADDLE_CLIENT_TOKEN,
-        eventCallback: (event) => {
+        eventCallback: (event: any) => {
           if (event.name === "checkout.closed") setLoadingPriceId(null);
           if (event.name === "checkout.completed") {
+            const txn = event.data;
+            const attribution = getLastTouch();
+            const firstAttribution = getFirstTouch();
+            const purchaseValue = parseFloat(txn?.totals?.total || "0");
+
+            // AppLovin purchase event
+            window.axon?.("track", "purchase", {
+              value: purchaseValue,
+              currency: txn?.currency_code || "USD",
+              transaction_id: txn?.transaction_id || "",
+              items: (txn?.items || []).map((item: any) => ({
+                id: item?.price?.id,
+                quantity: item?.quantity,
+              })),
+              shipping: 0,
+              tax: parseFloat(txn?.totals?.tax || "0"),
+            });
+
+            // PostHog purchase event with UTM attribution
+            posthog.capture("purchase", {
+              value: purchaseValue,
+              currency: txn?.currency_code || "USD",
+              transaction_id: txn?.transaction_id || "",
+              last_utm_source: attribution.utm_source || null,
+              last_utm_medium: attribution.utm_medium || null,
+              last_utm_campaign: attribution.utm_campaign || null,
+              first_utm_source: firstAttribution.utm_source || null,
+              aleid: attribution.aleid || firstAttribution.aleid || null,
+            });
+
             toast.success(t("Welcome aboard!"));
             queryClient.invalidateQueries({ queryKey: ["subscription"] });
           }
@@ -295,11 +326,23 @@ export default function PricingSection() {
   }, [isPromoLink, hasPromo]);
 
   const openCheckout = (priceId: string, discountId?: string) => {
+    const attribution = getLastTouch();
     setLoadingPriceId(priceId);
+
+    // AppLovin begin_checkout
+    window.axon?.("track", "begin_checkout");
+
     paddle.Checkout.open({
       items: [{ priceId, quantity: 1 }],
       discountId,
-      customData: { internal_user_id: userId, internal_email: email },
+      customData: {
+        internal_user_id: userId,
+        internal_email: email,
+        utm_source: attribution.utm_source || null,
+        utm_medium: attribution.utm_medium || null,
+        utm_campaign: attribution.utm_campaign || null,
+        aleid: attribution.aleid || null,
+      },
       settings: { displayMode: "overlay", theme: "system" }
     });
   };

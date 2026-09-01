@@ -90,6 +90,9 @@ const LoginBase = () => {
         new_user: data?.new,
       });
       if (data?.new) {
+        // AppLovin sign_up event
+        window.axon?.("track", "sign_up");
+
         setSessionData({
           id: data.id,
           idToken: variables.idToken,

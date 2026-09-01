@@ -26,6 +26,7 @@ import * as Sentry from "@sentry/react";
 import PostHogPageview from "./components/posthog-page-view.tsx";
 import { ThemeProvider } from "./components/theme-provider.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { initAttribution } from "./lib/attribution.ts";
 
 // tsc -b && ===> build command
 Sentry.init({
@@ -61,6 +62,9 @@ if (import.meta.env.PROD) {
     },
   });
 }
+
+// Persist UTM + AppLovin click params into first-party cookies
+initAttribution();
 
 const queryClient = new QueryClient({
   defaultOptions: {
