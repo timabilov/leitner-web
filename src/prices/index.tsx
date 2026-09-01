@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { Loader2, ChevronDown } from "lucide-react";
 import { initializePaddle } from "@paddle/paddle-js";
 import { useTranslation } from "react-i18next";
@@ -583,6 +583,7 @@ export default function PricingSection() {
   const [paddle, setPaddle] = useState<any>(null);
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [prices, setPrices] = useState<any>({});
+  const checkoutRef = useRef<{ priceId: string; itemPrice: number } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const { targetDate, hasPromo } = useOfferCountdown();
@@ -638,18 +639,18 @@ export default function PricingSection() {
             const txn = event.data;
             const attribution = getLastTouch();
             const firstAttribution = getFirstTouch();
-            const purchaseValue = parseFloat(txn?.totals?.total || "0");
             const firstItem = txn?.items?.[0];
+            const purchaseValue = firstItem?.totals?.total ?? txn?.totals?.total ?? checkoutRef.current?.itemPrice ?? 0;
             const axonPurchaseData = {
-              item_id: firstItem?.price?.id || "",
+              item_id: firstItem?.price_id || checkoutRef.current?.priceId || "",
               user_email: email || "",
               item_price: purchaseValue,
               value: purchaseValue,
               currency: txn?.currency_code || "USD",
               transaction_id: txn?.transaction_id || "",
-              items: (txn?.items || []).map((item: any) => ({ id: item?.price?.id, quantity: item?.quantity })),
+              items: (txn?.items || []).map((item: any) => ({ id: item?.price_id, quantity: item?.quantity })),
               shipping: 0,
-              tax: parseFloat(txn?.totals?.tax || "0"),
+              tax: firstItem?.totals?.tax ?? txn?.totals?.tax ?? 0,
             };
             console.log("[axon] purchase event:", axonPurchaseData);
             window.axon?.("track", "purchase", axonPurchaseData);
@@ -706,6 +707,7 @@ export default function PricingSection() {
     setLoadingPriceId(priceId);
     const liveData = prices[priceId];
     const itemPrice = liveData?.current || 0;
+    checkoutRef.current = { priceId, itemPrice };
     const axonCartData = {
       item_id: priceId,
       user_email: email || "",
