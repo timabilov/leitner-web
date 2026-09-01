@@ -229,6 +229,11 @@ export default function PricingSection() {
 
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
+  // AppLovin view_item — user is viewing the subscription product
+  useEffect(() => {
+    window.axon?.("track", "view_item");
+  }, []);
+
   // Timer Logic
   useEffect(() => {
     if (!targetDate) return;
@@ -329,7 +334,8 @@ export default function PricingSection() {
     const attribution = getLastTouch();
     setLoadingPriceId(priceId);
 
-    // AppLovin begin_checkout
+    // AppLovin add_to_cart + begin_checkout
+    window.axon?.("track", "add_to_cart");
     window.axon?.("track", "begin_checkout");
 
     paddle.Checkout.open({
