@@ -709,7 +709,6 @@ export default function PricingSection() {
   const openCheckout = (priceId: string, discountId?: string) => {
     const attribution = getLastTouch();
     setLoadingPriceId(priceId);
-<<<<<<< Updated upstream
     const liveData = prices[priceId];
     const itemPrice = liveData?.current || 0;
     checkoutRef.current = { priceId, itemPrice };
@@ -724,11 +723,6 @@ export default function PricingSection() {
     window.axon?.("track", "add_to_cart", axonCartData);
     console.log("[axon] begin_checkout event:", axonCartData);
     window.axon?.("track", "begin_checkout", axonCartData);
-=======
-    window.axon?.("track", "add_to_cart");
-    window.axon?.("track", "begin_checkout");
-    console.log("attribution", attribution);
->>>>>>> Stashed changes
     paddle.Checkout.open({
       items: [{ priceId, quantity: 1 }],
       discountId,
