@@ -452,16 +452,14 @@ function PricingCard({
   const hasTrial = liveData?.hasTrial;
   const trialFreq = liveData?.trialFrequency;
 
-  const displayPrice = isWeekly && hasPromo
-    ? "Free"
-    : price
+  const displayPrice =  price
       ? `$${isAnnual ? (price / 12).toFixed(2) : price}`
       : "";
   const perLabel = isWeekly ? (hasPromo ? "first week" : "/week") : isAnnual ? "/month" : `/${plan.unit}`;
   const anchor = original ? `$${isAnnual ? (original / 12).toFixed(2) : original}/${plan.unit}` : null;
 
   const baseChip = isWeekly
-    ? "Free to start"
+    ? null
     : isMonthly
       ? "50% OFF"
       : "80% OFF";
@@ -519,17 +517,22 @@ function PricingCard({
       )}
 
       {/* Name + chip */}
-      <div className="flex items-center gap-2">
-        <span className="text-[11.5px] font-extrabold tracking-[.12em] uppercase text-[var(--v2-mut)]">{plan.name || plan.key}</span>
-        <span className="ml-auto text-[11px] font-bold text-[var(--v2-ink)] bg-[var(--v2-nav-active)] rounded-full py-1 px-2.5 whitespace-nowrap">{baseChip}</span>
-      </div>
+     
+        <div className="flex items-center gap-2">
+          <span className="text-[11.5px] font-extrabold tracking-[.12em] uppercase text-[var(--v2-mut)]">{plan.name || plan.key}</span>
+          {baseChip && (
+            <span className="ml-auto text-[11px] font-bold text-[var(--v2-ink)] bg-[var(--v2-nav-active)] rounded-full py-1 px-2.5 whitespace-nowrap">{baseChip}</span>
+          )}
+        </div>
+       
 
       {/* Price */}
       <div className="flex items-baseline gap-1.5 mt-3.5 mb-0.5">
         <span className="font-heading text-4xl font-extrabold tracking-tight">{displayPrice}</span>
         {!isWeekly && <span className="text-[var(--v2-mut)] text-sm">{perLabel}</span>}
       </div>
-      {anchor && <span className="text-[var(--v2-mut)] text-[13px] line-through">{anchor}</span>}
+      {anchor &&  !isWeekly  &&  // TODO: clearer logic for when to show anchor price
+       <span className="text-[var(--v2-mut)] text-[13px] line-through">{anchor}</span>}
 
       <p className="mt-2.5 mb-3.5 text-[13.5px] text-[var(--v2-mut)]">{desc}</p>
 
@@ -590,8 +593,8 @@ export default function PricingSection() {
   const [searchParams] = useSearchParams();
   const isPromoLink = searchParams.get("sale") === "true";
   const posthog = usePostHog();
-
-  const promoOn = !!(isPromoLink && hasPromo);
+  console.log("isPromoLink", isPromoLink, "hasPromo", hasPromo);
+  const promoOn =  hasPromo;
 
   // Countdown
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
@@ -672,6 +675,7 @@ export default function PricingSection() {
       if (paddleInstance) {
         setPaddle(paddleInstance);
         const activeTiers = promoOn ? PRICING_TIERS_CLAIM : PRICING_TIERS;
+        console.log("activeTiers is here", activeTiers.map(t => ({ key: t.key, priceId: t.priceId, discountId: t.discountId })) );
         const results = await Promise.all(
           activeTiers.map((tier) =>
             paddleInstance.PricePreview({
@@ -705,6 +709,7 @@ export default function PricingSection() {
   const openCheckout = (priceId: string, discountId?: string) => {
     const attribution = getLastTouch();
     setLoadingPriceId(priceId);
+<<<<<<< Updated upstream
     const liveData = prices[priceId];
     const itemPrice = liveData?.current || 0;
     checkoutRef.current = { priceId, itemPrice };
@@ -719,6 +724,11 @@ export default function PricingSection() {
     window.axon?.("track", "add_to_cart", axonCartData);
     console.log("[axon] begin_checkout event:", axonCartData);
     window.axon?.("track", "begin_checkout", axonCartData);
+=======
+    window.axon?.("track", "add_to_cart");
+    window.axon?.("track", "begin_checkout");
+    console.log("attribution", attribution);
+>>>>>>> Stashed changes
     paddle.Checkout.open({
       items: [{ priceId, quantity: 1 }],
       discountId,

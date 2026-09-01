@@ -6,7 +6,7 @@ export const PRICING_TIERS_CLAIM = [
     name: "Weekly",
     claimOffer: "Free first week",
     description: "Perfect for short-term projects.",
-    discountId: "dsc_01kn732qx3f2tk2pdpvjj2dav5",
+    // discountId: "dsc_01kn732qx3f2tk2pdpvjj2dav5",
     priceId: "pri_01kn72e7s269tnzcakpvf9fvs5", 
     features: ['Unlimited notes', "2x Daily Live AI Tutoring",'AI Chat', 'Unlimited quizzes & flashcards', 'Quiz notifications'],
   },
