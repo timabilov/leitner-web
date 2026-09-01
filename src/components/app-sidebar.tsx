@@ -78,7 +78,7 @@ function NavIconButton({
               ? "w-full h-[42px] px-3"
               : "w-[42px] h-[42px] justify-center",
             isActive
-              ? "bg-[var(--v2-panel2)] text-[var(--v2-ink)]"
+              ? "bg-[var(--v2-nav-active)] text-[var(--v2-ink)]"
               : "bg-transparent text-[var(--v2-mut)] hover:bg-[var(--v2-panel2)]"
           )}
         >

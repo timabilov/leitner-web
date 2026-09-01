@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Schibsted+Grotesk:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAFAF8;--panel:#FFFFFF;--panel2:#F1F1EE;--ink:#17171B;--mut:#6E6E76;--line:#E6E6E1;--grid:rgba(20,20,30,.03);--accent:#17171B;--accent2:#4A4A52;--accent-soft:rgba(23,23,27,.06);--grad:#17171B;--grad-ink:#FFFFFF;--selbg:rgba(23,23,27,.16);--hl:#F3E9D2;--hl-ink:#6b4d00;--ok:#1F9D63;--bad:#D2453B;--shadow:0 1px 2px rgba(20,20,30,.05),0 14px 34px -14px rgba(20,20,30,.14);}
+[data-palette="warm"]{--accent:#F72585;--accent2:#FF8E3C;--accent-soft:rgba(247,37,133,.08);--grad:linear-gradient(135deg,var(--accent),var(--accent2));--grad-ink:#fff;--selbg:rgba(247,37,133,.25);}
+[data-paper="cream"]{--bg:#FAF9F6;--panel2:#F3F1EC;--line:#E8E5DE;--grid:rgba(20,20,25,.04);}
+[data-paper="blush"]{--bg:#FBF4F6;--panel2:#F6ECEF;--line:#EBDEE3;--grid:rgba(180,40,100,.045);}
+[data-theme="dark"]{--bg:#131316;--panel:#1B1B1F;--panel2:#242429;--ink:#EFEEEA;--mut:#9A9AA3;--line:#2B2B31;--grid:rgba(255,255,255,.035);--accent:#EFEEEA;--accent2:#B9B9C0;--accent-soft:rgba(255,255,255,.08);--grad:#EFEEEA;--grad-ink:#151519;--selbg:rgba(255,255,255,.22);--hl:#3E3517;--hl-ink:#FFD877;--ok:#3DD68C;--bad:#FF6B70;--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -18px rgba(0,0,0,.6);}
+[data-theme="dark"][data-palette="warm"]{--accent:#FF4FA3;--accent2:#FFA05C;--accent-soft:rgba(255,79,163,.13);--grad:linear-gradient(135deg,var(--accent),var(--accent2));--grad-ink:#fff;--selbg:rgba(255,79,163,.3);}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Instrument Sans',sans-serif;}
+*{box-sizing:border-box}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent2)}
+button{font-family:inherit}input,textarea{font-family:inherit;color:inherit}
+textarea::placeholder,input::placeholder{color:var(--mut)}
+::selection{background:var(--selbg)}
+[data-motion="off"] *{animation:none!important;transition:none!important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(5px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.18);opacity:.65}}
+@keyframes spinStar{0%{transform:rotate(0)}50%{transform:rotate(180deg) scale(1.18)}100%{transform:rotate(360deg)}}
+@keyframes blinkDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-2px)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (max-width:980px){
+  [data-pagepad]{padding:22px 18px 90px!important}
+  [data-onboard]{grid-template-columns:1fr!important}
+  [data-hide-sm]{display:none!important}
+}
+@media (pointer:coarse){
+  [data-hit]{min-height:44px!important;min-width:44px!important}
+  input,textarea{font-size:16px!important}
+}
+</style>
+</helmet>
+
+<div data-screen-label="Home" style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;">
+
+  <sc-if value="{{ saleOpen }}" hint-placeholder-val="{{ true }}">
+    <sc-if value="{{ saleLanding }}" hint-placeholder-val="{{ true }}">
+      <div data-screen-label="Sale banner" style="display:flex;align-items:center;gap:14px;padding:9px 16px;background:color-mix(in srgb, #F72585 6%, var(--panel));color:var(--ink);border-bottom:1px solid color-mix(in srgb, #F72585 30%, transparent);z-index:35;flex:0 0 auto;">
+        <span style="display:inline-flex;align-items:center;gap:7px;background:#F72585;color:#fff;border-radius:999px;padding:6px 13px;font-size:11px;font-weight:800;letter-spacing:.08em;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2-2.96 0-7-1-8 0 3.04-1.77 4.74-3 6-1.23 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.53-1.06-3.94-2-5-1.79 3-2.79 3-4 2z"></path></svg>SALE
+        </span>
+        <span style="font-size:13.5px;font-weight:600;">50% off Annual plans</span>
+        <span style="width:1px;height:18px;background:var(--line);" data-hide-sm="1"></span>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:6px;" data-hide-sm="1">
+          <span style="display:flex;flex-direction:column;align-items:center;min-width:36px;background:var(--panel2);border-radius:9px;padding:3px 6px;"><strong style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.2;">{{ saleD }}</strong><span style="font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:700;">DAYS</span></span>
+          <span style="display:flex;flex-direction:column;align-items:center;min-width:36px;background:var(--panel2);border-radius:9px;padding:3px 6px;"><strong style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.2;">{{ saleH }}</strong><span style="font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:700;">HRS</span></span>
+          <span style="display:flex;flex-direction:column;align-items:center;min-width:36px;background:var(--panel2);border-radius:9px;padding:3px 6px;"><strong style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.2;">{{ saleM }}</strong><span style="font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:700;">MIN</span></span>
+          <span style="display:flex;flex-direction:column;align-items:center;min-width:36px;background:var(--panel2);border-radius:9px;padding:3px 6px;"><strong style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.2;color:#F72585;">{{ saleS }}</strong><span style="font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:700;">SEC</span></span>
+        </div>
+        <a href="./Pricing.dc.html" style="height:32px;padding:0 14px;border-radius:999px;border:none;background:#F72585;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:opacity .15s;" style-hover="opacity:.88;color:#fff">Claim 50% off<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+        <button onClick="{{ closeSale }}" title="Dismiss" style="width:28px;height:28px;border:none;border-radius:9px;background:transparent;color:var(--mut);cursor:pointer;display:grid;place-items:center;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ saleBar }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Sale banner" style="display:flex;align-items:center;gap:14px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line);z-index:35;flex:0 0 auto;">
+      <span style="display:inline-flex;align-items:center;gap:6px;background:var(--grad);color:var(--grad-ink);border-radius:999px;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:.08em;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 4-1.5 5.5-1.5 8a4.5 4.5 0 0 0 9 .5C21.5 15.5 18 22 12 22S3 17 4.5 11.5C5.6 7.6 9.5 6 9.5 2.5 10.4 2.2 11.3 2 12 2z"></path></svg>SALE
+      </span>
+      <span style="font-size:13px;"><strong>Special student pricing</strong><span style="color:var(--mut);" data-hide-sm="1"> — 50% off annual plans, limited time</span></span>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:6px;" data-hide-sm="1">
+        <span style="display:flex;flex-direction:column;align-items:center;min-width:36px;background:var(--panel2);border-radius:9px;padding:3px 6px;"><strong style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.2;">{{ saleD }}</strong><span style="font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:700;">DAYS</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;min-width:36px;background:var(--panel2);border-radius:9px;padding:3px 6px;"><strong style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.2;">{{ saleH }}</strong><span style="font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:700;">HRS</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;min-width:36px;background:var(--panel2);border-radius:9px;padding:3px 6px;"><strong style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.2;">{{ saleM }}</strong><span style="font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:700;">MIN</span></span>
+        <span style="display:flex;flex-direction:column;align-items:center;min-width:36px;background:var(--panel2);border-radius:9px;padding:3px 6px;"><strong style="font-size:13px;font-variant-numeric:tabular-nums;line-height:1.2;">{{ saleS }}</strong><span style="font-size:8.5px;letter-spacing:.14em;color:var(--mut);font-weight:700;">SEC</span></span>
+      </div>
+      <a href="./Pricing.dc.html" style="height:32px;padding:0 14px;border-radius:10px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font-size:12.5px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;transition:opacity .15s;" style-hover="opacity:.85;color:var(--bg)">Claim 50% off</a>
+      <button onClick="{{ closeSale }}" title="Dismiss" style="width:28px;height:28px;border:none;border-radius:9px;background:transparent;color:var(--mut);cursor:pointer;display:grid;place-items:center;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+    </div>
+    </sc-if>
+  </sc-if>
+
+  <div style="display:flex;flex:1;min-height:0;">
+  <nav style="width:64px;flex:0 0 64px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0;border-right:1px solid var(--line);background:var(--panel);z-index:30;">
+    <div style="width:36px;height:36px;border-radius:12px;background:var(--grad);display:grid;place-items:center;margin-bottom:10px;box-shadow:var(--shadow);color:var(--grad-ink);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg>
+    </div>
+    <a href="./Home.dc.html" title="Home" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--ink);transition:background .15s;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></a>
+    <a href="./Note.dc.html" title="Notes" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);transition:background .15s;" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></a>
+    <a href="./Reviews.dc.html" title="Reviews" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);position:relative;transition:background .15s;" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--streak,#EA580C);border:2px solid var(--panel);"></span></a>
+    <a href="./Pricing.dc.html" title="Upgrade to Pro" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg></a>
+    <button title="Mobile app" style="width:42px;height:42px;border-radius:12px;border:none;cursor:pointer;display:grid;place-items:center;background:transparent;color:var(--mut);" style-hover="background:var(--panel2)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect><circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"></circle></svg></button>
+    <div style="flex:1"></div>
+    <button onClick="{{ toggleTheme }}" title="Theme" style="width:42px;height:42px;border-radius:12px;border:1px solid var(--line);cursor:pointer;display:grid;place-items:center;background:var(--panel2);color:var(--ink);" style-hover="border-color:var(--accent)">
+      <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"></path></svg></sc-if>
+      <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.4 13.6A8.5 8.5 0 1 1 10.4 3.6a6.8 6.8 0 0 0 10 10z"></path></svg></sc-if>
+    </button>
+    <div style="width:36px;height:36px;border-radius:50%;background:#3D4757;color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;margin-top:6px;">T</div>
+  </nav>
+
+  <main style="flex:1;min-width:0;overflow-y:auto;position:relative;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;">
+      <div data-pagepad="1" style="max-width:1060px;margin:0 auto;padding:40px 40px 80px;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:26px;animation:fadeUp .4s ease both;">
+          <sc-if value="{{ mascotOn }}" hint-placeholder-val="{{ true }}">
+            <div style="width:52px;height:52px;border-radius:18px;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;box-shadow:var(--shadow);">
+              <svg width="32" height="32" viewBox="0 0 48 48" fill="none"><path d="M11 21 8 8l12 5" fill="var(--ink)"></path><path d="M37 21 40 8 28 13" fill="var(--ink)"></path><circle cx="24" cy="28" r="15" fill="var(--ink)"></circle><circle cx="18.5" cy="26" r="2" fill="var(--bg)"></circle><path d="M27.5 26q3 3 6 0" stroke="var(--bg)" stroke-width="2.2" fill="none" stroke-linecap="round"></path><path d="M21.5 32q2.5 2.4 5 0" stroke="var(--bg)" stroke-width="2" fill="none" stroke-linecap="round"></path></svg>
+            </div>
+          </sc-if>
+          <div>
+            <h1 style="margin:0;font-family:'Schibsted Grotesk',sans-serif;font-size:26px;font-weight:700;letter-spacing:-.02em;">{{ greeting }}, Tamerlan</h1>
+            <p style="margin:2px 0 0;color:var(--mut);font-size:14px;">Your streak: <strong style="color:var(--ink)">6 days</strong> · 2 quizzes waiting for tonight</p>
+          </div>
+        </div>
+
+        <sc-if value="{{ showOnboard }}" hint-placeholder-val="{{ true }}">
+          <section data-onboard="1" style="display:grid;grid-template-columns:340px 1fr;gap:0;background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:22px;position:relative;animation:fadeUp .45s .05s ease both;">
+            <button onClick="{{ dismissOnboard }}" title="Dismiss" style="position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:10px;border:none;background:transparent;color:var(--mut);cursor:pointer;display:grid;place-items:center;z-index:2;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+            <div style="position:relative;background:var(--panel2);min-height:230px;">
+              <image-slot id="onboard-video" shape="rect" placeholder="Drop the 1-min tour GIF here"></image-slot>
+              <div style="position:absolute;left:14px;bottom:14px;display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:rgba(15,15,18,.72);color:#fff;font-size:12px;font-weight:600;pointer-events:none;backdrop-filter:blur(4px);">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.8v14.4L19.5 12z"></path></svg> Watch the 1-min tour
+              </div>
+            </div>
+            <div style="padding:22px 26px 20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);">Getting started</span>
+                <span style="font-size:11px;color:var(--mut);">· step 1 of 3 done</span>
+              </div>
+              <h2 style="margin:0 0 14px;font-family:'Schibsted Grotesk',sans-serif;font-size:19px;font-weight:700;letter-spacing:-.01em;">Turn anything into a note that quizzes you back</h2>
+              <div style="display:grid;gap:9px;">
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;border:1px solid var(--line);background:var(--bg);">
+                  <span style="width:26px;height:26px;flex:0 0 26px;border-radius:9px;background:var(--ok);color:#fff;display:grid;place-items:center;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>
+                  <div style="flex:1;min-width:0;"><strong style="font-size:13.5px;">Create a note</strong><span style="color:var(--mut);font-size:13px;"> — drop audio, PDFs or a YouTube link below.</span></div>
+                  <span style="font-size:12px;color:var(--ok);font-weight:600;">Done</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;border:1px solid var(--line);background:var(--panel);">
+                  <span style="width:26px;height:26px;flex:0 0 26px;border-radius:9px;background:var(--panel2);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:13px;">2</span>
+                  <div style="flex:1;min-width:0;"><strong style="font-size:13.5px;">Select any text</strong><span style="color:var(--mut);font-size:13px;"> — ask about it or turn it into a quiz.</span></div>
+                  <a href="./Note.dc.html?tab=transcript" style="border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;" style-hover="border-color:var(--ink);color:var(--ink)">Show me</a>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:13px;border:1px solid var(--line);background:var(--panel);">
+                  <span style="width:26px;height:26px;flex:0 0 26px;border-radius:9px;background:var(--panel2);color:var(--ink);display:grid;place-items:center;font-weight:700;font-size:13px;">3</span>
+                  <div style="flex:1;min-width:0;"><strong style="font-size:13.5px;">Schedule the quiz</strong><span style="color:var(--mut);font-size:13px;"> — get a push on your phone when it's time.</span></div>
+                  <a href="./Note.dc.html?schedule=1" style="border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;" style-hover="border-color:var(--ink);color:var(--ink)">Preview push</a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </sc-if>
+
+        <section style="background:var(--panel);border:1.5px solid {{ composerBorder }};border-radius:20px;box-shadow:var(--shadow);padding:18px 18px 14px;margin-bottom:34px;transition:border-color .2s;animation:fadeUp .45s .1s ease both;">
+          <textarea rows="2" ref="{{ setComposerEl }}" value="{{ composer }}" onChange="{{ onComposer }}" onFocus="{{ focusOn }}" onBlur="{{ focusOff }}" placeholder="Paste a YouTube link, drop files, or just start typing…" style="width:100%;border:none;outline:none;resize:none;background:transparent;font-size:16px;line-height:1.5;padding:2px 4px;"></textarea>
+
+          <sc-if value="{{ hasYt }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;align-items:center;gap:13px;border:1.5px solid {{ ytBorder }};background:var(--bg);border-radius:14px;padding:10px 12px;margin:6px 2px 10px;animation:popIn .22s ease both;transition:border-color .2s;">
+              <span style="width:58px;height:40px;border-radius:9px;background:#17171B;display:grid;place-items:center;flex:0 0 58px;">
+                <sc-if value="{{ ytNotInvalid }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13L19.5 12z"></path></svg></sc-if>
+                <sc-if value="{{ ytInvalid }}" hint-placeholder-val="{{ false }}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--bad)" stroke-width="2.2" stroke-linecap="round"><path d="M12 7v6"></path><circle cx="12" cy="17" r=".8" fill="var(--bad)" stroke="none"></circle><circle cx="12" cy="12" r="9.2" stroke-width="1.8"></circle></svg></sc-if>
+              </span>
+              <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <strong style="font-size:13.5px;">{{ ytTitle }}</strong>
+                  <sc-if value="{{ ytChecking }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--mut);font-weight:600;"><span style="width:5px;height:5px;border-radius:50%;background:var(--mut);animation:blinkDot 1.2s infinite;"></span><span style="width:5px;height:5px;border-radius:50%;background:var(--mut);animation:blinkDot 1.2s .2s infinite;"></span>Checking link…</span>
+                  </sc-if>
+                  <sc-if value="{{ ytReady }}" hint-placeholder-val="{{ false }}">
+                    <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ok);font-weight:700;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg>Link verified</span>
+                  </sc-if>
+                  <sc-if value="{{ ytInvalid }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size:11.5px;color:var(--bad);font-weight:700;">Not a valid video link</span>
+                  </sc-if>
+                </div>
+                <span style="display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ytMeta }}</span>
+              </div>
+              <button onClick="{{ removeYt }}" title="Remove video" data-hit="1" style="width:30px;height:30px;border:none;border-radius:9px;background:transparent;color:var(--mut);cursor:pointer;display:grid;place-items:center;flex:0 0 auto;" style-hover="background:var(--panel2);color:var(--bad)"><svg width="13" height="13" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ hasAttach }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;padding:6px 2px 10px;">
+              <sc-for list="{{ attach }}" as="f" hint-placeholder-count="0">
+                <span style="display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);font-size:13px;font-weight:500;animation:popIn .25s ease both;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="1.8" stroke-linejoin="round"><path d="M7 4.8v14.4L19.5 12z"></path></svg>{{ f.name }}
+                  <span style="color:var(--mut);font-size:11px;">{{ f.size }}</span>
+                  <button onClick="{{ f.onRemove }}" style="border:none;background:transparent;color:var(--mut);cursor:pointer;padding:0;display:grid;place-items:center;" style-hover="color:var(--bad)"><svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+                </span>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding-top:12px;flex-wrap:wrap;">
+            <button onClick="{{ addAttach }}" title="Attach files" data-hit="1" style="width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--mut);cursor:pointer;display:grid;place-items:center;" style-hover="border-color:var(--ink);color:var(--ink)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.5l-8.2 8.2a5.5 5.5 0 0 1-7.8-7.8L13.6 4.3a3.7 3.7 0 0 1 5.2 5.2l-8.4 8.4a1.9 1.9 0 0 1-2.7-2.7L15 8"></path></svg></button>
+            <button onClick="{{ toggleRec }}" title="Record audio" data-hit="1" style="height:36px;border-radius:11px;border:1px solid {{ recBorder }};background:{{ recBg }};color:{{ recColor }};cursor:pointer;display:flex;align-items:center;gap:7px;padding:0 12px;font-size:13px;font-weight:600;" style-hover="border-color:var(--ink)">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.4" stroke="currentColor" stroke-width="1.8"></circle><circle cx="12" cy="12" r="4" fill="currentColor"></circle></svg>
+              <sc-if value="{{ recording }}" hint-placeholder-val="{{ false }}"><span style="display:inline-flex;align-items:center;gap:6px;">Listening<span style="width:7px;height:7px;border-radius:50%;background:var(--bad);animation:pulse 1.1s infinite;"></span></span></sc-if>
+            </button>
+            <span data-hide-sm="1" style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:11px;font-size:13px;font-weight:600;color:var(--ink);background:var(--bg);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>live
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="2" stroke-linecap="round"><path d="M8 9.5 12 5.5l4 4M8 14.5l4 4 4-4"></path></svg>
+            </span>
+            <div style="flex:1"></div>
+            <div title="What happens when you send — click to switch" style="display:flex;align-items:center;background:var(--panel2);border-radius:999px;padding:3px;gap:2px;">
+              <button onClick="{{ pinAsk }}" style="height:28px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;border:none;cursor:pointer;font-size:12px;font-weight:700;background:{{ segAskBg }};color:{{ segAskC }};box-shadow:{{ segAskShadow }};transition:all .2s;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4.5l2-2.6A8 8 0 1 1 21 12z"></path></svg>Answer
+              </button>
+              <button onClick="{{ pinNote }}" style="height:28px;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:999px;border:none;cursor:pointer;font-size:12px;font-weight:700;background:{{ segNoteBg }};color:{{ segNoteC }};box-shadow:{{ segNoteShadow }};transition:all .2s;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5zM3 12.5l9 5 9-5"></path></svg>Note
+              </button>
+            </div>
+            <sc-if value="{{ intentIsAuto }}" hint-placeholder-val="{{ true }}">
+              <span key="{{ intentKey }}" style="font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--ink);background:var(--accent-soft);border-radius:999px;padding:4px 9px;animation:popIn .25s ease both;">AUTO</span>
+            </sc-if>
+            <span style="font-size:12px;color:var(--mut);" data-hide-sm="1">⌘ + Enter</span>
+            <button key="{{ intentKey }}" onClick="{{ startCreate }}" title="Send" data-hit="1" style="height:40px;padding:0 20px;border-radius:12px;border:none;cursor:pointer;background:{{ sendBg }};color:{{ sendC }};font-weight:700;font-size:14px;display:flex;align-items:center;gap:9px;animation:popIn .28s ease both;transition:opacity .15s;" style-hover="opacity:.88" style-active="transform:scale(.98)">
+              <sc-if value="{{ intentAsk }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 11.5 20 4l-4.5 16-4-6.5z"></path></svg></sc-if>
+              <sc-if value="{{ intentNote }}" hint-placeholder-val="{{ true }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg></sc-if>
+              {{ submitLabel }}
+            </button>
+          </div>
+          <p key="{{ intentKey }}" style="margin:10px 4px 0;font-size:12px;color:var(--mut);display:flex;align-items:center;gap:7px;animation:fadeUp .3s ease both;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="var(--mut)"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg>{{ intentHint }}
+          </p>
+        </section>
+
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;animation:fadeUp .45s .15s ease both;">
+          <h3 style="margin:0;font-family:'Schibsted Grotesk',sans-serif;font-size:17px;font-weight:700;">Your notes</h3>
+          <span style="font-size:12px;color:var(--mut);background:var(--panel2);border-radius:999px;padding:3px 9px;font-weight:600;">{{ noteCount }}</span>
+          <div style="flex:1"></div>
+          <div style="display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 12px;width:260px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--mut)" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.2-3.2"></path></svg>
+            <input placeholder="Search notes…" style="border:none;outline:none;background:transparent;font-size:13px;width:100%;">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;animation:fadeUp .45s .2s ease both;">
+          <sc-if value="{{ showCreatingTile }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px dashed var(--mut);border-radius:16px;background:var(--panel);padding:18px;display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent)" style="animation:spinStar 2.4s linear infinite;"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg>
+                <strong style="font-size:14px;">{{ creatingStageLabel }}</strong>
+                <span style="margin-left:auto;font-weight:700;color:var(--ink);">{{ creatingPct }}%</span>
+              </div>
+              <div style="height:6px;border-radius:99px;background:var(--panel2);overflow:hidden;"><div style="height:100%;width:{{ creatingPct }}%;border-radius:99px;background:var(--grad);transition:width .2s;"></div></div>
+              <p style="margin:0;font-size:12.5px;color:var(--mut);">{{ creatingFun }}</p>
+            </div>
+          </sc-if>
+          <sc-for list="{{ notes }}" as="n" hint-placeholder-count="3">
+            <a href="{{ n.href }}" style="text-align:left;color:var(--ink);border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:transform .15s,box-shadow .15s,border-color .15s;" style-hover="transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--mut);color:var(--ink)">
+              <div style="display:flex;align-items:center;gap:8px;width:100%;">
+                <span style="width:32px;height:32px;border-radius:10px;background:var(--panel2);display:grid;place-items:center;color:var(--mut);">
+                  <sc-if value="{{ n.isVideo }}" hint-placeholder-val="{{ false }}"><span style="width:20px;height:14px;border-radius:4.5px;background:#E5484D;display:grid;place-items:center;"><svg width="8" height="8" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13L19.5 12z"></path></svg></span></sc-if>
+                  <sc-if value="{{ n.isAudio }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.4" stroke="#E5484D" stroke-width="1.8"></circle><circle cx="12" cy="12" r="4" fill="#E5484D"></circle></svg></sc-if>
+                  <sc-if value="{{ n.isDoc }}" hint-placeholder-val="{{ true }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5zM3 12.5l9 5 9-5M3 17l9 5 9-5"></path></svg></sc-if>
+                </span>
+                <span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-left:auto;display:inline-flex;align-items:center;gap:5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>{{ n.folder }}</span>
+              </div>
+              <strong style="font-size:15px;font-family:'Schibsted Grotesk',sans-serif;font-weight:700;letter-spacing:-.01em;line-height:1.35;">{{ n.title }}</strong>
+              <span style="font-size:12.5px;color:var(--mut);">{{ n.meta }}</span>
+              <div style="display:flex;align-items:center;gap:8px;width:100%;margin-top:2px;">
+                <span style="font-size:11.5px;font-weight:600;color:{{ n.scoreC }};background:{{ n.scoreBg }};padding:3px 9px;border-radius:999px;">{{ n.score }}</span>
+                <span style="font-size:11.5px;color:var(--mut);margin-left:auto;">{{ n.date }}</span>
+              </div>
+            </a>
+          </sc-for>
+        </div>
+      </div>
+  </main>
+  </div>
+
+  <sc-if value="{{ showCreatingCard }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;right:22px;bottom:22px;z-index:60;width:320px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:14px 15px;animation:popIn .25s ease both;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--accent)" style="animation:spinStar 2.4s linear infinite;"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg>
+        <div style="min-width:0;"><strong style="font-size:13.5px;display:block;">{{ creatingCardTitle }}</strong><span style="font-size:12px;color:var(--mut);">{{ creatingStageLabel }}</span></div>
+        <span style="margin-left:auto;font-weight:800;color:var(--ink);font-size:14px;">{{ creatingPct }}%</span>
+      </div>
+      <div style="height:6px;border-radius:99px;background:var(--panel2);overflow:hidden;margin-bottom:10px;"><div style="height:100%;width:{{ creatingPct }}%;border-radius:99px;background:var(--grad);transition:width .2s;"></div></div>
+      <button onClick="{{ openCreating }}" style="width:100%;height:34px;border-radius:10px;border:1px solid {{ creatingBtnBorder }};background:{{ creatingBtnBg }};color:{{ creatingBtnC }};font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">{{ creatingBtnLabel }}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:26px;z-index:90;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:14px;padding:12px 18px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 14px 34px -10px rgba(0,0,0,.4);animation:toastIn .25s ease both;max-width:calc(100vw - 32px);">
+      <span style="width:20px;height:20px;border-radius:7px;background:var(--ok);display:grid;place-items:center;color:#fff;flex:0 0 20px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>
+      {{ toast }}
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;palette&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;graphite&quot;,&quot;warm&quot;],&quot;default&quot;:&quot;graphite&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Brand&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:[&quot;#F72585&quot;,&quot;#FF8E3C&quot;],&quot;options&quot;:[[&quot;#F72585&quot;,&quot;#FF8E3C&quot;],[&quot;#7C3AED&quot;,&quot;#22D3EE&quot;],[&quot;#0E9F6E&quot;,&quot;#84CC16&quot;],[&quot;#C96F45&quot;,&quot;#E8A87C&quot;]],&quot;tsType&quot;:&quot;string | string[]&quot;,&quot;section&quot;:&quot;Brand (warm palette only)&quot;},&quot;saleStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;landing&quot;,&quot;bar&quot;],&quot;default&quot;:&quot;landing&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Brand&quot;},&quot;paper&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;neutral&quot;,&quot;cream&quot;,&quot;blush&quot;],&quot;default&quot;:&quot;neutral&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Brand&quot;},&quot;mascot&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;section&quot;:&quot;Brand&quot;},&quot;reduceMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;Comfort&quot;}}">
+class Component extends DCLogic {
+  state = {
+    theme: localStorage.getItem('lapp-theme') || 'light',
+    showOnboard: true,
+    composer: '', focusC: false, attach: [], recording: false, yt: null,
+    creating: null, toast: null,
+    saleOpen: true, saleLeft: 17 * 86400 + 16 * 3600 + 26 * 60 + 59,
+    intentOverride: 'auto',
+  };
+  stages = ['Uploading files', 'Transcribing audio', 'Summarizing & structuring', 'Generating quiz & flashcards'];
+  fun = [
+    'Sending your files up — hold tight…',
+    'Listening closely… every word makes better quiz questions.',
+    'Finding the structure: key events, people, causes.',
+    'Almost there — writing questions you\u2019ll actually enjoy.',
+  ];
+  componentDidMount() {
+    this.applyPrefs();
+    this._sc = setInterval(() => this.state.saleOpen && this.setState(s => ({ saleLeft: Math.max(0, s.saleLeft - 1) })), 1000);
+  }
+  componentDidUpdate() { this.applyPrefs(); }
+  componentWillUnmount() { clearInterval(this._ct); clearInterval(this._sc); clearTimeout(this._tt); clearTimeout(this._yt); }
+  applyPrefs() {
+    const el = document.documentElement;
+    el.setAttribute('data-theme', this.state.theme);
+    el.setAttribute('data-motion', (this.props.reduceMotion ?? false) ? 'off' : 'on');
+    el.setAttribute('data-paper', this.props.paper ?? 'neutral');
+    const palette = this.props.palette ?? 'graphite';
+    el.setAttribute('data-palette', palette);
+    const a = this.props.accent;
+    const pair = Array.isArray(a) ? a : (a ? [a, a] : null);
+    if (palette === 'warm' && pair) {
+      el.style.setProperty('--accent', pair[0]); el.style.setProperty('--accent2', pair[1] || pair[0]);
+    } else { el.style.removeProperty('--accent'); el.style.removeProperty('--accent2'); }
+  }
+  parseYt(v) {
+    const m = v.match(/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?[^\s]*v=([\w-]{11})[^\s]*|shorts\/([\w-]{11})[^\s]*|embed\/([\w-]{11})[^\s]*)|youtu\.be\/([\w-]{11})[^\s]*)/i);
+    if (m) return { token: m[0], id: m[1] || m[2] || m[3] || m[4] };
+    const bad = v.match(/(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com|youtu\.be)\/?\S*/i);
+    if (bad) return { token: bad[0], id: null };
+    return null;
+  }
+  onComposerChange(v) {
+    if (!this.state.yt) {
+      const p = this.parseYt(v);
+      if (p) {
+        const rest = v.replace(p.token, '').trim();
+        if (this.composerEl) this.composerEl.value = rest;
+        if (p.id) {
+          this.setState({ composer: rest, yt: { id: p.id, url: 'youtube.com/watch?v=' + p.id, status: 'checking' } });
+          clearTimeout(this._yt);
+          this._yt = setTimeout(() => this.state.yt && this.state.yt.status === 'checking' && this.setState(s => ({ yt: { ...s.yt, status: 'ready', dur: '18:24' } })), 900);
+        } else {
+          this.setState({ composer: rest, yt: { id: null, url: p.token, status: 'invalid' } });
+        }
+        return;
+      }
+    }
+    this.setState({ composer: v });
+  }
+  detectIntent() {
+    const s = this.state, t = s.composer.trim();
+    if (s.yt && s.yt.status !== 'invalid') return 'note';
+    if (s.intentOverride !== 'auto') return s.intentOverride;
+    if (s.attach.length) return 'note';
+    if (!t) return 'note';
+    if (t.length < 180 && /(\?|почему|как |что |когда |зачем|объясни|why |how |what |when |explain )/i.test(t)) return 'ask';
+    return 'note';
+  }
+  submitComposer() {
+    const s = this.state;
+    if (s.yt && s.yt.status === 'invalid') { this.showToast('Fix the YouTube link first — it doesn\u2019t point to a video'); return; }
+    const intent = this.detectIntent();
+    const t = s.composer.trim();
+    if (intent === 'ask') {
+      window.location.href = './Ask.dc.html?q=' + encodeURIComponent(t || 'Почему США вторглись в Ирак в 2003 году?');
+    } else {
+      this.startCreating();
+    }
+  }
+  startCreating() {
+    clearInterval(this._ct);
+    this.setState({ creating: { pct: 0, stage: 0, done: false }, composer: '', attach: [], yt: null, recording: false });
+    this._ct = setInterval(() => {
+      const c = this.state.creating; if (!c || c.done) return clearInterval(this._ct);
+      let pct = c.pct + 1 + Math.random() * 2.4;
+      let stage = pct < 18 ? 0 : pct < 52 ? 1 : pct < 84 ? 2 : 3;
+      if (pct >= 100) {
+        clearInterval(this._ct);
+        this.setState({ creating: { pct: 100, stage: 3, done: true } });
+        this.showToast('Note is ready — quiz and flashcards included');
+      } else this.setState({ creating: { pct, stage, done: false } });
+    }, 90);
+  }
+  showToast(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 3800); }
+  renderVals() {
+    const s = this.state, P = this.props;
+    const cr = s.creating;
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    const intent = this.detectIntent();
+    const yt = s.yt;
+    const notes = [
+      { title: 'Вторжение США в Ирак 2003 года', folder: 'live', meta: '12 min audio · 1 PDF · quiz ready', date: 'Aug 30', score: 'Quiz 4/5', kind: 'audio', scoreC: 'var(--ok)', scoreBg: 'rgba(18,183,106,.1)' },
+      { title: 'Квантовая запутанность — просто о сложном', folder: 'Physics', meta: 'YouTube · 18 min', date: 'Aug 27', score: 'Quiz 5/5', kind: 'video', scoreC: 'var(--ok)', scoreBg: 'rgba(18,183,106,.1)' },
+      { title: 'Клеточное дыхание: гликолиз и цикл Кребса', folder: 'Common', meta: 'Lecture audio · 43 min', date: 'Aug 24', score: 'New quiz ready', kind: 'audio', scoreC: 'var(--ink)', scoreBg: 'var(--accent-soft)' },
+    ].map(n => ({ ...n, isVideo: n.kind === 'video', isAudio: n.kind === 'audio', isDoc: n.kind === 'doc', href: './Note.dc.html' }));
+    return {
+      greeting,
+      isDark: s.theme === 'dark', isLight: s.theme === 'light',
+      mascotOn: P.mascot ?? true,
+      toggleTheme: () => { const t = s.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('lapp-theme', t); this.setState({ theme: t }); },
+      showOnboard: s.showOnboard,
+      dismissOnboard: () => this.setState({ showOnboard: false }),
+      composer: s.composer,
+      onComposer: (e) => this.onComposerChange(e.target.value),
+      focusOn: () => this.setState({ focusC: true }), focusOff: () => this.setState({ focusC: false }),
+      composerBorder: s.focusC ? 'var(--ink)' : 'var(--line)',
+      hasAttach: s.attach.length > 0, attach: s.attach.map((f, i) => ({ ...f, onRemove: () => this.setState(st => ({ attach: st.attach.filter((_, j) => j !== i) })) })),
+      addAttach: () => this.setState({ attach: [{ name: 'usairaq.mp3', size: '12:44' }, { name: 'Selcan Amirli konspekt.pdf', size: '2.1 MB' }] }),
+      recording: s.recording, toggleRec: () => this.setState({ recording: !s.recording }),
+      recBorder: s.recording ? 'var(--bad)' : 'var(--line)', recBg: s.recording ? 'rgba(229,72,77,.08)' : 'var(--panel)', recColor: s.recording ? 'var(--bad)' : 'var(--mut)',
+      hasYt: !!yt,
+      ytChecking: yt ? yt.status === 'checking' : false,
+      ytReady: yt ? yt.status === 'ready' : false,
+      ytInvalid: yt ? yt.status === 'invalid' : false,
+      ytNotInvalid: yt ? yt.status !== 'invalid' : true,
+      ytBorder: yt && yt.status === 'invalid' ? 'var(--bad)' : yt && yt.status === 'ready' ? 'var(--ok)' : 'var(--line)',
+      ytTitle: yt && yt.status === 'invalid' ? 'This doesn\u2019t look like a video' : 'YouTube video',
+      ytMeta: yt ? (yt.status === 'invalid' ? yt.url + ' — check the link and paste again' : yt.url + (yt.dur ? ' · ' + yt.dur : '')) : '',
+      removeYt: () => { clearTimeout(this._yt); this.setState({ yt: null }); },
+      startCreate: () => this.submitComposer(),
+      intentAsk: intent === 'ask', intentNote: intent === 'note',
+      intentKey: intent + (yt ? '-yt' : '') + (s.intentOverride !== 'auto' ? '-pinned' : ''),
+      intentIsAuto: s.intentOverride === 'auto' && !yt,
+      pinAsk: () => this.setState({ intentOverride: s.intentOverride === 'ask' ? 'auto' : 'ask' }),
+      pinNote: () => this.setState({ intentOverride: s.intentOverride === 'note' ? 'auto' : 'note' }),
+      segAskBg: intent === 'ask' ? 'var(--panel)' : 'transparent',
+      segAskC: intent === 'ask' ? 'var(--ink)' : 'var(--mut)',
+      segAskShadow: intent === 'ask' ? 'var(--shadow)' : 'none',
+      segNoteBg: intent === 'note' ? 'var(--panel)' : 'transparent',
+      segNoteC: intent === 'note' ? 'var(--ink)' : 'var(--mut)',
+      segNoteShadow: intent === 'note' ? 'var(--shadow)' : 'none',
+      sendBg: intent === 'ask' ? 'var(--grad)' : 'var(--ink)',
+      sendC: intent === 'ask' ? 'var(--grad-ink)' : 'var(--bg)',
+      submitLabel: yt && yt.status !== 'invalid' ? 'Create note from video' : intent === 'ask' ? 'Ask' : 'Create note',
+      intentHint: yt
+        ? (yt.status === 'invalid' ? 'That link doesn\u2019t point to a YouTube video. Remove it or paste the full watch link.' : 'We\u2019ll pull the transcript from the video, then build the summary, quiz & flashcards. Add a question below — it\u2019ll be answered in the note\u2019s chat.')
+        : intent === 'ask'
+          ? (s.intentOverride === 'ask' ? 'Pinned to Answer — Enter opens an instant answer. Nothing is saved unless you keep it.' : 'Looks like a question — Enter answers instantly. You can save it as a note anytime.')
+          : (s.intentOverride === 'note' ? 'Pinned to Note — Enter builds a note with summary, quiz & flashcards.' : 'Enter creates a note: summary, transcript, quiz & flashcards. Add a question — it\u2019ll be answered in the note\u2019s chat.'),
+      notes, noteCount: notes.length + ' notes',
+      showCreatingTile: !!cr && !cr.done,
+      showCreatingCard: !!cr,
+      creatingPct: cr ? Math.round(cr.pct) : 0,
+      creatingStageLabel: cr ? (cr.done ? 'Everything is ready' : this.stages[cr.stage]) : '',
+      creatingFun: cr ? this.fun[cr.stage] : '',
+      creatingCardTitle: cr && cr.done ? 'Note is ready' : 'Creating note',
+      creatingBtnLabel: cr && cr.done ? 'Open note' : 'Watch it build',
+      creatingBtnBorder: cr && cr.done ? 'transparent' : 'var(--line)',
+      creatingBtnBg: cr && cr.done ? 'var(--grad)' : 'var(--panel)',
+      creatingBtnC: cr && cr.done ? 'var(--grad-ink)' : 'var(--ink)',
+      openCreating: () => { window.location.href = cr && cr.done ? './Note.dc.html' : './Note.dc.html?processing=1'; },
+      saleOpen: s.saleOpen, closeSale: () => this.setState({ saleOpen: false }),
+      saleLanding: (P.saleStyle ?? 'landing') !== 'bar',
+      saleBar: (P.saleStyle ?? 'landing') === 'bar',
+      saleD: Math.floor(s.saleLeft / 86400),
+      saleH: String(Math.floor(s.saleLeft % 86400 / 3600)).padStart(2, '0'),
+      saleM: String(Math.floor(s.saleLeft % 3600 / 60)).padStart(2, '0'),
+      saleS: String(s.saleLeft % 60).padStart(2, '0'),
+      hasToast: !!s.toast, toast: s.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

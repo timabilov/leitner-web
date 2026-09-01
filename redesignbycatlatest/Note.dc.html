@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=Schibsted+Grotesk:wght@500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAFAF8;--panel:#FFFFFF;--panel2:#F1F1EE;--ink:#17171B;--mut:#6E6E76;--line:#E6E6E1;--grid:rgba(20,20,30,.03);--accent:#17171B;--accent2:#4A4A52;--accent-soft:rgba(23,23,27,.06);--grad:#17171B;--grad-ink:#FFFFFF;--selbg:rgba(23,23,27,.16);--hl:#F3E9D2;--hl-ink:#6b4d00;--ok:#1F9D63;--bad:#D2453B;--streak:#EA580C;--streak-soft:rgba(234,88,12,.1);--shadow:0 1px 2px rgba(20,20,30,.05),0 14px 34px -14px rgba(20,20,30,.14);}
+[data-palette="warm"]{--accent:#F72585;--accent2:#FF8E3C;--accent-soft:rgba(247,37,133,.08);--grad:linear-gradient(135deg,var(--accent),var(--accent2));--grad-ink:#fff;--selbg:rgba(247,37,133,.25);}
+[data-paper="cream"]{--bg:#FAF9F6;--panel2:#F3F1EC;--line:#E8E5DE;--grid:rgba(20,20,25,.04);}
+[data-paper="blush"]{--bg:#FBF4F6;--panel2:#F6ECEF;--line:#EBDEE3;--grid:rgba(180,40,100,.045);}
+[data-theme="dark"]{--bg:#131316;--panel:#1B1B1F;--panel2:#242429;--ink:#EFEEEA;--mut:#9A9AA3;--line:#2B2B31;--grid:rgba(255,255,255,.035);--accent:#EFEEEA;--accent2:#B9B9C0;--accent-soft:rgba(255,255,255,.08);--grad:#EFEEEA;--grad-ink:#151519;--selbg:rgba(255,255,255,.22);--hl:#3E3517;--hl-ink:#FFD877;--ok:#3DD68C;--bad:#FF6B70;--streak:#FF8B47;--streak-soft:rgba(255,139,71,.13);--shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -18px rgba(0,0,0,.6);}
+[data-theme="dark"][data-palette="warm"]{--accent:#FF4FA3;--accent2:#FFA05C;--accent-soft:rgba(255,79,163,.13);--grad:linear-gradient(135deg,var(--accent),var(--accent2));--grad-ink:#fff;--selbg:rgba(255,79,163,.3);}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:'Instrument Sans',sans-serif;}
+*{box-sizing:border-box}
+a{color:var(--accent);text-decoration:none}a:hover{color:var(--accent2)}
+button{font-family:inherit}input,textarea{font-family:inherit;color:inherit}
+textarea::placeholder,input::placeholder{color:var(--mut)}
+::selection{background:var(--selbg)}
+[data-motion="off"] *{animation:none!important;transition:none!important}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(5px)}to{opacity:1;transform:none}}
+@keyframes spinStar{0%{transform:rotate(0)}50%{transform:rotate(180deg) scale(1.18)}100%{transform:rotate(360deg)}}
+@keyframes blinkDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-2px)}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
+@media (max-width:980px){
+  [data-notegrid]{grid-template-columns:1fr!important}
+  [data-chatpanel]{position:fixed!important;top:auto!important;inset:auto 10px 10px 10px!important;height:72dvh!important;min-height:0!important;max-width:none!important;margin:0!important;z-index:75;box-shadow:0 -10px 44px -10px rgba(0,0,0,.35)!important}
+  [data-chatpanel="full"]{inset:0!important;height:100dvh!important;border-radius:0!important}
+  [data-pagepad]{padding:22px 18px 90px!important}
+  [data-noteheader]{flex-wrap:wrap}
+  [data-notetoolbar]{flex-wrap:wrap;position:static!important}
+  [data-hide-sm]{display:none!important}
+}
+@media (pointer:coarse){
+  [data-hit]{min-height:44px!important;min-width:44px!important}
+  input,textarea{font-size:16px!important}
+}
+</style>
+</helmet>
+
+<div data-screen-label="Note" style="display:flex;flex-direction:column;height:100dvh;overflow:hidden;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.55;">
+  <div style="display:flex;flex:1;min-height:0;">
+  <nav style="width:64px;flex:0 0 64px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 0;border-right:1px solid var(--line);background:var(--panel);z-index:30;">
+    <div style="width:36px;height:36px;border-radius:12px;background:var(--grad);display:grid;place-items:center;margin-bottom:10px;box-shadow:var(--shadow);color:var(--grad-ink);">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg>
+    </div>
+    <a href="./Home.dc.html" title="Home" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);transition:background .15s;" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></a>
+    <a href="./Note.dc.html" title="Notes" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--ink);transition:background .15s;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg></a>
+    <a href="./Reviews.dc.html" title="Reviews" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);position:relative;transition:background .15s;" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:9px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--streak,#EA580C);border:2px solid var(--panel);"></span></a>
+    <a href="./Pricing.dc.html" title="Upgrade to Pro" style="width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:transparent;color:var(--mut);" style-hover="background:var(--panel2);color:var(--mut)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l2.2 5.8L20 11l-5.8 2.2L12 19l-2.2-5.8L4 11l5.8-2.2z"></path></svg></a>
+    <div style="flex:1"></div>
+    <button onClick="{{ toggleTheme }}" title="Theme" style="width:42px;height:42px;border-radius:12px;border:1px solid var(--line);cursor:pointer;display:grid;place-items:center;background:var(--panel2);color:var(--ink);" style-hover="border-color:var(--accent)">
+      <sc-if value="{{ isDark }}" hint-placeholder-val="{{ false }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 2.5v2.4M12 19.1v2.4M2.5 12h2.4M19.1 12h2.4M4.9 4.9l1.7 1.7M17.4 17.4l1.7 1.7M19.1 4.9l-1.7 1.7M6.6 17.4l-1.7 1.7"></path></svg></sc-if>
+      <sc-if value="{{ isLight }}" hint-placeholder-val="{{ true }}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20.4 13.6A8.5 8.5 0 1 1 10.4 3.6a6.8 6.8 0 0 0 10 10z"></path></svg></sc-if>
+    </button>
+    <div style="width:36px;height:36px;border-radius:50%;background:#3D4757;color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;margin-top:6px;">T</div>
+  </nav>
+
+  <main style="flex:1;min-width:0;overflow-y:auto;position:relative;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:36px 36px;">
+      <div data-pagepad="1" style="max-width:1240px;margin:0 auto;padding:26px 34px 60px;">
+        <div data-noteheader="1" style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <a href="./Home.dc.html" title="Back" data-hit="1" style="width:34px;height:34px;border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--ink);display:grid;place-items:center;" style-hover="border-color:var(--ink);color:var(--ink)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></a>
+          <div style="position:relative;display:flex;align-items:center;gap:10px;min-width:0;">
+            <h1 style="margin:0;font-family:'Schibsted Grotesk',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ noteTitle }}</h1>
+            <button onClick="{{ toggleRetitle }}" title="AI title ideas" style="height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--line);background:var(--accent-soft);color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;flex:0 0 auto;" style-hover="border-color:var(--ink)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg> Retitle
+            </button>
+            <sc-if value="{{ retitleOpen }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:40px;left:0;z-index:40;width:420px;max-width:86vw;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:12px;animation:popIn .18s ease both;">
+                <p style="margin:2px 4px 10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);">Title ideas from your note</p>
+                <sc-for list="{{ titleIdeas }}" as="ti" hint-placeholder-count="3">
+                  <button onClick="{{ ti.onPick }}" style="display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:11px;padding:9px 12px;margin-bottom:7px;cursor:pointer;font-size:13.5px;line-height:1.4;color:var(--ink);" style-hover="border-color:var(--ink);background:var(--accent-soft)">{{ ti.t }}</button>
+                </sc-for>
+                <button onClick="{{ toggleRetitle }}" style="border:none;background:transparent;color:var(--mut);font-size:12.5px;cursor:pointer;padding:4px;" style-hover="color:var(--ink)">Keep current title</button>
+              </div>
+            </sc-if>
+          </div>
+          <div style="flex:1"></div>
+          <div style="position:relative;flex:0 0 auto;">
+            <button onClick="{{ toggleRemindPop }}" data-hit="1" title="Lock-screen reviews for this note" style="display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:{{ remindPillC }};border:1px solid {{ remindPillBorder }};border-radius:999px;padding:5px 12px;background:{{ remindPillBg }};cursor:pointer;transition:border-color .15s;" style-hover="border-color:{{ remindPillC }}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg>{{ remindPillText }}
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"></path></svg>
+            </button>
+            <sc-if value="{{ remindPop }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute;top:40px;right:0;z-index:45;width:330px;max-width:86vw;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;animation:popIn .18s ease both;text-align:left;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px;">
+                  <span style="width:32px;height:32px;border-radius:10px;background:var(--streak-soft);color:var(--streak);display:grid;place-items:center;flex:0 0 32px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg></span>
+                  <strong style="font-size:14px;flex:1;">Quiz me on this</strong>
+                  <button onClick="{{ toggleRemind }}" data-hit="1" style="display:inline-flex;align-items:center;gap:8px;border:none;background:transparent;cursor:pointer;padding:2px;">
+                    <span style="font-size:11px;font-weight:800;letter-spacing:.06em;color:{{ remindTgLabelC }};">{{ remindTgLabel }}</span>
+                    <span style="width:40px;height:23px;border-radius:99px;background:{{ remindTgBg }};position:relative;display:inline-block;transition:background .2s;"><span style="position:absolute;top:2.5px;left:{{ remindTgKnob }};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s;"></span></span>
+                  </button>
+                </div>
+                <div style="border-radius:13px;overflow:hidden;height:118px;position:relative;background:radial-gradient(150% 120% at 25% 0%,#FFB47A 0%,#F0703F 36%,#B23A48 66%,#4A1530 100%);margin-bottom:10px;">
+                  <div style="width:56px;height:12px;border-radius:99px;background:rgba(0,0,0,.55);margin:8px auto 4px;"></div>
+                  <div style="text-align:center;color:rgba(255,255,255,.95);font-family:'Schibsted Grotesk',sans-serif;font-size:24px;font-weight:600;line-height:1;margin-bottom:8px;">14:20</div>
+                  <div style="margin:0 12px;background:rgba(250,250,252,.94);border-radius:12px;padding:8px 10px;color:#17171B;box-shadow:0 6px 18px rgba(0,0,0,.3);">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span style="width:16px;height:16px;border-radius:5px;background:#17171B;display:grid;place-items:center;color:#fff;flex:0 0 16px;"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg></span>
+                      <strong style="font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;">Cat Care Tips</strong>
+                      <span style="margin-left:auto;font-size:9.5px;color:#6E6E76;flex:0 0 auto;">now</span>
+                    </div>
+                    <span style="display:block;font-size:10.5px;color:#4A4A52;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Why does your cat stare at the wall at 3am?</span>
+                  </div>
+                </div>
+                <p style="margin:0 0 10px;font-size:12.5px;color:var(--mut);line-height:1.5;">A few short quizzes a day, timed before you forget.</p>
+                <div style="display:flex;align-items:center;gap:8px;background:var(--panel2);border-radius:10px;padding:7px 11px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink)" stroke-width="1.8"><rect x="7" y="2.5" width="10" height="19" rx="2.5"></rect><circle cx="12" cy="18" r="1" fill="var(--ink)" stroke="none"></circle></svg>
+                  <span style="font-size:12px;color:var(--ink);flex:1;">Via the mobile app</span>
+                  <a href="#" style="font-size:12px;font-weight:700;">Get the app</a>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+          <span data-hide-sm="1" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--panel);">Aug 30, 2026</span>
+          <span data-hide-sm="1" style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 11px;background:var(--panel);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.5l-8.2 8.2a5.5 5.5 0 0 1-7.8-7.8L13.6 4.3a3.7 3.7 0 0 1 5.2 5.2l-8.4 8.4a1.9 1.9 0 0 1-2.7-2.7L15 8"></path></svg>3 files</span>
+        </div>
+
+        <sc-if value="{{ noteProcessing }}" hint-placeholder-val="{{ false }}">
+          <div style="max-width:620px;margin:60px auto 0;background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:34px 38px;text-align:center;animation:fadeUp .4s ease both;">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="var(--accent)" style="animation:spinStar 2.4s linear infinite;"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg>
+            <h2 style="margin:14px 0 4px;font-family:'Schibsted Grotesk',sans-serif;font-size:21px;font-weight:800;">Building your note</h2>
+            <p style="margin:0 0 22px;color:var(--mut);font-size:14px;">{{ creatingFun }}</p>
+            <div style="display:grid;gap:10px;text-align:left;">
+              <sc-for list="{{ creatingSteps }}" as="st" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:13px;border:1px solid {{ st.border }};background:{{ st.bg }};transition:all .3s;">
+                  <span style="width:24px;height:24px;flex:0 0 24px;border-radius:8px;display:grid;place-items:center;background:{{ st.iconBg }};color:{{ st.iconC }};font-size:12px;font-weight:700;">
+                    <sc-if value="{{ st.done }}" hint-placeholder-val="{{ false }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></sc-if>
+                    <sc-if value="{{ st.notDone }}" hint-placeholder-val="{{ true }}">{{ st.num }}</sc-if>
+                  </span>
+                  <span style="font-size:13.5px;font-weight:600;color:{{ st.textC }};">{{ st.label }}</span>
+                  <sc-if value="{{ st.active }}" hint-placeholder-val="{{ false }}"><span style="margin-left:auto;display:inline-flex;gap:3px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--ink);animation:blinkDot 1.2s infinite;"></span><span style="width:5px;height:5px;border-radius:50%;background:var(--ink);animation:blinkDot 1.2s .2s infinite;"></span><span style="width:5px;height:5px;border-radius:50%;background:var(--ink);animation:blinkDot 1.2s .4s infinite;"></span></span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="margin-top:22px;height:7px;border-radius:99px;background:var(--panel2);overflow:hidden;"><div style="height:100%;width:{{ creatingPct }}%;border-radius:99px;background:var(--grad);transition:width .2s;"></div></div>
+            <p style="margin:12px 0 0;font-size:12.5px;color:var(--mut);">You can leave this page — we'll ping you when it's ready.</p>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ noteReady }}" hint-placeholder-val="{{ true }}">
+          <div data-notetoolbar="1" style="display:flex;align-items:center;gap:10px;margin:14px 0 16px;position:sticky;top:10px;z-index:20;">
+            <div style="display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:4px;gap:2px;box-shadow:var(--shadow);">
+              <button onClick="{{ tabOverviewGo }}" data-hit="1" style="height:32px;padding:0 16px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:{{ tabOvBg }};color:{{ tabOvC }};transition:all .15s;">Overview</button>
+              <button onClick="{{ tabTranscriptGo }}" data-hit="1" style="height:32px;padding:0 16px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:{{ tabTrBg }};color:{{ tabTrC }};transition:all .15s;">Transcript</button>
+            </div>
+            <span style="display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-weight:500;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3.5 8 8l4.5 2L8 12l-2 4.5L4 12l-4.5-2L4 8z" transform="translate(6 3)"></path></svg>
+              {{ selHint }}
+            </span>
+            <div style="flex:1"></div>
+            <button onClick="{{ quizWholeNote }}" data-hit="1" style="height:36px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;" style-hover="border-color:var(--ink)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.4-3 4.4"></path><circle cx="12" cy="12" r="9.2"></circle><circle cx="11.9" cy="17.8" r=".6" fill="currentColor" stroke="none"></circle></svg>Quiz me</button>
+            <button onClick="{{ toggleChat }}" data-hit="1" style="height:36px;padding:0 15px;border-radius:12px;border:none;cursor:pointer;background:{{ chatBtnBg }};color:{{ chatBtnC }};font-size:13px;font-weight:700;display:flex;align-items:center;gap:7px;transition:transform .15s;" style-hover="transform:translateY(-1px)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4.5l2-2.6A8 8 0 1 1 21 12z"></path></svg>{{ chatBtnLabel }}</button>
+          </div>
+
+          <div data-notegrid="1" style="display:grid;grid-template-columns:{{ gridCols }};gap:{{ gridGap }};align-items:start;transition:grid-template-columns .3s ease,gap .3s ease;">
+            <div ref="{{ setContentEl }}" style="position:relative;background:var(--panel);border:1px solid {{ contentBorder }};border-radius:18px;box-shadow:{{ contentShadow }};padding:{{ contentPad }};min-width:0;overflow:hidden;opacity:{{ contentOp }};transition:opacity .25s ease,padding .3s ease;">
+
+              <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ false }}">
+                <div data-selpop="1" style="position:absolute;z-index:50;left:{{ selLeft }}px;top:{{ selTop }}px;transform:translateX(-50%);display:flex;align-items:center;background:var(--ink);color:var(--bg);border-radius:13px;box-shadow:0 10px 30px -8px rgba(0,0,0,.45);padding:5px;gap:2px;animation:popIn .15s ease both;">
+                  <button onPointerDown="{{ askSelection }}" data-hit="1" style="border:none;background:transparent;color:inherit;font-size:13px;font-weight:600;padding:7px 12px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:6px;" style-hover="background:rgba(255,255,255,.14)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H4.5l2-2.6A8 8 0 1 1 21 12z"></path></svg>Ask</button>
+                  <span style="width:1px;height:16px;background:rgba(255,255,255,.2);"></span>
+                  <button onPointerDown="{{ quizSelection }}" data-hit="1" style="border:none;background:transparent;color:inherit;font-size:13px;font-weight:600;padding:7px 12px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:6px;" style-hover="background:rgba(255,255,255,.14)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.4-3 4.4"></path><circle cx="12" cy="12" r="9.2"></circle></svg>Make quiz</button>
+                  <span style="width:1px;height:16px;background:rgba(255,255,255,.2);"></span>
+                  <button onPointerDown="{{ scheduleSelection }}" data-hit="1" style="border:none;background:transparent;color:inherit;font-size:13px;font-weight:600;padding:7px 12px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:6px;" style-hover="background:rgba(255,255,255,.14)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg>Schedule</button>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ tabOverview }}" hint-placeholder-val="{{ true }}">
+                <article data-screen-label="Overview" style="max-width:760px;font-size:15px;animation:fadeUp .3s ease both;">
+                  <p style="margin:0 0 6px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);">TL;DR</p>
+                  <p style="margin:0 0 22px;font-size:16.5px;line-height:1.6;font-family:'Schibsted Grotesk',sans-serif;font-weight:500;">Вторжение США в Ирак в 2003 году, официально провозглашённое как борьба против оружия массового поражения, обернулось многолетним конфликтом, дестабилизацией региона и глубокими изменениями во внешней политике США.</p>
+                  <h3 style="margin:0 0 10px;font-family:'Schibsted Grotesk',sans-serif;font-size:16px;font-weight:700;">Основные события и факторы</h3>
+                  <p style="margin:0 0 14px;color:var(--ink);"><strong>Предыстория и санкции.</strong> После войны в Персидском заливе (1991) Ирак столкнулся с тяжелейшими санкциями, которые привели к гуманитарному кризису, не сумев при этом устранить режим Саддама Хусейна.</p>
+                  <p style="margin:0 0 14px;"><strong>Информационная кампания.</strong> Администрация Буша, поддержанная Тони Блэром, использовала угрозу ОМП как главный повод для войны — несмотря на отсутствие доказательств.</p>
+                  <p style="margin:0 0 22px;"><strong>Военная операция.</strong> В марте 2003 года началась операция «Свобода Ираку». Быстрая победа сменилась затяжной партизанской войной из-за ошибок оккупационной администрации.</p>
+                  <div style="border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:22px;">
+                    <div style="display:grid;grid-template-columns:150px 1fr;gap:0;">
+                      <div style="padding:11px 14px;background:var(--panel2);font-weight:700;font-size:13px;border-bottom:1px solid var(--line);">Фактор</div><div style="padding:11px 14px;background:var(--panel2);font-weight:700;font-size:13px;border-bottom:1px solid var(--line);">Итог</div>
+                      <div style="padding:11px 14px;font-weight:600;font-size:13.5px;border-bottom:1px solid var(--line);">ОМП</div><div style="padding:11px 14px;font-size:13.5px;color:var(--mut);border-bottom:1px solid var(--line);">Не обнаружено — главный повод войны не подтвердился</div>
+                      <div style="padding:11px 14px;font-weight:600;font-size:13.5px;border-bottom:1px solid var(--line);">Регион</div><div style="padding:11px 14px;font-size:13.5px;color:var(--mut);border-bottom:1px solid var(--line);">Рост влияния Ирана и радикальных группировок</div>
+                      <div style="padding:11px 14px;font-weight:600;font-size:13.5px;">Политика США</div><div style="padding:11px 14px;font-size:13.5px;color:var(--mut);">«Смена режима» стала крайне непопулярной концепцией</div>
+                    </div>
+                  </div>
+                  <h3 style="margin:0 0 10px;font-family:'Schibsted Grotesk',sans-serif;font-size:16px;font-weight:700;">Ключевые фигуры</h3>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <span style="padding:7px 13px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600;">Джордж Буш-мл.</span>
+                    <span style="padding:7px 13px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600;">Дональд Рамсфельд</span>
+                    <span style="padding:7px 13px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600;">Тони Блэр</span>
+                    <span style="padding:7px 13px;border:1px solid var(--line);border-radius:999px;background:var(--bg);font-size:13px;font-weight:600;">Саддам Хусейн</span>
+                  </div>
+                </article>
+              </sc-if>
+
+              <sc-if value="{{ tabTranscript }}" hint-placeholder-val="{{ false }}">
+                <article data-screen-label="Transcript" style="max-width:760px;font-size:15px;line-height:1.75;animation:fadeUp .3s ease both;">
+                  <p style="margin:0 0 18px;">Первого мая 2003 года Джордж Буш-младший приземлился на палубу авианосца с пафосным плакатом «миссия выполнена» и триумфально объявил:</p>
+                  <p style="margin:0 0 18px;color:var(--mut);font-style:italic;">“No terrorist network will gain weapons of mass destruction from the Iraqi regime, because the regime is no more.”</p>
+                  <p style="margin:0 0 18px;"><mark style="background:var(--hl);color:var(--hl-ink);border-radius:4px;padding:1px 3px;">Но за бурными аплодисментами никто не услышал, что в самом Ираке уже началась другая война.</mark> Вторжение, которое должно было превратить Ирак в демократический, проамериканский оазис на Ближнем Востоке, обернулось многолетней войной, подъёмом экстремизма и изменениями всего региона и самой Америки, которые видны и сейчас, спустя больше 20 лет.</p>
+                  <p style="margin:0 0 18px;">После окончания войны в Персидском заливе, первого вторжения США в Ирак в девяносто первом году, власть Саддама оказалась шаткой. Шииты на юге и курды на севере, угнетённые его режимом, подняли восстание и попытались свергнуть диктатора. В разгар восстания Хусейн контролировал только четыре из восемнадцати провинций Ирака.</p>
+                  <p style="margin:0 0 18px;">Чтобы ослабить экономику Ирака и сделать режим Саддама слабее, ООН проголосовала за введение против страны масштабного пакета санкций, крупнейшего в истории на тот момент. В первую очередь Ираку запретили продавать нефть, лишив его главного источника денег.</p>
+                  <p style="margin:0;">В итоге страна оказалась в экономической яме, из которой не было видно выхода. Уровень жизни населения снижался вплоть до девяносто шестого года, а вместе с ним рос уровень недоедания и болезней. <mark style="background:var(--hl);color:var(--hl-ink);border-radius:4px;padding:1px 3px;">В девяносто шестом году появилась программа «Нефть в обмен на продовольствие»</mark> — попытка смягчить гуманитарную катастрофу, сохранив давление на режим.</p>
+                </article>
+              </sc-if>
+            </div>
+
+            <sc-if value="{{ chatOpen }}" hint-placeholder-val="{{ false }}">
+              <aside data-screen-label="AI Chat" data-chatpanel="{{ chatModeAttr }}" style="position:sticky;top:60px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;height:{{ chatH }};min-height:420px;overflow:hidden;animation:popIn .2s ease both;width:100%;max-width:{{ chatMaxW }};margin:{{ chatMargin }};justify-self:stretch;">
+                <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-bottom:1px solid var(--line);">
+                  <div style="width:32px;height:32px;border-radius:11px;background:var(--grad);display:grid;place-items:center;color:var(--grad-ink);">
+                    <svg width="18" height="18" viewBox="0 0 48 48" fill="none"><path d="M11 21 8 8l12 5" fill="currentColor"></path><path d="M37 21 40 8 28 13" fill="currentColor"></path><circle cx="24" cy="28" r="15" fill="currentColor"></circle></svg>
+                  </div>
+                  <div style="min-width:0;"><strong style="font-size:13.5px;display:block;">Study buddy</strong><span style="font-size:11.5px;color:var(--ok);display:inline-flex;align-items:center;gap:5px;"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok);"></span>knows this note</span></div>
+                  <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+                    <div title="Chat layout" style="display:inline-flex;background:var(--panel2);border-radius:10px;padding:2px;gap:2px;">
+                      <button onClick="{{ setChatHalf }}" title="Side-by-side" style="width:30px;height:26px;border:none;border-radius:8px;cursor:pointer;display:grid;place-items:center;background:{{ segHalfBg }};color:{{ segHalfC }};box-shadow:{{ segHalfShadow }};transition:all .15s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="16" rx="3"></rect><path d="M14.5 4v16"></path></svg></button>
+                      <button onClick="{{ setChatFull }}" title="Full chat" style="width:30px;height:26px;border:none;border-radius:8px;cursor:pointer;display:grid;place-items:center;background:{{ segFullBg }};color:{{ segFullC }};box-shadow:{{ segFullShadow }};transition:all .15s;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="4" width="18" height="16" rx="3"></rect></svg></button>
+                    </div>
+                    <button onClick="{{ closeChat }}" title="Close chat" data-hit="1" style="width:28px;height:28px;border:none;border-radius:9px;background:transparent;color:var(--mut);cursor:pointer;display:grid;place-items:center;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+                  </div>
+                </div>
+                <sc-if value="{{ chatFull }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--panel2);font-size:12px;color:var(--mut);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5zM3 12.5l9 5 9-5"></path></svg>
+                    Full chat over <strong style="color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ noteTitle }}</strong>
+                    <button onClick="{{ setChatHalf }}" style="margin-left:auto;border:none;background:transparent;color:var(--ink);font-size:12px;font-weight:700;cursor:pointer;text-decoration:underline;">Show note</button>
+                  </div>
+                </sc-if>
+                <div ref="{{ setChatEl }}" style="flex:1;overflow-y:auto;padding:16px 15px;display:flex;flex-direction:column;gap:12px;">
+                  <sc-for list="{{ msgs }}" as="m" hint-placeholder-count="1">
+                    <div style="display:flex;flex-direction:column;align-items:{{ m.align }};animation:popIn .2s ease both;">
+                      <sc-if value="{{ m.hasQuote }}" hint-placeholder-val="{{ false }}">
+                        <div style="max-width:92%;font-size:12px;color:var(--mut);background:var(--panel2);border-radius:11px 11px 4px 11px;padding:8px 11px;margin-bottom:4px;font-style:italic;">“{{ m.quote }}”</div>
+                      </sc-if>
+                      <sc-if value="{{ m.isText }}" hint-placeholder-val="{{ true }}">
+                        <div style="max-width:92%;font-size:13.5px;line-height:1.55;padding:10px 13px;border-radius:{{ m.radius }};background:{{ m.bg }};color:{{ m.color }};">{{ m.text }}</div>
+                      </sc-if>
+                      <sc-if value="{{ m.isQuiz }}" hint-placeholder-val="{{ false }}">
+                        <div style="width:100%;border:1px solid var(--line);border-radius:14px;padding:13px;background:var(--bg);">
+                          <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;"><span style="font-size:10.5px;font-weight:800;letter-spacing:.1em;color:var(--ink);background:var(--accent-soft);border-radius:999px;padding:3px 9px;">QUICK QUIZ</span><span style="font-size:11px;color:var(--mut);">from your selection</span></div>
+                          <p style="margin:0 0 10px;font-size:13.5px;font-weight:600;line-height:1.45;">{{ quizQ }}</p>
+                          <div style="display:grid;gap:7px;">
+                            <sc-for list="{{ quizOpts }}" as="o" hint-placeholder-count="4">
+                              <button onClick="{{ o.onPick }}" data-hit="1" style="text-align:left;border:1.5px solid {{ o.border }};background:{{ o.bg }};color:var(--ink);border-radius:11px;padding:9px 12px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .15s;" style-hover="border-color:var(--ink)">
+                                <span style="width:18px;height:18px;flex:0 0 18px;border-radius:6px;border:1.5px solid {{ o.dotBorder }};background:{{ o.dotBg }};display:grid;place-items:center;color:#fff;">
+                                  <sc-if value="{{ o.showMark }}" hint-placeholder-val="{{ false }}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></sc-if>
+                                </span>{{ o.t }}
+                              </button>
+                            </sc-for>
+                          </div>
+                          <sc-if value="{{ quizFeedbackOn }}" hint-placeholder-val="{{ false }}">
+                            <p style="margin:10px 0 0;font-size:12.5px;font-weight:600;color:{{ quizFeedbackC }};">{{ quizFeedback }}</p>
+                          </sc-if>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ typing }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:inline-flex;gap:4px;padding:12px 14px;background:var(--panel2);border-radius:13px 13px 13px 4px;width:max-content;">
+                      <span style="width:6px;height:6px;border-radius:50%;background:var(--mut);animation:blinkDot 1.2s infinite;"></span><span style="width:6px;height:6px;border-radius:50%;background:var(--mut);animation:blinkDot 1.2s .2s infinite;"></span><span style="width:6px;height:6px;border-radius:50%;background:var(--mut);animation:blinkDot 1.2s .4s infinite;"></span>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);">
+                  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:9px;">
+                    <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+                      <button onClick="{{ c.onSend }}" style="border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:12px;font-weight:500;cursor:pointer;" style-hover="border-color:var(--ink);background:var(--accent-soft)">{{ c.t }}</button>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;border:1.5px solid var(--line);border-radius:13px;padding:5px 5px 5px 13px;background:var(--bg);">
+                    <input value="{{ chatInput }}" onChange="{{ onChatInput }}" onKeyDown="{{ onChatKey }}" placeholder="Ask about this note…" style="flex:1;border:none;outline:none;background:transparent;font-size:13.5px;min-width:0;">
+                    <button onClick="{{ sendChat }}" data-hit="1" style="width:34px;height:34px;border-radius:10px;border:none;cursor:pointer;background:var(--grad);color:var(--grad-ink);display:grid;place-items:center;flex:0 0 34px;transition:transform .15s;" style-hover="transform:scale(1.06)" style-active="transform:scale(.95)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 11.5 20 4l-4.5 16-4-6.5z"></path><path d="M20 4l-8.5 9.5"></path></svg></button>
+                  </div>
+                </div>
+              </aside>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+  </main>
+  </div>
+
+  <sc-if value="{{ schedOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeSched }}" style="position:fixed;inset:0;z-index:80;background:rgba(12,12,16,.45);backdrop-filter:blur(3px);display:grid;place-items:center;animation:fadeUp .2s ease both;">
+      <div onClick="{{ stopProp }}" style="width:480px;max-width:92vw;background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:24px 26px;animation:popIn .22s ease both;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="width:36px;height:36px;border-radius:12px;background:var(--accent-soft);color:var(--ink);display:grid;place-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.5V12l3 2"></path></svg></span>
+          <h3 style="margin:0;font-family:'Schibsted Grotesk',sans-serif;font-size:18px;font-weight:800;">Schedule a quiz</h3>
+          <button onClick="{{ closeSched }}" data-hit="1" style="margin-left:auto;width:30px;height:30px;border:none;border-radius:10px;background:transparent;color:var(--mut);cursor:pointer;display:grid;place-items:center;" style-hover="background:var(--panel2);color:var(--ink)"><svg width="15" height="15" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+        </div>
+        <p style="margin:0 0 14px;color:var(--mut);font-size:13.5px;">5 questions on your selection. We'll push it to your phone.</p>
+        <div style="border:1px solid var(--line);background:var(--panel2);border-radius:11px;padding:10px 13px;font-size:13px;font-style:italic;color:var(--ink);margin-bottom:16px;">“{{ schedQuote }}”</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;">
+          <sc-for list="{{ schedTimes }}" as="t" hint-placeholder-count="4">
+            <button onClick="{{ t.onPick }}" data-hit="1" style="border:1.5px solid {{ t.border }};background:{{ t.bg }};color:{{ t.color }};border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;" style-hover="border-color:var(--ink)">{{ t.label }}</button>
+          </sc-for>
+        </div>
+        <p style="margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);">Push preview</p>
+        <div style="background:linear-gradient(135deg,#1d1d24,#2a2a35);border-radius:16px;padding:13px 15px;display:flex;gap:11px;align-items:flex-start;margin-bottom:20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);">
+          <span style="width:34px;height:34px;flex:0 0 34px;border-radius:9px;background:var(--grad);color:var(--grad-ink);display:grid;place-items:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.4 6.1 6.1 2.4-6.1 2.4L12 19.5 9.6 13.4 3.5 11l6.1-2.4z"></path></svg></span>
+          <div style="min-width:0;color:#F2F1EE;">
+            <div style="display:flex;gap:8px;align-items:baseline;"><strong style="font-size:13px;">Quiz time</strong><span style="font-size:11px;color:rgba(255,255,255,.5);">{{ schedLabelShort }}</span></div>
+            <p style="margin:2px 0 0;font-size:12.5px;color:rgba(255,255,255,.75);line-height:1.45;">Вторжение США в Ирак — 5 questions on your highlight. ~2 min.</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onClick="{{ closeSched }}" data-hit="1" style="flex:1;height:42px;border-radius:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:14px;font-weight:600;cursor:pointer;" style-hover="background:var(--panel2)">Cancel</button>
+          <button onClick="{{ confirmSched }}" data-hit="1" style="flex:2;height:42px;border-radius:13px;border:none;background:var(--grad);color:var(--grad-ink);font-size:14px;font-weight:700;cursor:pointer;transition:transform .15s;" style-hover="transform:translateY(-1px)" style-active="transform:scale(.98)">Schedule quiz</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;left:50%;bottom:26px;z-index:90;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:14px;padding:12px 18px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 14px 34px -10px rgba(0,0,0,.4);animation:toastIn .25s ease both;max-width:calc(100vw - 32px);">
+      <span style="width:20px;height:20px;border-radius:7px;background:var(--ok);display:grid;place-items:center;color:#fff;flex:0 0 20px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"></path></svg></span>
+      {{ toast }}
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;palette&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;graphite&quot;,&quot;warm&quot;],&quot;default&quot;:&quot;graphite&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Brand&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:[&quot;#F72585&quot;,&quot;#FF8E3C&quot;],&quot;options&quot;:[[&quot;#F72585&quot;,&quot;#FF8E3C&quot;],[&quot;#7C3AED&quot;,&quot;#22D3EE&quot;],[&quot;#0E9F6E&quot;,&quot;#84CC16&quot;],[&quot;#C96F45&quot;,&quot;#E8A87C&quot;]],&quot;tsType&quot;:&quot;string | string[]&quot;,&quot;section&quot;:&quot;Brand (warm palette only)&quot;},&quot;paper&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;neutral&quot;,&quot;cream&quot;,&quot;blush&quot;],&quot;default&quot;:&quot;neutral&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Brand&quot;},&quot;reduceMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;section&quot;:&quot;Comfort&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const q = new URLSearchParams(location.search);
+    this.state = {
+      theme: localStorage.getItem('lapp-theme') || 'light',
+      tab: q.get('tab') === 'transcript' ? 'transcript' : 'overview',
+      chatMode: 'closed', chatInput: '', typing: false,
+      msgs: [{ id: 1, role: 'ai', kind: 'text', text: 'Привет! Я прочитал всю заметку — спрашивай что угодно, или выдели текст слева, чтобы начать с конкретного места.' }],
+      quizPicked: null, selPop: null,
+      schedOpen: q.get('schedule') === '1', schedPick: 0,
+      remindOn: true, remindPop: false,
+      schedQuote: 'Но за бурными аплодисментами никто не услышал, что в самом Ираке уже началась другая война.',
+      toast: null, retitleOpen: false,
+      processing: q.get('processing') === '1',
+      creating: q.get('processing') === '1' ? { pct: 0, stage: 0, done: false } : null,
+      title: 'Вторжение США в Ирак 2003 года',
+    };
+  }
+  stages = ['Uploading files', 'Transcribing audio', 'Summarizing & structuring', 'Generating quiz & flashcards'];
+  fun = [
+    'Sending your files up — hold tight…',
+    'Listening closely… every word makes better quiz questions.',
+    'Finding the structure: key events, people, causes.',
+    'Almost there — writing questions you\u2019ll actually enjoy.',
+  ];
+  quizData = { q: 'В каком году появилась программа «Нефть в обмен на продовольствие»?', opts: ['1991 год', '1996 год', '1997 год', '2001 год'], correct: 1 };
+
+  componentDidMount() {
+    this.applyPrefs();
+    this._coarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+    this._selch = () => { clearTimeout(this._selt); this._selt = setTimeout(() => this.readSelection(), 180); };
+    document.addEventListener('selectionchange', this._selch);
+    if (this.state.processing) this.runCreating();
+  }
+  componentDidUpdate() { this.applyPrefs(); }
+  componentWillUnmount() {
+    document.removeEventListener('selectionchange', this._selch);
+    clearInterval(this._ct); clearTimeout(this._tt); clearTimeout(this._rt); clearTimeout(this._selt);
+  }
+  applyPrefs() {
+    const el = document.documentElement;
+    el.setAttribute('data-theme', this.state.theme);
+    el.setAttribute('data-motion', (this.props.reduceMotion ?? false) ? 'off' : 'on');
+    el.setAttribute('data-paper', this.props.paper ?? 'neutral');
+    const palette = this.props.palette ?? 'graphite';
+    el.setAttribute('data-palette', palette);
+    const a = this.props.accent;
+    const pair = Array.isArray(a) ? a : (a ? [a, a] : null);
+    if (palette === 'warm' && pair) {
+      el.style.setProperty('--accent', pair[0]); el.style.setProperty('--accent2', pair[1] || pair[0]);
+    } else { el.style.removeProperty('--accent'); el.style.removeProperty('--accent2'); }
+  }
+  runCreating() {
+    clearInterval(this._ct);
+    this._ct = setInterval(() => {
+      const c = this.state.creating; if (!c || c.done) return clearInterval(this._ct);
+      let pct = c.pct + 1 + Math.random() * 2.4;
+      let stage = pct < 18 ? 0 : pct < 52 ? 1 : pct < 84 ? 2 : 3;
+      if (pct >= 100) {
+        clearInterval(this._ct);
+        this.setState({ creating: { pct: 100, stage: 3, done: true }, processing: false });
+        this.showToast('Note is ready — quiz and flashcards included');
+      } else this.setState({ creating: { pct, stage, done: false } });
+    }, 90);
+  }
+  readSelection() {
+    const sel = window.getSelection();
+    const el = this.contentEl;
+    if (!el || !sel || sel.isCollapsed || !sel.rangeCount) { if (this.state.selPop) this.setState({ selPop: null }); return; }
+    if (!el.contains(sel.anchorNode)) { if (this.state.selPop) this.setState({ selPop: null }); return; }
+    const r = sel.getRangeAt(0).getBoundingClientRect();
+    const c = el.getBoundingClientRect();
+    const text = sel.toString().trim().slice(0, 140);
+    if (!text) return;
+    const left = Math.max(140, Math.min(c.width - 140, r.left - c.left + r.width / 2));
+    const top = this._coarse ? (r.bottom - c.top + 14) : Math.max(8, r.top - c.top - 52);
+    this.setState({ selPop: { left, top, text } });
+  }
+  showToast(t) { clearTimeout(this._tt); this.setState({ toast: t }); this._tt = setTimeout(() => this.setState({ toast: null }), 3800); }
+  pushAi(msg, delay) {
+    this.setState({ typing: true });
+    this._rt = setTimeout(() => {
+      this.setState(s => ({ typing: false, msgs: [...s.msgs, msg] }), () => this.scrollChat());
+    }, delay || 1100);
+  }
+  scrollChat() { if (this.chatEl) this.chatEl.scrollTop = this.chatEl.scrollHeight; }
+  send(text, quote) {
+    if (!text) return;
+    this.setState(s => ({ chatMode: s.chatMode === 'closed' ? 'half' : s.chatMode, chatInput: '', msgs: [...s.msgs, { id: Date.now(), role: 'user', kind: 'text', text, quote }] }), () => this.scrollChat());
+    const reply = /нефть|food|1996/i.test(text + (quote || ''))
+      ? 'Программа «Нефть в обмен на продовольствие» была создана в 1996 году: Ираку разрешили продавать нефть, но выручка шла под контролем ООН на еду и лекарства. Хочешь, добавлю это в карточки?'
+      : 'Коротко: заявленный повод (ОМП) не подтвердился, а ошибки оккупации — роспуск армии и запрет партии Баас — превратили быструю победу в затяжную войну. Могу разобрать любую часть глубже.';
+    this.pushAi({ id: Date.now() + 1, role: 'ai', kind: 'text', text: reply });
+  }
+  makeQuiz() {
+    this.setState(s => ({ chatMode: s.chatMode === 'closed' ? 'half' : s.chatMode, quizPicked: null, msgs: [...s.msgs, { id: Date.now(), role: 'ai', kind: 'quiz' }] }), () => this.scrollChat());
+  }
+  renderVals() {
+    const s = this.state;
+    const cr = s.creating;
+    const noteProcessing = !!(cr && !cr.done);
+    const times = ['Tonight · 20:00', 'Tomorrow · 09:00', 'In 3 days', 'Every Sunday'];
+    const qd = this.quizData;
+    const mode = s.chatMode;
+    const chatOpen = mode !== 'closed';
+    const full = mode === 'full';
+    const msgs = s.msgs.map(m => {
+      const user = m.role === 'user';
+      return {
+        ...m, isText: m.kind === 'text', isQuiz: m.kind === 'quiz', hasQuote: !!m.quote,
+        align: user ? 'flex-end' : 'flex-start',
+        bg: user ? 'var(--grad)' : 'var(--panel2)',
+        color: user ? 'var(--grad-ink)' : 'var(--ink)',
+        radius: user ? '13px 13px 4px 13px' : '13px 13px 13px 4px',
+      };
+    });
+    const quizOpts = qd.opts.map((t, i) => {
+      const picked = s.quizPicked, isC = i === qd.correct, isP = picked === i;
+      let border = 'var(--line)', bg = 'var(--panel)', dotBorder = 'var(--line)', dotBg = 'transparent', showMark = false;
+      if (picked != null) {
+        if (isC) { border = 'var(--ok)'; bg = 'rgba(18,183,106,.08)'; dotBorder = 'var(--ok)'; dotBg = 'var(--ok)'; showMark = true; }
+        else if (isP) { border = 'var(--bad)'; bg = 'rgba(229,72,77,.07)'; dotBorder = 'var(--bad)'; }
+      }
+      return { t, border, bg, dotBorder, dotBg, showMark, onPick: () => s.quizPicked == null && this.setState({ quizPicked: i }, () => this.scrollChat()) };
+    });
+    const steps = this.stages.map((label, i) => {
+      const done = cr ? (cr.stage > i || cr.done) : false;
+      const active = cr ? (cr.stage === i && !cr.done) : false;
+      return {
+        label, num: i + 1, done, notDone: !done, active,
+        border: active ? 'var(--ink)' : 'var(--line)',
+        bg: active ? 'var(--accent-soft)' : done ? 'var(--bg)' : 'var(--panel)',
+        iconBg: done ? 'var(--ok)' : active ? 'var(--ink)' : 'var(--panel2)',
+        iconC: done ? '#fff' : active ? 'var(--bg)' : 'var(--mut)',
+        textC: done || active ? 'var(--ink)' : 'var(--mut)',
+      };
+    });
+    return {
+      isDark: s.theme === 'dark', isLight: s.theme === 'light',
+      toggleTheme: () => { const t = s.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('lapp-theme', t); this.setState({ theme: t }); },
+      noteProcessing, noteReady: !noteProcessing,
+      creatingPct: cr ? Math.round(cr.pct) : 0,
+      creatingFun: cr ? this.fun[cr.stage] : '',
+      creatingSteps: steps,
+      noteTitle: s.title,
+      retitleOpen: s.retitleOpen, toggleRetitle: () => this.setState({ retitleOpen: !s.retitleOpen }),
+      titleIdeas: [
+        'Ирак-2003: как «миссия выполнена» обернулась хаосом',
+        'От санкций до оккупации: путь к войне в Ираке',
+        'Цена вторжения: Ирак 2003 и 20 лет последствий',
+      ].map(t => ({ t, onPick: () => { this.setState({ title: t, retitleOpen: false }); this.showToast('Title updated'); } })),
+      tabOverview: s.tab === 'overview', tabTranscript: s.tab === 'transcript',
+      tabOverviewGo: () => this.setState({ tab: 'overview', selPop: null }),
+      tabTranscriptGo: () => this.setState({ tab: 'transcript', selPop: null }),
+      tabOvBg: s.tab === 'overview' ? 'var(--ink)' : 'transparent', tabOvC: s.tab === 'overview' ? 'var(--bg)' : 'var(--mut)',
+      tabTrBg: s.tab === 'transcript' ? 'var(--ink)' : 'transparent', tabTrC: s.tab === 'transcript' ? 'var(--bg)' : 'var(--mut)',
+      selHint: this._coarse ? 'Tap and hold any text to ask, quiz, or schedule' : 'Select any text to ask, quiz, or schedule a reminder',
+      setContentEl: (el) => { this.contentEl = el; },
+      hasSel: !!s.selPop, selLeft: s.selPop ? Math.round(s.selPop.left) : 0, selTop: s.selPop ? Math.round(s.selPop.top) : 0,
+      askSelection: (e) => { e.preventDefault(); const q = s.selPop.text; this.setState({ selPop: null }); this.send('Расскажи подробнее про это место', q); },
+      quizSelection: (e) => { e.preventDefault(); this.setState({ selPop: null }); this.makeQuiz(); },
+      scheduleSelection: (e) => { e.preventDefault(); const q = s.selPop.text; this.setState({ selPop: null }); this.send('Schedule a quiz on this part', q); },
+      quizWholeNote: () => this.makeQuiz(),
+      chatOpen, chatFull: full,
+      chatModeAttr: mode,
+      toggleChat: () => this.setState({ chatMode: chatOpen ? 'closed' : 'half' }),
+      closeChat: () => this.setState({ chatMode: 'closed' }),
+      setChatHalf: () => this.setState({ chatMode: 'half' }),
+      setChatFull: () => this.setState({ chatMode: 'full' }),
+      chatBtnLabel: chatOpen ? 'Chat on' : 'Chat',
+      segHalfBg: mode === 'half' ? 'var(--panel)' : 'transparent',
+      segHalfC: mode === 'half' ? 'var(--ink)' : 'var(--mut)',
+      segHalfShadow: mode === 'half' ? 'var(--shadow)' : 'none',
+      segFullBg: full ? 'var(--panel)' : 'transparent',
+      segFullC: full ? 'var(--ink)' : 'var(--mut)',
+      segFullShadow: full ? 'var(--shadow)' : 'none',
+      gridCols: mode === 'closed' ? 'minmax(0,1fr)' : full ? 'minmax(0,0fr) minmax(0,1fr)' : 'minmax(0,1fr) minmax(300px,380px)',
+      gridGap: full ? '0px' : '18px',
+      contentPad: full ? '0px' : '34px 40px 44px',
+      contentBorder: full ? 'transparent' : 'var(--line)',
+      contentShadow: full ? 'none' : 'var(--shadow)',
+      contentOp: full ? 0 : 1,
+      chatH: full ? 'calc(100dvh - 170px)' : 'calc(100dvh - 200px)',
+      chatMaxW: full ? '860px' : 'none',
+      chatMargin: full ? '0 auto' : '0',
+      chatBtnBg: chatOpen ? 'var(--accent-soft)' : 'var(--grad)',
+      chatBtnC: chatOpen ? 'var(--ink)' : 'var(--grad-ink)',
+      setChatEl: (el) => { this.chatEl = el; },
+      msgs, typing: s.typing,
+      quizQ: qd.q, quizOpts,
+      quizFeedbackOn: s.quizPicked != null,
+      quizFeedback: s.quizPicked === qd.correct ? 'Correct — 1996, резолюция ООН №986.' : 'Not quite — правильный ответ 1996 год. Добавил в повторение.',
+      quizFeedbackC: s.quizPicked === qd.correct ? 'var(--ok)' : 'var(--bad)',
+      chips: ['Сделай 5 карточек', 'Объясни проще', 'Почему ОМП не нашли?'].map(t => ({ t, onSend: () => this.send(t) })),
+      chatInput: s.chatInput, onChatInput: (e) => this.setState({ chatInput: e.target.value }),
+      onChatKey: (e) => { if (e.key === 'Enter') this.send(s.chatInput); },
+      sendChat: () => this.send(s.chatInput),
+      schedOpen: s.schedOpen, closeSched: () => this.setState({ schedOpen: false }),
+      stopProp: (e) => e.stopPropagation(),
+      schedQuote: s.schedQuote,
+      schedTimes: times.map((label, i) => ({
+        label, onPick: () => this.setState({ schedPick: i }),
+        border: s.schedPick === i ? 'var(--ink)' : 'var(--line)',
+        bg: s.schedPick === i ? 'var(--accent-soft)' : 'var(--panel)',
+        color: 'var(--ink)',
+      })),
+      schedLabelShort: times[s.schedPick],
+      openSched: () => this.setState({ schedOpen: true }),
+      remindPop: s.remindPop,
+      toggleRemindPop: () => this.setState({ remindPop: !s.remindPop }),
+      remindPillText: s.remindOn ? 'Quizzes you · on your phone' : 'Quiz reminders off',
+      remindPillC: s.remindOn ? 'var(--streak)' : 'var(--mut)',
+      remindPillBg: s.remindOn ? 'var(--streak-soft)' : 'var(--panel2)',
+      remindPillBorder: s.remindOn ? 'color-mix(in srgb, var(--streak) 35%, transparent)' : 'var(--line)',
+      remindTgLabel: s.remindOn ? 'ON' : 'OFF',
+      remindTgLabelC: s.remindOn ? 'var(--ok)' : 'var(--mut)',
+      remindTgBg: s.remindOn ? 'var(--ok)' : 'var(--line)',
+      remindTgKnob: s.remindOn ? '19.5px' : '2.5px',
+      toggleRemind: () => {
+        const on = !s.remindOn;
+        this.setState({ remindOn: on });
+        this.showToast(on ? 'Lock-screen reviews on — first one arrives today' : 'Lock-screen reviews off for this note');
+      },
+      confirmSched: () => { this.setState({ schedOpen: false }); this.showToast('Quiz scheduled · ' + times[s.schedPick] + ' — we\u2019ll push it to your phone'); },
+      hasToast: !!s.toast, toast: s.toast,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -42,8 +42,8 @@ const Layout = () => {
       <AppSidebar photo={photo || ""} fullName={fullName || ""} email={email || ""} />
 
       <SidebarInset className="flex flex-1 flex-col relative w-full h-full overflow-hidden">
-        {/* Sale banner */}
-        <PromoBanner />
+        {/* Sale banner — hidden on pricing page (has its own inline promo) */}
+        {!location.pathname.includes("/price-page") && <PromoBanner />}
 
         <main
           ref={containerRef}
