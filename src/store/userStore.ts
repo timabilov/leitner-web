@@ -145,6 +145,8 @@ export const useUserStore = create<UserStore>()(
           subscriptionLastCheckedDate: undefined,
           countryCode: '',
           pushTokenRegistered: undefined,
+          selectedFolder: undefined,
+          folders: [],
         }),
     }),
     {
