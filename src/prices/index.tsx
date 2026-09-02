@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { Loader2, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown, Zap } from "lucide-react";
 import { initializePaddle } from "@paddle/paddle-js";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -430,6 +430,7 @@ function PricingCard({
   liveData,
   hasPromo,
   promoOn,
+  monthlyPrice
 }: {
   plan: any;
   featured: boolean;
@@ -440,6 +441,7 @@ function PricingCard({
   liveData: any;
   hasPromo: boolean;
   promoOn: boolean;
+  monthlyPrice?: number;
 }) {
   const { t } = useTranslation();
   const isActive = activePlanKey === plan.key;
@@ -451,21 +453,19 @@ function PricingCard({
   const original = liveData?.original;
   const hasTrial = liveData?.hasTrial;
   const trialFreq = liveData?.trialFrequency;
-
+  console.log("liveData", liveData, price, original, hasTrial, trialFreq);
   const displayPrice =  price
       ? `$${isAnnual ? (price / 12).toFixed(2) : price}`
       : "";
-  const perLabel = isWeekly ? (hasPromo ? "first week" : "/week") : isAnnual ? "/month" : `/${plan.unit}`;
+  const perLabel = isWeekly ? "/week" : isAnnual ? "/month" : `/${plan.unit}`;
   const anchor = original ? `$${isAnnual ? (original / 12).toFixed(2) : original}/${plan.unit}` : null;
 
   const baseChip = isWeekly
     ? null
-    : isMonthly
-      ? "50% OFF"
-      : "80% OFF";
+    : `-${( +liveData?.discountPercent)?.toFixed(0)}%`;
 
   const desc = isWeekly
-    ? "For the exam that's next week. Full access, then $5.99/wk if you stay."
+    ? `Full access, $${price} weekly, pause or cancel whenever.`
     : isMonthly
       ? "Through the semester, month by month. Pause or cancel whenever."
       : promoOn
@@ -477,20 +477,20 @@ function PricingCard({
     : hasTrial
       ? `Start ${trialFreq}-${t("day free trial")}`
       : isWeekly
-        ? "Start free week"
+        ? "Get weekly"
         : isAnnual
           ? (promoOn ? "Start 3-day free trial" : "Go Annual")
           : "Get Monthly";
 
   const ctaSub = isWeekly
-    ? "No card. It just works."
+    ? "Billed weekly"
     : isMonthly
-      ? "Billed monthly · cancel in 2 taps"
+      ?`Billed $${price} ${hasPromo ? "first month" : "monthly"}  ${hasPromo ? ` (next  $${original})` : `(instead of  $${original})`}`
       : promoOn
-        ? `$0 today · $${price || "79.99"} year one`
-        : `Billed $${price || "119.88"}/yr · cancel anytime`;
+        ? `$0 due today · $${price || "79.99"} first year (next  $${original})`
+        : `Billed $${price || "119.88"} yearly (instead of  $${original})`;
 
-  const promoPill = featured && promoOn ? "Semester offer: extra discount + free trial" : null;
+  const promoPill = featured && promoOn ? "Semester offer: discount + free trial" : null;
 
   const features = plan.features || [
     "Unlimited notes",
@@ -504,9 +504,8 @@ function PricingCard({
     <div
       className={cn(
         "relative flex flex-col bg-[var(--v2-panel)] rounded-[20px] p-6 transition-transform hover:-translate-y-[3px]",
-        featured
-          ? "border-[1.5px] border-[var(--v2-accent)] shadow-[var(--v2-shadow)]"
-          : "border-[1.5px] border-[var(--v2-line)]"
+
+          "border-[1.5px] border-[var(--v2-line)]"
       )}
     >
       {/* "MOST PICKED" badge */}
@@ -520,7 +519,7 @@ function PricingCard({
      
         <div className="flex items-center gap-2">
           <span className="text-[11.5px] font-extrabold tracking-[.12em] uppercase text-[var(--v2-mut)]">{plan.name || plan.key}</span>
-          {baseChip && (
+          {baseChip  && (
             <span className="ml-auto text-[11px] font-bold text-[var(--v2-ink)] bg-[var(--v2-nav-active)] rounded-full py-1 px-2.5 whitespace-nowrap">{baseChip}</span>
           )}
         </div>
@@ -529,20 +528,28 @@ function PricingCard({
       {/* Price */}
       <div className="flex items-baseline gap-1.5 mt-3.5 mb-0.5">
         <span className="font-heading text-4xl font-extrabold tracking-tight">{displayPrice}</span>
-        {!isWeekly && <span className="text-[var(--v2-mut)] text-sm">{perLabel}</span>}
+        <span className="text-[var(--v2-mut)] text-sm">{perLabel}</span>
       </div>
       {anchor &&  !isWeekly  &&  // TODO: clearer logic for when to show anchor price
        <span className="text-[var(--v2-mut)] text-[13px] line-through">{anchor}</span>}
 
       <p className="mt-2.5 mb-3.5 text-[13.5px] text-[var(--v2-mut)]">{desc}</p>
-
-      {/* Promo pill */}
-      {promoPill && (
-        <span className="inline-flex items-center gap-1.5 w-max bg-[var(--v2-ink)] text-[var(--v2-bg)] rounded-full py-1.5 px-3 text-[12.5px] font-bold mb-3.5">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12z" /></svg>
-          {promoPill}
-        </span>
-      )}
+      
+      {
+        isAnnual && hasPromo && (
+          <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-pink-200 rounded-2xl p-3.5 space-y-1.5 mb-3.5">
+          <div className="flex items-center gap-1.5 text-pink-700 font-bold text-xs">
+            <Zap className="w-4 h-4 fill-pink-500 text-pink-500 shrink-0" />
+            <span>SPECIAL SEMESTER OFFER</span>
+          </div>
+          <p className="text-xs text-zinc-600 font-medium leading-relaxed">
+            
+            Includes <strong>365 Days</strong> of Unlimited Study Help. Extra discount + free trial
+          </p>
+        </div>
+        )
+      }
+      
 
       {/* Features */}
       <div className="grid gap-2.5 mb-5">
@@ -589,7 +596,8 @@ export default function PricingSection() {
   const checkoutRef = useRef<{ priceId: string; itemPrice: number } | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
-  const { targetDate, hasPromo } = useOfferCountdown();
+  const { targetDate  } = useOfferCountdown();
+  const hasPromo = true;
   const [searchParams] = useSearchParams();
   const isPromoLink = searchParams.get("sale") === "true";
   const posthog = usePostHog();
@@ -624,7 +632,7 @@ export default function PricingSection() {
     enabled: !!userId,
   });
   const activePlanKey = subscriptionData?.data?.billing_cycle?.interval
-    ? (subscriptionData.data.billing_cycle.interval === "year" ? "annual" : "monthly")
+    ? (subscriptionData.data.billing_cycle.interval === "year" ? "annual" : subscriptionData.data.billing_cycle.interval === "week" ? "weekly" : "monthly")
     : null;
 
   // AppLovin view_item
@@ -769,10 +777,10 @@ export default function PricingSection() {
 
           {/* Trust badges */}
           <div className="flex justify-center gap-2.5 flex-wrap mb-6">
-            {["No credit card", "Cancel anytime", "Money back, 30 days"].map((txt, i) => (
+            {["No credit card", "Cancel anytime"].map((txt, i) => (
               <span key={i} className={cn(
                 "inline-flex items-center gap-2 bg-[var(--v2-panel)] rounded-full py-2 px-4 text-[13.5px] font-bold shadow-[var(--v2-shadow)]",
-                i === 0 ? "border-[1.5px] border-[var(--v2-ok)]" : "border border-[var(--v2-line)]"
+            "border border-[var(--v2-line)]"
               )}>
                 <CheckIcon />
                 {txt}
@@ -815,7 +823,7 @@ export default function PricingSection() {
           </div>
 
           {/* Star rating */}
-          <div className="mt-3.5 text-[13px]">
+          <div className="mt-8 text-[13px]">
             <span className="text-amber-400 tracking-wider">★★★★★</span>{" "}
             <strong>4.9</strong>{" "}
             <span className="text-[var(--v2-mut)]">from 20,000+ students</span>
@@ -828,7 +836,11 @@ export default function PricingSection() {
           style={{ animation: "v2-fadeUp .45s .08s ease both" }}
         >
           {activeTiers.map((tier: any) => {
+            const monthlyTier = activeTiers.find(t => t.key === "monthly");
+            const monthlyTierPriceId = monthlyTier ? monthlyTier.priceId : null;
+         
             const liveData = prices[tier.priceId];
+            const monthlyPrice = monthlyTierPriceId ? prices[monthlyTierPriceId]?.current : null;
             return (
               <PricingCard
                 key={tier.id}
@@ -841,6 +853,7 @@ export default function PricingSection() {
                 liveData={liveData}
                 hasPromo={!!hasPromo}
                 promoOn={promoOn}
+                monthlyPrice={monthlyPrice}
               />
             );
           })}
